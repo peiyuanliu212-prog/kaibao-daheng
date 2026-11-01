@@ -116,7 +116,7 @@ h1 { background: linear-gradient(92deg, #ffe9a8, #f5b942 55%, #c47f17); -webkit-
 .card .jpatch { position: absolute; right: 6px; bottom: 46px; z-index: 4; width: 34px; height: 26px; border-radius: 4px; background: repeating-linear-gradient(45deg, #f2f2f2 0 5px, #d8d8d8 5px 10px); border: 2px solid #ffd24d; color: #8a6d00; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
 .dexcell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .card.ghost { opacity: 1; background: linear-gradient(180deg, #1d212b, #12151c); }
-.pitch { position: relative; aspect-ratio: 10 / 15; border-radius: 16px; overflow: hidden; background-size: cover; background-position: center; border: 1px solid rgba(255,176,46,.35); box-shadow: inset 0 0 60px rgba(0,0,0,.55); margin-bottom: 10px; }
+.pitch { position: relative; aspect-ratio: 10 / 16; border-radius: 16px; overflow: hidden; background-size: cover; background-position: center; border: 1px solid rgba(255,176,46,.35); box-shadow: inset 0 0 60px rgba(0,0,0,.55); margin-bottom: 10px; }
 .pitch .slot { position: absolute; transform: translate(-50%, -50%); width: 92px; min-height: 0; padding: 3px; background: rgba(11,14,19,.78); border-color: rgba(255,255,255,.28); backdrop-filter: blur(2px); }
 .pitch .slot .card { width: 80px; }
 .pitch .slot .postag { font-size: 10.5px; margin-bottom: 2px; }
@@ -233,7 +233,25 @@ body { padding-bottom: 78px; }
 #drawSummary { margin-top: 12px; font-size: 13.5px; color: #ffd257; min-height: 18px; }
 .card .newb { position: absolute; top: 82px; left: 6px; z-index: 5; background: #2ecc71; color: #06280f; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: .5px; box-shadow: 0 2px 8px rgba(46,204,113,.5); }
 .card .hot { top: 58px; }
-.card .stamp { top: auto; bottom: 2px; right: 6px; left: auto; transform: rotate(-4deg); z-index: 5; font-size: 10px; padding: 1px 5px; }
+/* 卡面遮挡修复：徽章避开脸部，变体改铭牌文字，卖按钮移出卡面 */
+.card .hot { top: 30px; font-size: 9.5px; padding: 0 4px; }
+.card .sig { bottom: 64px; }
+.pitch .card .sig { bottom: 40px; }
+.pitch .card .hot { top: 22px; }
+.card .cval { font-size: 10.5px; color: #ffd257; white-space: nowrap; }
+.vt { font-weight: 800; }
+.vt-银折 { color: #cfe0f2; }
+.vt-红折 { color: #ff8a70; }
+.vt-签字 { color: #ffd76a; }
+.vt-球衣 { color: #7dd87d; }
+.libcell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.libcell .sellbtn { background: linear-gradient(160deg, #ffd257, #d98a16); color: #231303; border: none; font-weight: 800; font-size: 12px; padding: 5px 14px; border-radius: 999px; cursor: pointer; }
+.pitch .card .stamp, .pitch .card .hot, .pitch .card .sig { display: none; }
+.pitch .card .cname { font-size: 11px !important; }
+.pitch .card .ctier { font-size: 9.5px; }
+.pitch .card .cval { font-size: 9px; }
+.pitch .card .cfoot { padding: 4px 6px 5px; }
+.card .stamp { top: auto; bottom: 2px; right: 6px; left: auto; transform: rotate(-4deg); z-index: 5; font-size: 9px; padding: 1px 4px; }
 
 /* ===== v7：全页背景图 ===== */
 #bgLayer { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center top; transition: background-image .3s; }
@@ -1442,19 +1460,17 @@ function cardHTML(c, opts) {
   const val = S.instanceValue(state, c, D);
   const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
   const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
-  const sell = opts.sell ? `<button class="sell" data-sell="${c.uid}">卖 ${Math.floor(val * 0.85)} 金</button>` : "";
   const newb = opts.new ? `<span class="newb">NEW</span>` : "";
   const vv = c.variant && c.variant !== "base" ? c.variant : "";
-  const vbadge = vv ? `<span class="vb vb-${vv}">${vv}</span>` : "";
   const sig = vv === "签字" ? `<div class="sig">${c.name}</div>` : "";
-  const jpatch = vv === "球衣" ? `<div class="jpatch">球衣</div>` : "";
   return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
     <img class="cart${(typeof PORTRAITS !== "undefined" && PORTRAITS[c.pid]) ? " photo" : ""}" src="${avatarURL(playerOf(c))}" alt="">
     <div class="cshade"></div>${newb}
     <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${c.rating}</span></div>
-    <div class="cfoot"><div class="cname">${c.name}</div>
-    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""} · 身价 ${val}</div></div>
-    ${stamp}${hot}${vbadge}${sig}${jpatch}${sell}</div>`;
+    <div class="cfoot"><div class="cname" style="font-size:${c.name.length >= 7 ? 12 : c.name.length === 6 ? 13.5 : 15}px">${c.name}</div>
+    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}</div>
+    <div class="cval">身价 ${val}</div></div>
+    ${stamp}${hot}${sig}</div>`;
 }
 let toastTimer = null;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400); }
@@ -1474,8 +1490,8 @@ function render() {
 // ---------- 卡店 ----------
 function renderShop() {
   const lv = state.shopLv, shop = S.SHOP[lv], next = S.SHOP[lv + 1];
-  $("#shopInfo").innerHTML = `卡店 Lv.${lv} · 展示位 ${state.display.length}/${shop.slots} · 时薪 <b>${S.idleRate(state)}</b> 金币`;
-  const hero = $("#shopHero"); if (hero) hero.innerHTML = `<div class="hh-name">${SHOP_NAMES[state.shopLv] || "我的卡馆"} · Lv.${state.shopLv}</div><div class="hh-sub">展示柜时薪 ${S.idleRate(state)} 金币 · 图鉴 ${new Set(state.cards.map(c => c.pid)).size}/120 · 传世保底 ${state.pity}/240</div>`;
+  $("#shopInfo").innerHTML = `卡店 Lv.${lv} · 展示位 ${state.display.length}/${shop.slots} · 时薪 <b>${Math.round(S.idleRate(state))}</b> 金币`;
+  const hero = $("#shopHero"); if (hero) hero.innerHTML = `<div class="hh-name">${SHOP_NAMES[state.shopLv] || "我的卡馆"} · Lv.${state.shopLv}</div><div class="hh-sub">展示柜时薪 ${Math.round(S.idleRate(state))} 金币 · 图鉴 ${new Set(state.cards.map(c => c.pid)).size}/120 · 传世保底 ${state.pity}/240</div>`;
   $("#idlePending").textContent = Math.floor(state.idlePending || 0);
   $("#upgradeBtn").style.display = next ? "" : "none";
   if (next) $("#upgradeBtn").textContent = `升级 Lv.${lv + 1}（${next.cost} 金币${S.UNLOCKS[lv + 1] ? " · 解锁" + S.UNLOCKS[lv + 1] : ""}）`;
@@ -1533,7 +1549,7 @@ function renderLineup() {
   const mine = S.lineupCards(state);
   const pw = S.powerOf(mine, state.captainUid);
   const posNames = { GK: "门将", DF: "后卫", MF: "中场", WG: "边锋", ST: "中锋" };
-  const POSXY = { ST: [50, 14], WG: [21, 37], MF: [79, 37], DF: [50, 59], GK: [50, 82] };
+  const POSXY = { ST: [50, 14], WG: [21, 37], MF: [79, 37], DF: [50, 57], GK: [50, 84] };
   const pitch = $("#lineupGrid");
   if (!pitch.style.backgroundImage && typeof KBArt !== "undefined" && KBArt.lineup) pitch.style.backgroundImage = `url(${KBArt.lineup})`;
   pitch.innerHTML = ["GK", "DF", "MF", "WG", "ST"].map(pos => {
@@ -1584,7 +1600,7 @@ function renderDex() {
     return b.rating - a.rating;
   });
   $("#libCount").textContent = state.cards.length;
-  $("#libGrid").innerHTML = sorted.map(c => cardHTML(c, { sell: true })).join("");
+  $("#libGrid").innerHTML = sorted.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${Math.floor(S.instanceValue(state, c, D) * 0.85)} 金</button></div>`).join("");
   // 行情
   if (state.shopLv >= 5) {
     const board = S.marketBoard(D);
