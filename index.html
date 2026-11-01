@@ -245,6 +245,8 @@ body { padding-bottom: 78px; }
 .vt-签字 { color: #ffd76a; }
 .vt-球衣 { color: #7dd87d; }
 .libcell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.libcell, .dexcell { content-visibility: auto; contain-intrinsic-size: auto 190px; }
+.packflash { outline: 2px solid #ffd257 !important; outline-offset: 2px; }
 .libcell .sellbtn { background: linear-gradient(160deg, #ffd257, #d98a16); color: #231303; border: none; font-weight: 800; font-size: 12px; padding: 5px 14px; border-radius: 999px; cursor: pointer; }
 .pitch .card .stamp, .pitch .card .hot, .pitch .card .sig { display: none; }
 .pitch .card .cname { font-size: 11px !important; }
@@ -282,7 +284,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <header>
   <h1>足坛卡王 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span> <span id="nickTag" class="hint"></span></h1>
   <div class="wallet"><button id="homeBtn" title="开始页">🏠</button>
-    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><span>🪙 <b id="coins">0</b> 金币</span><span class="d">💎 <b id="dia">0</b> 钻石</span></div>
+    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><span>🪙 <b id="coins">0</b> 金币</span><span class="d" id="diaPill" title="钻石用于开传世箱，点我直达" style="cursor:pointer">💎 <b id="dia">0</b> 钻石</span></div>
 </header>
 <div class="pitybar"><div id="pityFill"></div><span id="pityText"></span></div>
 <nav>
@@ -295,6 +297,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 
 <section class="page on" id="page-shop">
   <div id="shopHero"></div>
+  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页卡库里，行情价 85% 回收</span></div>
   <h2>我的卡店</h2>
   <p id="shopInfo"></p>
   <div class="row">
@@ -306,7 +309,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：展示柜挂机（离线也算，封顶 8 小时）· 卖卡（行情价 85%）· 联赛赢球奖金与周结算 · 收藏家委托溢价收卡 · 每日任务与签到。<br>钻石：每日任务 3/日 · 签到第 7 天 +10 · 成就奖励。钻石只用来开传世箱，不卖不换。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页「我的卡库」，每张卡下方有卖出按钮（行情价 85%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
@@ -331,6 +334,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <div class="pack"><h3>名宿系列包</h3><p>5 张 · 高级包概率<br>传说/传世必为名宿</p><button id="legendPackBtn">1800 金币</button></div>
   </div>
   <p id="pityLine" class="pityline"></p>
+  <p class="hint">💎 钻石专开传世箱：无普通档，史诗 50% · 传说 22% · 传世 4%，每箱保底 1 张史诗+。钻石靠签到、每日任务、成就和广告攒，点顶部钻石数可直达。</p>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
     <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
@@ -339,6 +343,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   </div>
   <div id="drawSummary"></div>
   <div class="grid" id="drawGrid"></div>
+  <div class="row"><button class="btn ghost" id="bulkSellBtn2">一键卖重复（普通/稀有）</button><button class="btn ghost" id="goLibBtn">去卡库卖卡</button></div>
 </section>
 
 <section class="page" id="page-lineup">
@@ -379,13 +384,14 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>图鉴</h2>
   <p id="dexInfo"></p>
   <div class="grid" id="dexGrid"></div>
-  <h2>我的卡库（<span id="libCount">0</span> 张）</h2>
+  <h2>我的卡库 · 卖卡（<span id="libCount">0</span> 张）</h2>
   <div class="row">
     <label>排序 <select id="sortSel"><option value="tier">稀有度</option><option value="rating">评分</option><option value="value">身价（行情）</option></select></label>
     <button class="btn ghost" id="deskBtn" style="display:none">添加到桌面</button>
   <button class="btn ghost" id="bulkSellBtn">一键卖重复（普通/稀有）</button>
   <button class="btn ghost" id="resetBtn">删档重开</button>
   </div>
+  <p class="hint">点每张卡下方的金色按钮卖出，按行情价 85% 回收金币；卖卡是前期攒金币最快的方式。</p>
   <div class="grid" id="libGrid"></div>
   <h2>合成炉</h2>
   <div id="synthArea"></div>
@@ -419,7 +425,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </div>
 <div id="giftModal"><div class="gift-card">
   <h3>🎁 新手大礼包</h3>
-  <div id="giftStage1"><p>欢迎开店！这份开业礼包归你了：</p><p class="gift-items">💰 1500 金币 · 💎 40 钻石<br>🃏 首发五人组（五位置各 1 人：1 史诗 + 4 稀有）</p><button class="btn" id="giftClaimBtn">领取礼包</button></div>
+  <div id="giftStage1"><p>欢迎开店！这份开业礼包归你了：</p><p class="gift-items">💰 4000 金币 · 💎 80 钻石<br>🃏 首发五人组（五位置各 1 人：1 史诗 + 4 稀有）</p><button class="btn" id="giftClaimBtn">领取礼包</button></div>
   <div id="giftStage2" style="display:none"><p>你的首发五人组：</p><div class="grid" id="giftGrid"></div><button class="btn" id="giftGoBtn">进入卡店</button></div>
 </div></div>
 <script>
@@ -1126,23 +1132,23 @@ if (typeof module !== "undefined") module.exports = KBAds;
 // 《足坛卡王》M3 — 规格 §10/§9/§12：签到、每日/每周任务、成就、套卡、纪录、赛报文案池、存档码
 const KBMeta = (() => {
   const E = KBEngine, S = KBSystems;
-  // ---------- 签到（§10）：日奖 150 金，第 7 天另 +10 钻 ----------
+  // ---------- 签到（§10）：日奖 300 金，第 7 天另 +10 钻 ----------
   function signIn(state, dayStr) {
     if (state.lastSignDay === dayStr) return { ok: false, reason: "今日已签到" };
     state.lastSignDay = dayStr;
     state.signTotal++;
     const cycleDay = ((state.signTotal - 1) % 7) + 1;
-    state.coins += 150;
+    state.coins += 300;
     let diaBonus = 0;
     if (cycleDay === 7) { diaBonus = 10; state.dia += 10; }
     return { ok: true, cycleDay, diaBonus };
   }
-  // ---------- 每日任务（§10）：开1包/打1场/收1次挂机 → 200 金 + 3 钻 ----------
+  // ---------- 每日任务（§10）：开1包/打1场/收1次挂机 → 400 金 + 3 钻 ----------
   function dailyDone(state) { const d = state.daily; return d.packs >= 1 && d.matches >= 1 && d.idle >= 1; }
   function claimDaily(state) {
     if (state.daily.claimed) return { ok: false, reason: "今日任务奖励已领取" };
     if (!dailyDone(state)) return { ok: false, reason: "任务未全部完成" };
-    state.daily.claimed = true; state.coins += 200; state.dia += 3;
+    state.daily.claimed = true; state.coins += 400; state.dia += 3;
     return { ok: true };
   }
   // ---------- 每周任务（§10）：合成1次/赢5场/图鉴+5 → 20 钻 ----------
@@ -1154,36 +1160,36 @@ const KBMeta = (() => {
   function claimWeekly(state) {
     if (state.weekly.claimed) return { ok: false, reason: "本周任务奖励已领取" };
     if (!weeklyDone(state)) return { ok: false, reason: "每周任务未全部完成" };
-    state.weekly.claimed = true; state.dia += 20;
+    state.weekly.claimed = true; state.dia += 30;
     return { ok: true };
   }
   // ---------- 成就（§10 + 纪录系） ----------
   const ACHS = [
-    { id: "firstUR", name: "首抽传世", dia: 10, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
-    { id: "firstOne", name: "首张 /1", dia: 10, test: st => st.cards.some(c => c.stamp === "/1") },
-    { id: "firstPara", name: "首张平行版", dia: 5, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
-    { id: "para10", name: "平行收藏 10", dia: 10, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
-    { id: "jersey1", name: "球衣卡到手", dia: 15, test: st => st.cards.some(c => c.variant === "球衣") },
-    { id: "dex30", name: "图鉴 30", dia: 5, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
-    { id: "dex60", name: "图鉴 60", dia: 10, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
-    { id: "dex90", name: "图鉴 90", dia: 15, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
-    { id: "dex120", name: "图鉴全集 120", dia: 30, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
-    { id: "shop5", name: "卡店 Lv.5", dia: 5, test: st => st.shopLv >= 5 },
-    { id: "shop10", name: "卡店 Lv.10", dia: 20, test: st => st.shopLv >= 10 },
-    { id: "rich100k", name: "全仓身价破 10 万", dia: 10, test: st => st.records.total >= 100000 },
-    { id: "rich500k", name: "全仓身价破 50 万", dia: 25, test: st => st.records.total >= 500000 },
-    { id: "master", name: "联赛大师段位", dia: 15, test: st => st.division >= 5 },
-    { id: "synthLegend", name: "合成出传说", dia: 10, test: st => !!st.flags.synthLegend },
-    { id: "ur3", name: "传世收藏 3", dia: 10, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 3 },
-    { id: "ur6", name: "传世收藏 6", dia: 20, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 6 },
-    { id: "ur10", name: "传世收藏 10 · 卡王", dia: 50, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 10 }
+    { id: "firstUR", name: "首抽传世", dia: 10, coins: 1000, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
+    { id: "firstOne", name: "首张 /1", dia: 10, coins: 1000, test: st => st.cards.some(c => c.stamp === "/1") },
+    { id: "firstPara", name: "首张平行版", dia: 8, coins: 300, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
+    { id: "para10", name: "平行收藏 10", dia: 10, coins: 600, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
+    { id: "jersey1", name: "球衣卡到手", dia: 15, coins: 800, test: st => st.cards.some(c => c.variant === "球衣") },
+    { id: "dex30", name: "图鉴 30", dia: 10, coins: 500, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
+    { id: "dex60", name: "图鉴 60", dia: 10, coins: 800, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
+    { id: "dex90", name: "图鉴 90", dia: 15, coins: 1200, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
+    { id: "dex120", name: "图鉴全集 120", dia: 30, coins: 2000, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
+    { id: "shop5", name: "卡店 Lv.5", dia: 10, coins: 800, test: st => st.shopLv >= 5 },
+    { id: "shop10", name: "卡店 Lv.10", dia: 20, coins: 1500, test: st => st.shopLv >= 10 },
+    { id: "rich100k", name: "全仓身价破 10 万", dia: 10, coins: 1000, test: st => st.records.total >= 100000 },
+    { id: "rich500k", name: "全仓身价破 50 万", dia: 25, coins: 2500, test: st => st.records.total >= 500000 },
+    { id: "master", name: "联赛大师段位", dia: 15, coins: 1000, test: st => st.division >= 5 },
+    { id: "synthLegend", name: "合成出传说", dia: 10, coins: 800, test: st => !!st.flags.synthLegend },
+    { id: "ur3", name: "传世收藏 3", dia: 10, coins: 1000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 3 },
+    { id: "ur6", name: "传世收藏 6", dia: 20, coins: 1500, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 6 },
+    { id: "ur10", name: "传世收藏 10 · 卡王", dia: 50, coins: 3000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 10 }
   ];
   function claimAchievement(state, id) {
     const a = ACHS.find(x => x.id === id);
     if (!a || state.achClaimed[id]) return { ok: false };
     if (!a.test(state)) return { ok: false, reason: "尚未达成" };
-    state.achClaimed[id] = 1; state.dia += a.dia;
-    return { ok: true, dia: a.dia, name: a.name };
+    state.achClaimed[id] = 1; state.dia += a.dia; state.coins += a.coins || 0;
+    return { ok: true, dia: a.dia, coins: a.coins || 0, name: a.name };
   }
   function titleOf(state) {
     if (state.achClaimed.ur10 || ACHS.find(a => a.id === "ur10").test(state)) return "👑 卡王";
@@ -1261,22 +1267,21 @@ if (typeof module !== "undefined") module.exports = KBMeta;
 
 // ===== audio.js =====
 // 《足坛卡王》WebAudio 声音系统：程序化 BGM + 音效，零文件体积
-// BGM：Am–F–C–G 慢板 pad + 低音 + 轻帽 + 随机五声音阶拨弦（深夜卡店氛围）
+// BGM：Em–C–G–D 球场摇滚律动（底鼓+军鼓+驱动贝斯+颂歌主旋律）
 // 首次用户手势后启动（浏览器自动播放政策）；静音状态存 localStorage。
 const KBAudio = (() => {
   let ctx = null, master = null, musicBus = null, sfxBus = null, noiseBuf = null;
   let muted = false;
   try { muted = localStorage.getItem("kaibao_mute") === "1"; } catch (e) {}
   let started = false, schedTimer = null, step = 0, nextT = 0;
-  const STEP = 0.46; // 每步时长（约 65 BPM 的八分音符感）
-  const CHORDS = [ // Am7, Fmaj7, Cmaj7, G6（根音 + 和弦音）
-    { root: 110.00, notes: [220.00, 261.63, 329.63, 392.00] },
-    { root: 87.31, notes: [174.61, 220.00, 261.63, 329.63] },
-    { root: 130.81, notes: [196.00, 261.63, 329.63, 493.88] },
-    { root: 98.00, notes: [196.00, 246.94, 293.66, 329.63] }
+  const STEP = 0.217; // 八分音符 @ 约 138 BPM，球场律动
+  const BARS = [ // Em / C / G / D 球场颂歌进行（根音 + 和弦音）
+    { root: 82.41, chord: [164.81, 196.00, 246.94] },
+    { root: 65.41, chord: [164.81, 196.00, 261.63] },
+    { root: 98.00, chord: [196.00, 246.94, 293.66] },
+    { root: 73.42, chord: [185.00, 220.00, 293.66] }
   ];
-  const PENTA = [440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
-  let melodyIdx = 2;
+  const MELODY32 = [0, 0, 659.25, 0, 783.99, 0, 880.00, 0, 0, 0, 987.77, 0, 880.00, 0, 783.99, 0, 1174.66, 0, 987.77, 0, 880.00, 0, 783.99, 0, 659.25, 0, 0, 0, 587.33, 0, 0, 0];
 
   function ac() {
     if (!ctx) {
@@ -1313,19 +1318,32 @@ const KBAudio = (() => {
     src.connect(f); f.connect(g); g.connect(musicBus);
     src.start(t); src.stop(t + 0.08);
   }
+  function kick(t, vol) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.11);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    o.connect(g); g.connect(musicBus); o.start(t); o.stop(t + 0.15);
+  }
+  function snare(t, vol) {
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1900; f.Q.value = 0.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+    src.connect(f); f.connect(g); g.connect(musicBus); src.start(t); src.stop(t + 0.12);
+    tone(190, t, 0.08, "triangle", vol * 0.5, musicBus);
+  }
   function scheduleStep(s, t) {
-    const chord = CHORDS[Math.floor(s / 8) % 4];
-    if (s % 8 === 0) { // 和弦 pad + 根音低音
-      chord.notes.forEach(f => tone(f, t, STEP * 8.2, "triangle", 0.028, musicBus));
-      tone(chord.root, t, STEP * 3.5, "sine", 0.075, musicBus);
-      tone(chord.root * 1.5, t + STEP * 4, STEP * 3, "sine", 0.045, musicBus);
-    }
-    if (s % 2 === 0) hat(t, 0.012); else hat(t, 0.006);
-    if (s % 4 === 2 && Math.random() < 0.55) { // 五声音阶拨弦，随机游走
-      melodyIdx = Math.max(0, Math.min(PENTA.length - 1, melodyIdx + (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.25 ? 2 : 1)));
-      tone(PENTA[melodyIdx], t, 0.5, "sine", 0.035, musicBus);
-      tone(PENTA[melodyIdx] * 2, t, 0.22, "sine", 0.012, musicBus);
-    }
+    const bar = BARS[Math.floor(s / 8) % 4], st = s % 8;
+    if (st % 2 === 0) kick(t, 0.30);
+    if (st === 2 || st === 6) snare(t, 0.15);
+    hat(t, st % 2 === 0 ? 0.016 : 0.010);
+    const bassPat = [1, 1, 2, 1, 1, 1, 2, 1];
+    tone(bar.root * bassPat[st], t, 0.19, "sawtooth", 0.026, musicBus);
+    tone(bar.root, t, 0.2, "sine", 0.05, musicBus);
+    if (st === 0) bar.chord.forEach(f => tone(f, t, 0.34, "triangle", 0.045, musicBus));
+    if (st === 4) bar.chord.forEach(f => tone(f, t, 0.22, "triangle", 0.028, musicBus));
+    const mel = MELODY32[s % 32];
+    if (mel) { tone(mel, t, 0.3, "square", 0.015, musicBus); tone(mel * 0.5, t, 0.25, "triangle", 0.02, musicBus); }
   }
   function start() {
     if (started || !ac()) return;
@@ -1355,13 +1373,43 @@ const KBAudio = (() => {
       if (tierIdx >= 4) { [261.63, 329.63, 392, 523.25].forEach(f => tone(f, t + 0.4, 1.1, "triangle", 0.05)); tone(2093, t + 0.55, 0.7, "sine", 0.05); }
     }
   };
+  let crowdBuf = null;
+  function getCrowdBuf() { if (!crowdBuf) { crowdBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = crowdBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return crowdBuf; }
+  function noiseHit(t, dur, freq, q, vol) {
+    const src = ctx.createBufferSource(); src.buffer = getCrowdBuf(); src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t, Math.random() * 1.2); src.stop(t + dur + 0.05);
+  }
+  function tear() { if (!ac()) return; const t = now();
+    const src = ctx.createBufferSource(); src.buffer = getCrowdBuf();
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.1;
+    f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(2800, t + 0.14);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.20, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t, Math.random()); src.stop(t + 0.2);
+  }
+  function cheer(lv) { if (!ac()) return; const t = now(); const dur = 1.1 + lv * 0.55, vol = 0.05 + lv * 0.028;
+    const src = ctx.createBufferSource(); src.buffer = getCrowdBuf(); src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 850; f.Q.value = 0.45;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.14);
+    g.gain.setValueAtTime(vol, t + dur * 0.55); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+    if (lv >= 2) noiseHit(t + 0.05, dur * 0.8, 1500, 0.6, vol * 0.5);
+    if (lv >= 3) { tone(2250, t + 0.25, 0.5, "sine", 0.018, sfxBus, 2950); tone(2350, t + 0.7, 0.55, "sine", 0.015, sfxBus, 3100); }
+  }
+  function drumRoll() { if (!ac()) return; const t = now(); const N = 15;
+    for (let i = 0; i < N; i++) noiseHit(t + 0.8 * Math.pow(i / N, 1.55), 0.05, 2100, 1.2, 0.03 + 0.11 * (i / N));
+  }
   function toggleMute() {
     muted = !muted;
     try { localStorage.setItem("kaibao_mute", muted ? "1" : "0"); } catch (e) {}
     if (ctx && master) master.gain.linearRampToValueAtTime(muted ? 0 : 1, ctx.currentTime + 0.1);
     return muted;
   }
-  return { start, toggleMute, isMuted: () => muted, ...SFX };
+  return { start, toggleMute, isMuted: () => muted, ...SFX, tear, cheer, drumRoll };
 })();
 
 // ===== art.js =====
@@ -1383,6 +1431,9 @@ const TIER_COLOR = { "普通": "#9aa3ad", "稀有": "#4da3ff", "史诗": "#b678f
 const S = KBSystems, E = KBEngine;
 function freshState() { const st = E.newSave(); st.coins = 0; st.dia = 0; st.cards = []; st.uid = 1; st.giftPending = true; return st; }
 let state = KBSave.load();
+let curTab = "shop";
+let libExpanded = false;
+let dexGridKey = "";
 if (!state) { state = freshState(); }
 const D = S.todayIndex();
 state.dayIndex = D;
@@ -1464,7 +1515,7 @@ function cardHTML(c, opts) {
   const vv = c.variant && c.variant !== "base" ? c.variant : "";
   const sig = vv === "签字" ? `<div class="sig">${c.name}</div>` : "";
   return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
-    <img class="cart${(typeof PORTRAITS !== "undefined" && PORTRAITS[c.pid]) ? " photo" : ""}" src="${avatarURL(playerOf(c))}" alt="">
+    <img class="cart${(typeof PORTRAITS !== "undefined" && PORTRAITS[c.pid]) ? " photo" : ""}" loading="lazy" decoding="async" src="${avatarURL(playerOf(c))}" alt="">
     <div class="cshade"></div>${newb}
     <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${c.rating}</span></div>
     <div class="cfoot"><div class="cname" style="font-size:${c.name.length >= 7 ? 12 : c.name.length === 6 ? 13.5 : 15}px">${c.name}</div>
@@ -1483,7 +1534,12 @@ function render() {
   $("#pityText").textContent = `传世保底 ${state.pity}/${E.PITY_UR}`;
   KBMeta.updateRecords(state, D);
   $("#titleTag").textContent = KBMeta.titleOf(state);
-  renderShop(); renderPacks(); renderLineup(); renderLeague(); renderDex(); renderMeta();
+  if (curTab === "shop") renderShop();
+  else if (curTab === "packs") renderPacks();
+  else if (curTab === "lineup") renderLineup();
+  else if (curTab === "league") renderLeague();
+  else if (curTab === "dex") renderDex();
+  renderMeta();
   bindDynamic();
   persist();
 }
@@ -1587,6 +1643,8 @@ function renderDex() {
   const ownedIds = new Set(state.cards.map(c => c.pid));
   const paraSet = new Set(state.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant));
   $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480`;
+  const _dexKey = D + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid).join(",") : "0"; }).join(";");
+  if (_dexKey !== dexGridKey) { dexGridKey = _dexKey;
   $("#dexGrid").innerHTML = PLAYERS.map(p => {
     const own = ownedIds.has(p.id);
     if (own) { const mine = state.cards.filter(c => c.pid === p.id); const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
@@ -1594,13 +1652,18 @@ function renderDex() {
     return own ? ""
       : `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
   }).join("");
+  }
   const sorted = [...state.cards].sort((a, b) => {
     if (sortMode === "tier") return E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.rating - a.rating;
     if (sortMode === "value") return S.instanceValue(state, b, D) - S.instanceValue(state, a, D);
     return b.rating - a.rating;
   });
   $("#libCount").textContent = state.cards.length;
-  $("#libGrid").innerHTML = sorted.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${Math.floor(S.instanceValue(state, c, D) * 0.85)} 金</button></div>`).join("");
+  const LIB_CAP = 120;
+  const libShown = libExpanded ? sorted : sorted.slice(0, LIB_CAP);
+  $("#libGrid").innerHTML = libShown.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${Math.floor(S.instanceValue(state, c, D) * 0.85)} 金</button></div>`).join("")
+    + (!libExpanded && sorted.length > LIB_CAP ? `<button class="btn ghost" id="libMoreBtn" style="grid-column:1/-1">显示全部（共 ${sorted.length} 张）</button>` : "");
+  const _mb = $("#libMoreBtn"); if (_mb) _mb.onclick = () => { libExpanded = true; render(); };
   // 行情
   if (state.shopLv >= 5) {
     const board = S.marketBoard(D);
@@ -1678,13 +1741,14 @@ function playReveal(best, done) {
   try { KBAudio.revealRise(tierIdx); } catch (e) {}
   let finished = false; const timers = [];
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-  later(() => { ov.dataset.stage = "2"; if (best.tier !== "传世") { try { KBAudio.fanfare(tierIdx); } catch (e) {} } }, 1050);
-  if (best.tier === "传世") later(() => { ov.dataset.stage = "3"; try { KBAudio.fanfare(4); } catch (e) {} }, 1800);
+  later(() => { ov.dataset.stage = "2"; if (best.tier !== "传世") { try { KBAudio.fanfare(tierIdx); KBAudio.cheer(tierIdx >= 3 ? 2 : 1); } catch (e) {} } else { try { KBAudio.drumRoll(); } catch (e) {} } }, 1050);
+  if (best.tier === "传世") later(() => { ov.dataset.stage = "3"; try { KBAudio.fanfare(4); KBAudio.cheer(3); } catch (e) {} }, 1800);
   later(finish, best.tier === "传世" ? 3300 : 2000);
   function finish() { if (finished) return; finished = true; timers.forEach(clearTimeout); ov.className = ""; ov.onclick = null; done(); }
   ov.onclick = finish;
 }
 function afterDraw(cards, urToast) {
+  try { KBAudio.tear(); } catch (e) {}
   const bestCard = [...cards].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.value - a.value)[0];
   const bestIdx = E.TIERS.indexOf(bestCard.tier);
   if (bestIdx >= 2) { playReveal(bestCard, () => { if (urToast) urToast(); checkPoster(cards); }); }
@@ -1782,7 +1846,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
   document.querySelectorAll(".page").forEach(x => x.classList.remove("on"));
   t.classList.add("on"); $("#page-" + t.dataset.tab).classList.add("on");
-  setBg(t.dataset.tab);
+  setBg(t.dataset.tab); curTab = t.dataset.tab; render();
 });
 $("#bulkSellBtn").onclick = () => {
   const busy = new Set([...(state.display || []), ...Object.values(state.lineup || {})]);
@@ -1808,7 +1872,7 @@ $("#homeBtn").onclick = () => { persist(); renderSlots(); $("#startOv").classLis
 function renderMeta() {
   // 签到与任务（卡店页）
   const d = state.daily;
-  $("#signBtn").textContent = state.lastSignDay === todayStr() ? `已签到（累计 ${state.signTotal} 天）` : "每日签到 +150 金";
+  $("#signBtn").textContent = state.lastSignDay === todayStr() ? `已签到（累计 ${state.signTotal} 天）` : "每日签到 +300 金";
   $("#signBtn").disabled = state.lastSignDay === todayStr();
   const task = (label, cur, goal) => `<span class="taskchip ${cur >= goal ? "done" : ""}">${label} ${Math.min(cur, goal)}/${goal}</span>`;
   $("#dailyTasks").innerHTML = task("开 1 包", d.packs, 1) + task("打 1 场联赛", d.matches, 1) + task("领 1 次挂机", d.idle, 1);
@@ -1830,9 +1894,9 @@ function renderMeta() {
   // 成就（图鉴页）
   $("#achGrid").innerHTML = KBMeta.ACHS.map(a => {
     const done = a.test(state), claimed = !!state.achClaimed[a.id];
-    return `<div class="ach ${done ? "done" : ""}"><b>${a.name}</b><span>💎${a.dia}</span>${claimed ? "<em>已领取</em>" : done ? `<button class="btn achbtn" data-ach="${a.id}">领取</button>` : "<em>未达成</em>"}</div>`;
+    return `<div class="ach ${done ? "done" : ""}"><b>${a.name}</b><span>${a.coins ? `💰${a.coins} · ` : ""}💎${a.dia}</span>${claimed ? "<em>已领取</em>" : done ? `<button class="btn achbtn" data-ach="${a.id}">领取</button>` : "<em>未达成</em>"}</div>`;
   }).join("");
-  document.querySelectorAll("[data-ach]").forEach(b => b.onclick = () => { const r = KBMeta.claimAchievement(state, b.dataset.ach); if (r.ok) { render(); toast(`成就「${r.name}」+${r.dia} 钻石`); } });
+  document.querySelectorAll("[data-ach]").forEach(b => b.onclick = () => { const r = KBMeta.claimAchievement(state, b.dataset.ach); if (r.ok) { render(); toast(`成就「${r.name}」${r.coins ? "+" + r.coins + " 金 · " : ""}+${r.dia} 钻`); } });
   // 套卡
   $("#setGrid").innerHTML = KBMeta.SETS.map(set => {
     const done = set.test(state), claimed = !!state.setsClaimed[set.id];
@@ -1859,9 +1923,10 @@ function claimSet(id) {
   switchTab("packs");
 }
 function setBg(name) { const l = $("#bgLayer"); if (l && typeof KBArt !== "undefined" && KBArt[name]) l.style.backgroundImage = `url(${KBArt[name]})`; }
-function switchTab(name) { setBg(name);
+function switchTab(name) { setBg(name); curTab = name;
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.dataset.tab === name));
   document.querySelectorAll(".page").forEach(x => x.classList.toggle("on", x.id === "page-" + name));
+  render();
 }
 // ----- 广告点位 -----
 function applyAdReward(kind) {
@@ -1879,7 +1944,7 @@ async function adWatch(kind) {
   render();
   toast(granted ? AD_OK_MSG[kind] : "奖励已发放过（幂等拦截）");
 }
-$("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +150 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
+$("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +300 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +200 金 +3 钻"); } else toast(r.reason); };
 $("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +20 钻"); } else toast(r.reason); };
 $("#adFreeBtn").onclick = () => adWatch("free");
@@ -1981,10 +2046,21 @@ render();
 document.addEventListener("pointerdown", () => { try { KBAudio.start(); } catch (e) {} });
 document.addEventListener("click", e => { if (e.target.closest("button") && !e.target.closest("#muteBtn")) { try { KBAudio.click(); } catch (err) {} } });
 const muteBtnEl = document.querySelector("#muteBtn");
+const goSellBtnEl = $("#goSellBtn");
+if (goSellBtnEl) goSellBtnEl.onclick = () => { switchTab("dex"); setTimeout(() => { const el = $("#libGrid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
+const goLibBtnEl = $("#goLibBtn");
+if (goLibBtnEl && goSellBtnEl) goLibBtnEl.onclick = () => goSellBtnEl.onclick();
+const goUrBtnEl = $("#goUrBtn");
+if (goUrBtnEl) goUrBtnEl.onclick = () => { switchTab("packs"); setTimeout(() => { const b = document.querySelector('[data-pack="urbox"]'); const el = b ? b.closest(".pack") : null; if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("packflash"); setTimeout(() => el.classList.remove("packflash"), 1300); } }, 60); };
+const diaPillEl = $("#diaPill");
+if (diaPillEl && goUrBtnEl) diaPillEl.onclick = () => goUrBtnEl.onclick();
+const bulkSell2El = $("#bulkSellBtn2");
+if (bulkSell2El) bulkSell2El.onclick = () => $("#bulkSellBtn").click();
 if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; muteBtnEl.onclick = () => { const md = KBAudio.toggleMute(); muteBtnEl.textContent = md ? "🔇" : "🔊"; }; }
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
+  { v: "新手福利加量", items: ["新手礼包加量：4000 金币 + 80 钻石 + 首发五人组", "签到、每日任务、成就奖励全面上调，前期开包更爽", "卖卡入口更好找：卡店页直达卡库，开完包可一键卖重复", "新 BGM 球场摇滚律动；出史诗以上好卡有欢呼、鼓点和哨声"] },
   { v: "v1.0 首发版", items: ["120 名球员真人海报风肖像卡池，概率全公示、无充值", "平行版全套：银折 / 红折 / 签字 / 球衣卡，叠加限编戳双绝版", "传世保底 240 张（跨日累计）+ 慢揭开包演出（传世带 walkout）", "三档位存档 + 新手大礼包 + 开始页公告", "联赛每日 20 场，联赛广告不限次（纯自愿）", "正式定名《足坛卡王》：足球球星卡 · 开包当卡王；每个页面都有主题背景图"] },
 ];
 function fmtSlotTime(ts) { if (!ts) return ""; const d = new Date(ts); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
@@ -2017,7 +2093,7 @@ function enterSlot(n) {
 }
 function showGiftIfPending() { if (state.giftPending) { $("#giftStage1").style.display = ""; $("#giftStage2").style.display = "none"; $("#giftModal").classList.add("show"); } }
 $("#giftClaimBtn").onclick = () => {
-  state.coins = 1500; state.dia = 40; state.cards = E.starterFive(state); state.giftPending = false;
+  state.coins = 4000; state.dia = 80; state.cards = E.starterFive(state); state.giftPending = false;
   $("#giftStage1").style.display = "none"; $("#giftStage2").style.display = "";
   $("#giftGrid").innerHTML = state.cards.map((c, i) => cardHTML(c, { pop: i, new: true })).join("");
   try { KBAudio.fanfare(2); } catch (e) {}
