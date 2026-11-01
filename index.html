@@ -297,7 +297,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 
 <section class="page on" id="page-shop">
   <div id="shopHero"></div>
-  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页卡库里，行情价 85% 回收</span></div>
+  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页卡库里：开业首日 85%、平时 50% 回收</span></div>
   <h2>我的卡店</h2>
   <p id="shopInfo"></p>
   <div class="row">
@@ -309,7 +309,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页「我的卡库」，每张卡下方有卖出按钮（行情价 85%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页「我的卡库」，每张卡下方有卖出按钮（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
@@ -391,7 +391,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <button class="btn ghost" id="bulkSellBtn">一键卖重复（普通/稀有）</button>
   <button class="btn ghost" id="resetBtn">删档重开</button>
   </div>
-  <p class="hint">点每张卡下方的金色按钮卖出，按行情价 85% 回收金币；卖卡是前期攒金币最快的方式。</p>
+  <p class="hint">点每张卡下方的金色按钮卖出：开业首日 85% 高价回收，平时 50%。首日卖重复卡最划算，别留到明天。</p>
   <div class="grid" id="libGrid"></div>
   <h2>合成炉</h2>
   <div id="synthArea"></div>
@@ -565,11 +565,11 @@ const KBEngine = (() => {
     st.cards = starterFive(st, rng);
     return st;
   }
-  function sellCard(state, uid, valueNow) {
+  function sellCard(state, uid, valueNow, rate) {
     const i = state.cards.findIndex(c => c.uid === uid);
     if (i < 0) return { ok: false };
     const c = state.cards[i];
-    const gain = Math.floor((valueNow !== undefined ? valueNow : c.value) * 0.85);
+    const gain = Math.floor((valueNow !== undefined ? valueNow : c.value) * (rate === undefined ? 0.5 : rate));
     state.cards.splice(i, 1);
     state.display = state.display.filter(u => u !== uid);
     for (const pos of Object.keys(state.lineup || {})) if (state.lineup[pos] === uid) state.lineup[pos] = null;
@@ -1429,7 +1429,7 @@ const KBArt = {
 const SHOP_NAMES = { 1: "街角小卡摊", 2: "巷口卡店", 3: "球迷卡吧", 4: "城西卡馆", 5: "金字招牌卡馆", 6: "全市闻名的卡馆", 7: "卡界旗舰店", 8: "藏家圣地", 9: "传奇卡馆", 10: "卡王殿堂" };
 const TIER_COLOR = { "普通": "#9aa3ad", "稀有": "#4da3ff", "史诗": "#b678ff", "传说": "#ffb02e", "传世": "#ff4d5e" };
 const S = KBSystems, E = KBEngine;
-function freshState() { const st = E.newSave(); st.coins = 0; st.dia = 0; st.cards = []; st.uid = 1; st.giftPending = true; return st; }
+function freshState() { const st = E.newSave(); st.coins = 0; st.dia = 0; st.cards = []; st.uid = 1; st.giftPending = true; st.startDay = S.todayIndex(); return st; }
 let state = KBSave.load();
 let curTab = "shop";
 let libExpanded = false;
@@ -1437,6 +1437,9 @@ let dexGridKey = "";
 if (!state) { state = freshState(); }
 const D = S.todayIndex();
 state.dayIndex = D;
+if (state.startDay === undefined) state.startDay = D;
+function sellRate() { return state.startDay === D ? 0.85 : 0.5; }
+function sellPrice(c) { return Math.floor(S.instanceValue(state, c, D) * sellRate()); }
 if (state.matchDay !== String(D)) { state.matchesLeft = 20; state.matchDay = String(D); }
 if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
 // M3 每日/每周/广告日计数重置
@@ -1661,7 +1664,7 @@ function renderDex() {
   $("#libCount").textContent = state.cards.length;
   const LIB_CAP = 120;
   const libShown = libExpanded ? sorted : sorted.slice(0, LIB_CAP);
-  $("#libGrid").innerHTML = libShown.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${Math.floor(S.instanceValue(state, c, D) * 0.85)} 金</button></div>`).join("")
+  $("#libGrid").innerHTML = libShown.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${sellPrice(c)} 金</button></div>`).join("")
     + (!libExpanded && sorted.length > LIB_CAP ? `<button class="btn ghost" id="libMoreBtn" style="grid-column:1/-1">显示全部（共 ${sorted.length} 张）</button>` : "");
   const _mb = $("#libMoreBtn"); if (_mb) _mb.onclick = () => { libExpanded = true; render(); };
   // 行情
@@ -1690,7 +1693,7 @@ function bindDynamic() {
     const c = state.cards.find(x => x.uid === uid);
     const val = S.instanceValue(state, c, D);
     if ((c.tier === "传世" || c.stamp === "/1") && !confirm(`这张是${c.tier}${c.stamp !== "无编" ? " " + c.stamp : ""}，确定要卖掉？`)) return;
-    const r = E.sellCard(state, uid, val);
+    const r = E.sellCard(state, uid, val, sellRate());
     if (r.ok) { render(); toast(`卖出 ${r.card.name}，+${r.gain} 金币`); }
   });
   document.querySelectorAll("[data-slot]").forEach(el => el.onclick = () => { pickSlot = +el.dataset.slot; render(); });
@@ -1854,7 +1857,7 @@ $("#bulkSellBtn").onclick = () => {
   const sorted = [...state.cards].sort((a, b) => S.instanceValue(state, b, D) - S.instanceValue(state, a, D));
   for (const c of sorted) { if (seenPid.has(c.pid)) { if ((c.tier === "普通" || c.tier === "稀有") && !busy.has(c.uid)) sell.push(c); } else seenPid.add(c.pid); }
   if (!sell.length) { toast("没有可卖的重复普通/稀有卡"); return; }
-  const gain = sell.reduce((s, c) => s + Math.floor(S.instanceValue(state, c, D) * 0.85), 0);
+  const gain = sell.reduce((s, c) => s + sellPrice(c), 0);
   if (!confirm(`出售 ${sell.length} 张重复卡（普通/稀有，阵容与展示中的不动），得 ${gain} 金币？`)) return;
   const ids = new Set(sell.map(c => c.uid));
   state.cards = state.cards.filter(c => !ids.has(c.uid));
@@ -2060,7 +2063,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "新手福利加量", items: ["新手礼包加量：4000 金币 + 80 钻石 + 首发五人组", "签到、每日任务、成就奖励全面上调，前期开包更爽", "卖卡入口更好找：卡店页直达卡库，开完包可一键卖重复", "新 BGM 球场摇滚律动；出史诗以上好卡有欢呼、鼓点和哨声"] },
+  { v: "新手福利加量", items: ["新手礼包加量：4000 金币 + 80 钻石 + 首发五人组", "签到、每日任务、成就奖励全面上调，前期开包更爽", "卖卡入口更好找：卡店页直达卡库，开完包可一键卖重复", "新 BGM 球场摇滚律动；出史诗以上好卡有欢呼、鼓点和哨声", "卖卡回收改版：开业首日 85% 高价回收，平时 50%——首日卖重复卡最划算"] },
   { v: "v1.0 首发版", items: ["120 名球员真人海报风肖像卡池，概率全公示、无充值", "平行版全套：银折 / 红折 / 签字 / 球衣卡，叠加限编戳双绝版", "传世保底 240 张（跨日累计）+ 慢揭开包演出（传世带 walkout）", "三档位存档 + 新手大礼包 + 开始页公告", "联赛每日 20 场，联赛广告不限次（纯自愿）", "正式定名《足坛卡王》：足球球星卡 · 开包当卡王；每个页面都有主题背景图"] },
 ];
 function fmtSlotTime(ts) { if (!ts) return ""; const d = new Date(ts); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
