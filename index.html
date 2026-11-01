@@ -150,6 +150,29 @@ nav { position: sticky; top: 57px; z-index: 39; background: rgba(16,19,25,.82); 
 .slot { border-radius: 14px; background: linear-gradient(180deg, #242b36, #1b2029); }
 .chip, .taskchip { backdrop-filter: blur(3px); }
 details { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 8px 10px; }
+
+/* ===== 竞品借鉴 v5：保底余量 + 慢揭演出 + 结果墙 ===== */
+.pityline { margin: 10px 2px 0; font-size: 13px; color: #ffd257; }
+#revealOv { position: fixed; inset: 0; z-index: 200; display: none; background: radial-gradient(600px 420px at 50% 38%, color-mix(in srgb, var(--rc, #b26bff) 34%, transparent), rgba(5,6,9,.97) 72%); align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+#revealOv.show { display: flex; }
+#revealOv.t2 { --rc: #b26bff; } #revealOv.t3 { --rc: #ffb02e; } #revealOv.t4 { --rc: #ff4d5e; }
+#revealOv::before { content: ""; position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--rc) 26%, transparent) 18deg, transparent 40deg, transparent 180deg, color-mix(in srgb, var(--rc) 18%, transparent) 200deg, transparent 225deg); animation: rvsweep 2.6s linear infinite; }
+@keyframes rvsweep { to { transform: rotate(360deg); } }
+#revealOv .rv-pos { position: relative; font-size: 30px; font-weight: 800; color: var(--rc); letter-spacing: 6px; opacity: 0; transform: translateY(8px); transition: all .3s; }
+#revealOv .rv-rating { position: relative; font-size: 92px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 34px var(--rc); opacity: 0; transform: scale(.8); transition: all .35s; }
+#revealOv[data-stage="1"] .rv-pos, #revealOv[data-stage="2"] .rv-pos, #revealOv[data-stage="3"] .rv-pos,
+#revealOv[data-stage="1"] .rv-rating, #revealOv[data-stage="2"] .rv-rating, #revealOv[data-stage="3"] .rv-rating { opacity: 1; transform: none; }
+#revealOv .rv-tier { position: relative; font-size: 44px; font-weight: 900; color: var(--rc); letter-spacing: 10px; margin-top: 10px; opacity: 0; transform: scale(1.6); transition: all .3s; text-shadow: 0 0 26px var(--rc); }
+#revealOv[data-stage="2"] .rv-tier, #revealOv[data-stage="3"] .rv-tier { opacity: 1; transform: none; }
+#revealOv .rv-img { position: relative; width: 176px; height: 232px; object-fit: cover; object-position: 50% 12%; border-radius: 14px; margin-top: 14px; opacity: 0; box-shadow: 0 0 0 3px var(--rc), 0 18px 50px rgba(0,0,0,.6); }
+#revealOv[data-stage="3"] .rv-img { animation: walkin .6s ease both, unshadow .45s ease .62s both; }
+@keyframes walkin { from { opacity: 1; transform: translateX(-56px); filter: brightness(.14) contrast(1.3) saturate(.35); } to { opacity: 1; transform: none; filter: brightness(.14) contrast(1.3) saturate(.35); } }
+@keyframes unshadow { 0% { filter: brightness(.14) contrast(1.3) saturate(.35); } 35% { filter: brightness(1.7) saturate(1.2); } 100% { filter: none; } }
+#revealOv .rv-name { position: relative; font-size: 26px; font-weight: 800; color: #fff; margin-top: 12px; opacity: 0; transition: opacity .3s .95s; }
+#revealOv[data-stage="3"] .rv-name { opacity: 1; }
+#revealOv .rv-skip { position: absolute; bottom: calc(26px + var(--safe-top)); font-size: 12px; color: #8b95a3; }
+#drawGrid .card.bestInPack { animation: bestpulse 1.1s ease-in-out infinite alternate; }
+@keyframes bestpulse { from { box-shadow: inset 0 0 0 2px var(--tc), 0 0 10px -2px var(--tc); } to { box-shadow: inset 0 0 0 2px var(--tc), 0 0 24px 2px var(--tc); } }
 footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8; }
 .titletag { font-size: 12px; color: #ffd257; border: 1px solid #ffd257; border-radius: 999px; padding: 2px 8px; letter-spacing: 0; }
 .taskchip { background: #1d2129; border: 1px solid #3a4150; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
@@ -217,6 +240,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <div class="pack"><h3>传世箱</h3><p>3 张 · 传世 4%/张<br>无普通档 · 保底 1 张史诗+</p><button data-pack="urbox">40 钻石</button></div>
     <div class="pack"><h3>名宿系列包</h3><p>5 张 · 高级包概率<br>传说/传世必为名宿</p><button id="legendPackBtn">1800 金币</button></div>
   </div>
+  <p id="pityLine" class="pityline"></p>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
     <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
@@ -1183,6 +1207,7 @@ const KBAudio = (() => {
     error() { if (!ac()) return; const t = now(); tone(170, t, 0.14, "square", 0.06); },
     win() { if (!ac()) return; const t = now(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, t + i * 0.09, 0.22, "triangle", 0.10)); },
     lose() { if (!ac()) return; const t = now(); [392, 329.63, 261.63].forEach((f, i) => tone(f, t + i * 0.11, 0.2, "triangle", 0.08)); },
+    revealRise(tierIdx) { if (!ac()) return; const t = now(); tone(280, t, 1.0, "sine", 0.055, sfxBus, 880); tone(140, t, 1.0, "triangle", 0.05, sfxBus, 440); if (tierIdx >= 3) { tone(1560, t + 0.55, 0.4, "sine", 0.03); tone(2093, t + 0.8, 0.35, "sine", 0.025); } },
     fanfare(tierIdx) { // tierIdx: 0 普通 … 4 传世，档位越高越华丽
       if (!ac()) return; const t = now();
       const base = [523.25, 659.25, 783.99];
@@ -1360,7 +1385,10 @@ function renderPacks() {
   document.querySelector('[data-pack="urbox"]').textContent = state.shopLv < 4 ? "卡店 Lv.4 解锁" : "40 钻石";
   $("#legendPackBtn").disabled = state.shopLv < 7;
   $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "1800 金币";
-  $("#drawGrid").innerHTML = lastDraw.map((c, i) => cardHTML(c, { pop: i })).join("");
+  const pl = $("#pityLine"); if (pl) pl.textContent = `🎯 传世保底：还差 ${240 - state.pity} 张必出传世（已累计 ${state.pity}/240） · 高级包传说保底进度 ${state.hjNoLegend}/10`;
+  const wall = [...lastDraw].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.value - a.value);
+  $("#drawGrid").innerHTML = wall.map((c, i) => cardHTML(c, { pop: i })).join("");
+  if (wall.length && E.TIERS.indexOf(wall[0].tier) >= 2) { const first = document.querySelector("#drawGrid .card"); if (first) first.classList.add("bestInPack"); }
   const best = lastDraw.some(c => c.stamp === "/1") ? "one" : lastDraw.some(c => c.tier === "传世") ? "ur" : lastDraw.some(c => c.tier === "传说") ? "legend" : "";
   if (best) { const f = $("#flash"); f.className = "go " + best; setTimeout(() => f.className = "", 480); }
 }
@@ -1478,6 +1506,35 @@ function bindDynamic() {
     else toast(r.reason);
   });
 }
+// ---------- 开包慢揭演出（史诗+触发，传世带剪影 walkout；点击跳过） ----------
+function playReveal(best, done) {
+  const ov = $("#revealOv");
+  if (!ov) { done(); return; }
+  const tierIdx = E.TIERS.indexOf(best.tier);
+  ov.className = "show t" + tierIdx;
+  ov.dataset.stage = "1";
+  ov.querySelector(".rv-pos").textContent = best.pos + " · " + (best.series === "名宿" ? "名宿" : "现役");
+  ov.querySelector(".rv-rating").textContent = best.rating;
+  ov.querySelector(".rv-tier").textContent = best.tier + "！";
+  ov.querySelector(".rv-name").textContent = best.name + (best.stamp !== "无编" ? " " + best.stamp : "") + (best.variant && best.variant !== "base" ? " · " + best.variant : "");
+  const img = ov.querySelector(".rv-img");
+  img.src = (typeof PORTRAITS !== "undefined" && PORTRAITS[best.pid]) ? PORTRAITS[best.pid] : avatarURL(playerOf(best));
+  try { KBAudio.revealRise(tierIdx); } catch (e) {}
+  let finished = false; const timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  later(() => { ov.dataset.stage = "2"; if (best.tier !== "传世") { try { KBAudio.fanfare(tierIdx); } catch (e) {} } }, 1050);
+  if (best.tier === "传世") later(() => { ov.dataset.stage = "3"; try { KBAudio.fanfare(4); } catch (e) {} }, 1800);
+  later(finish, best.tier === "传世" ? 3300 : 2000);
+  function finish() { if (finished) return; finished = true; timers.forEach(clearTimeout); ov.className = ""; ov.onclick = null; done(); }
+  ov.onclick = finish;
+}
+function afterDraw(cards, urToast) {
+  const bestCard = [...cards].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.value - a.value)[0];
+  const bestIdx = E.TIERS.indexOf(bestCard.tier);
+  if (bestIdx >= 2) { playReveal(bestCard, () => { if (urToast) urToast(); checkPoster(cards); }); }
+  else { try { KBAudio.fanfare(bestIdx); } catch (e) {} if (urToast) urToast(); checkPoster(cards); }
+}
+
 // ---------- 静态绑定 ----------
 function doOpen(key, free) {
   const res = E.openPack(state, key, Math.random, free ? { free: true } : undefined);
@@ -1485,10 +1542,9 @@ function doOpen(key, free) {
   if (free) state.freeDay = todayStr();
   for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
   state.daily.packs++;
-  lastDraw = res.cards; render(); checkPoster(res.cards);
+  lastDraw = res.cards; render();
   const ur = res.cards.find(c => c.tier === "传世");
-  if (ur) toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`);
-  try { KBAudio.fanfare(Math.max(...res.cards.map(c => E.TIERS.indexOf(c.tier)))); } catch (e) {}
+  afterDraw(res.cards, ur ? () => toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`) : null);
   document.querySelectorAll("#drawGrid .card").forEach((el, i) => { el.style.animationDelay = (i * 0.12) + "s"; el.classList.add("flip"); });
 }
 document.querySelectorAll("[data-pack]").forEach(b => b.onclick = () => doOpen(b.dataset.pack, false));
@@ -1497,7 +1553,7 @@ $("#legendPackBtn").onclick = () => {
   if (!res.ok) { toast(res.reason); return; }
   for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
   state.daily.packs++;
-  lastDraw = res.cards; render(); checkPoster(res.cards); toast("名宿系列包已开"); try { KBAudio.fanfare(Math.max(...res.cards.map(c => E.TIERS.indexOf(c.tier)))); } catch (e) {}
+  lastDraw = res.cards; render(); toast("名宿系列包已开"); afterDraw(res.cards, null);
 };
 $("#freeBtn").onclick = () => doOpen("normal", true);
 $("#claimBtn").onclick = () => { const g = S.claimIdle(state); if (g > 0) { state.daily.idle = 1; try { KBAudio.coin(); } catch (e) {} } render(); toast(g > 0 ? `领取挂机收益 +${g} 金币` : "暂无可领取收益"); };
@@ -1757,5 +1813,6 @@ const muteBtnEl = document.querySelector("#muteBtn");
 if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; muteBtnEl.onclick = () => { const md = KBAudio.toggleMute(); muteBtnEl.textContent = md ? "🔇" : "🔊"; }; }
 
 </script>
+<div id="revealOv"><div class="rv-pos"></div><div class="rv-rating"></div><div class="rv-tier"></div><img class="rv-img" alt=""><div class="rv-name"></div><div class="rv-skip">点击任意处跳过</div></div>
 </body>
 </html>
