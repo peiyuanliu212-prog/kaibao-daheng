@@ -976,7 +976,7 @@ const KBPlatform = (() => {
   async function shareCard(title, text) {
     const cb = CB();
     if (!cb || !cb.social || typeof cb.social.share !== "function") return { ok: false, message: "请在虎扑 App 内使用分享" };
-    try { await cb.social.share({ title, link: "https://peiyuanliu212-prog.github.io/kaibao-daheng/", text: text || "" }); return { ok: true }; }
+    try { await cb.social.share({ title, link: window.location.href, text: text || "" }); return { ok: true }; }
     catch (e) { return { ok: false, message: (e && e.message) || "分享失败" }; }
   }
   function desktopAvailable() { const cb = CB(); return !!cb && typeof cb.addToDesktop === "function"; }
