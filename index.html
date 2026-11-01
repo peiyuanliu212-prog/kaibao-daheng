@@ -206,7 +206,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <button class="btn ghost" id="play5Btn">⏩ 快速 ×5</button>
     <button class="btn ghost" id="adLeagueBtn">📺 广告 +10 场</button>
     <button class="btn" id="weekBtn" style="display:none">领取周结算</button>
-    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 20 场，场次用完可看广告 +10 场（每天 2 次）。</span>
+    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 20 场，场次用完可看广告 +10 场（不限次）。</span>
   </div>
   <div id="matchResult"></div>
 </section>
@@ -809,7 +809,7 @@ const KBTrack = (() => {
 // 重载后凭平台任务状态 = completed 才补发（30 分钟内有效），核对不上不发。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { free: 1, double: 3, dia: 2, league: 2, urdraw: 1 }; // 游戏侧点位日限（C2 案+重度玩家修正：联赛 2 次×+10 场、双倍 3、钻石 2），合计封顶 12
+  const LIMITS = { free: 1, double: 3, dia: 2, league: Infinity, urdraw: 1 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   function vatask() {
@@ -821,10 +821,11 @@ const KBAds = (() => {
   }
   function isNative() { return !!vatask(); }
   function todayCount(state) { return Object.values(state.adDay.counts).reduce((s, n) => s + n, 0); }
+  function capCount(state) { return todayCount(state) - (state.adDay.counts.league || 0); } // 总限额计数不含联赛（不限次）
   function canWatch(state, kind) {
     if (state.adLocked) return { ok: false, reason: "今日广告奖励已领完（平台返回）" };
     if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
-    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 12" };
+    if (kind !== "league" && capCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 12" };
     return { ok: true };
   }
   function simulatedWatch() {
@@ -899,7 +900,7 @@ const KBAds = (() => {
     } catch (e) {}
     return null;
   }
-  return { LIMITS, TOTAL_CAP, isNative, canWatch, watch, grant, recoverPending, todayCount };
+  return { LIMITS, TOTAL_CAP, isNative, canWatch, watch, grant, recoverPending, todayCount, capCount };
 })();
 if (typeof module !== "undefined") module.exports = KBAds;
 
@@ -1424,9 +1425,9 @@ function renderMeta() {
   $("#adDoubleBtn").disabled = cnt("double") >= 3 || Math.floor(state.idlePending || 0) <= 0;
   $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/3）`;
   $("#adDiaBtn").disabled = cnt("dia") >= 1;
-  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 2);
+  $("#adLeagueBtn").disabled = state.matchesLeft > 0;
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
-  $("#adTotal").textContent = `今日广告 ${KBAds.todayCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）`;
+  $("#adTotal").textContent = `今日广告 ${KBAds.capCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）· 联赛广告不限次`;
   // 成就（图鉴页）
   $("#achGrid").innerHTML = KBMeta.ACHS.map(a => {
     const done = a.test(state), claimed = !!state.achClaimed[a.id];
