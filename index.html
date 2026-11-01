@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>开包大亨</title>
+<style>
+:root { --safe-top: 0px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #14171d; color: #e8ebef; padding-top: var(--safe-top); }
+header { padding: 14px 16px 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+h1 { font-size: 20px; letter-spacing: 2px; }
+h1 small { font-size: 11px; color: #8b95a3; letter-spacing: 0; }
+.wallet { margin-left: auto; display: flex; gap: 14px; font-size: 15px; }
+.wallet b { color: #ffd257; } .wallet .d b { color: #7dd7ff; }
+.pitybar { margin: 4px 16px 10px; background: #232833; border-radius: 8px; height: 20px; position: relative; overflow: hidden; }
+.pitybar #pityFill { background: linear-gradient(90deg, #ff8a5c, #ff4d5e); height: 100%; width: 0; transition: width .4s; }
+.pitybar span { position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 20px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+nav { display: flex; gap: 4px; padding: 0 8px; }
+.tab { flex: 1; padding: 9px 0; text-align: center; background: #232833; border: none; border-radius: 10px 10px 0 0; color: #aeb6c2; font-size: 14px; cursor: pointer; }
+.tab.on { background: #2c333f; color: #fff; font-weight: 700; }
+.page { display: none; background: #2c333f; margin: 0 8px 16px; border-radius: 0 0 12px 12px; padding: 14px 10px 20px; min-height: 60vh; }
+.page.on { display: block; }
+.packs { display: flex; gap: 10px; flex-wrap: wrap; }
+.pack { flex: 1; min-width: 100px; background: #1d2129; border: 1px solid #3a4150; border-radius: 12px; padding: 12px; text-align: center; }
+.pack h3 { font-size: 16px; margin-bottom: 4px; }
+.pack p { font-size: 12px; color: #8b95a3; min-height: 30px; }
+.pack button, .btn { background: #ffb02e; border: none; color: #221a08; font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.pack button:disabled, .btn:disabled { background: #565f6d; color: #cfd6df; cursor: default; }
+.btn.ghost { background: #3a4150; color: #e8ebef; }
+.grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.card { width: 104px; background: linear-gradient(180deg, #20242e, #171a21); border: 2px solid var(--tc); border-radius: 12px; padding: 8px; text-align: center; position: relative; }
+.card.flip { animation: flip .45s both; }
+@keyframes flip { from { transform: rotateY(90deg); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
+.card.ghost { border-color: #3a4150; opacity: .55; }
+.ghostav { width: 56px; height: 56px; border-radius: 8px; background: #11141a; margin: 0 auto; }
+.chead { display: flex; justify-content: space-between; font-weight: 700; }
+.chead .pos { color: var(--tc); font-size: 12px; }
+.chead .rating { font-size: 17px; }
+.avatar { width: 56px; height: 56px; border-radius: 8px; image-rendering: pixelated; }
+.cname { font-size: 15px; font-weight: 700; margin-top: 2px; }
+.ctier { font-size: 12px; color: var(--tc); }
+.cval { font-size: 12px; color: #ffd257; }
+.stamp { position: absolute; top: 26px; right: -6px; background: #ff4d5e; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; transform: rotate(12deg); }
+.hot { display: inline-block; margin-top: 3px; font-size: 10px; color: #ffb02e; border: 1px solid #ffb02e; border-radius: 4px; padding: 0 4px; }
+.sell { margin-top: 6px; width: 100%; background: #3a4150; color: #ffd257; border: none; border-radius: 6px; padding: 5px 0; cursor: pointer; font-size: 12px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+select { background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-radius: 6px; padding: 6px; }
+.hint { color: #8b95a3; font-size: 13px; line-height: 1.7; }
+.slot { width: 118px; min-height: 150px; background: #1d2129; border: 1px dashed #3a4150; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 4px; }
+.slot.filled { border-style: solid; cursor: default; flex-direction: column; }
+.slot .empty { color: #69707c; font-size: 14px; }
+.slot .card { width: 104px; }
+.postag { font-size: 12px; color: #ffd257; margin-bottom: 4px; }
+.capbtn { margin-top: 6px; font-size: 12px; padding: 5px 8px; }
+.pickable { cursor: pointer; } .pickable:hover { outline: 2px solid #ffb02e; border-radius: 12px; }
+.cols { display: flex; gap: 16px; flex-wrap: wrap; } .cols > div { flex: 1; min-width: 150px; }
+h2 { font-size: 16px; margin: 14px 0 6px; } h2:first-child { margin-top: 0; }
+#toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: #ffb02e; color: #221a08; font-weight: 700; padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: all .3s; max-width: 90vw; text-align: center; z-index: 9; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8; }
+.titletag { font-size: 12px; color: #ffd257; border: 1px solid #ffd257; border-radius: 999px; padding: 2px 8px; letter-spacing: 0; }
+.taskchip { background: #1d2129; border: 1px solid #3a4150; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+.taskchip.done { border-color: #4ade80; color: #4ade80; }
+.achgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.ach { background: #1d2129; border: 1px solid #3a4150; border-radius: 10px; padding: 8px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ach.done { border-color: #ffb02e; }
+.ach em { color: #8b95a3; font-style: normal; font-size: 12px; }
+.achbtn { padding: 4px 10px; font-size: 12px; }
+.reportline { color: #ffd257; font-size: 14px; margin-bottom: 6px; }
+textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-radius: 8px; padding: 8px; font-size: 12px; }
+#posterModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 50; }
+#posterModal.show { display: flex; }
+.posterbox { text-align: center; max-width: 92vw; }
+.posterbox img { width: min(340px, 86vw); border-radius: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>开包大亨 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span></h1>
+  <div class="wallet"><span>🪙 <b id="coins">0</b> 金币</span><span class="d">💎 <b id="dia">0</b> 钻石</span></div>
+</header>
+<div class="pitybar"><div id="pityFill"></div><span id="pityText"></span></div>
+<nav>
+  <button class="tab on" data-tab="shop">卡店</button>
+  <button class="tab" data-tab="packs">开包</button>
+  <button class="tab" data-tab="lineup">阵容</button>
+  <button class="tab" data-tab="league">联赛</button>
+  <button class="tab" data-tab="dex">图鉴</button>
+</nav>
+
+<section class="page on" id="page-shop">
+  <h2>我的卡店</h2>
+  <p id="shopInfo"></p>
+  <div class="row">
+    <span>待领挂机收益：<b id="idlePending" style="color:#ffd257">0</b> 金币</span>
+    <button class="btn" id="claimBtn">领取</button>
+    <button class="btn ghost" id="upgradeBtn">升级</button>
+    <button class="btn ghost" id="autoDispBtn">自动摆最佳</button>
+  </div>
+  <h2>展示柜（点空位选卡上柜）</h2>
+  <div class="grid" id="cabinet"></div>
+  <div id="pickArea"></div>
+  <h2>今日收藏家委托</h2>
+  <div id="commArea"></div>
+  <h2>签到与任务</h2>
+  <div class="row"><button class="btn" id="signBtn">每日签到</button><span id="adTotal" class="hint"></span></div>
+  <div class="row" id="dailyTasks"></div>
+  <div class="row"><button class="btn ghost" id="dailyClaim">领取每日任务奖励</button><button class="btn ghost" id="adDoubleBtn">广告双倍领取</button><button class="btn ghost" id="adDiaBtn">📺 钻石小包 +10 钻</button></div>
+  <div class="row" id="weeklyTasks"></div>
+  <div class="row"><button class="btn ghost" id="weeklyClaim">领取每周任务奖励</button></div>
+  <h2>存档码（防丢档）</h2>
+  <p class="hint">导出后请把存档码复制到安全的地方；换设备/清缓存后粘贴回来导入（含保底计数、委托与广告日限状态）。</p>
+  <textarea id="codeBox" rows="3" placeholder="存档码将生成在这里，或把已有存档码粘贴到这里"></textarea>
+  <div class="row"><button class="btn ghost" id="exportBtn">导出存档码</button><button class="btn ghost" id="importBtn">导入存档码</button></div>
+</section>
+
+<section class="page" id="page-packs">
+  <div class="packs">
+    <div class="pack"><h3>普通包</h3><p>5 张 · 传世 0.3%/张<br>普通62 稀有26 史诗9 传说2.7</p><button data-pack="normal">400 金币</button></div>
+    <div class="pack"><h3>高级包</h3><p>5 张 · 传世 0.9%/张<br>连 10 包无传说+ 保底传说</p><button data-pack="premium">1400 金币</button></div>
+    <div class="pack"><h3>传世箱</h3><p>3 张 · 传世 4%/张<br>无普通档 · 保底 1 张史诗+</p><button data-pack="urbox">40 钻石</button></div>
+    <div class="pack"><h3>名宿系列包</h3><p>5 张 · 高级包概率<br>传说/传世必为名宿</p><button id="legendPackBtn">1800 金币</button></div>
+  </div>
+  <div class="row">
+    <button class="btn" id="freeBtn">领今日免费包</button>
+    <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
+    <button class="btn ghost" id="adUrBtn">📺 传世箱体验抽（助力）</button>
+    <span class="hint">保底：第 240 张必出传世（跨日累计）；每包至少覆盖 3 个位置（传世箱 2 个）。</span>
+  </div>
+  <div class="grid" id="drawGrid"></div>
+</section>
+
+<section class="page" id="page-lineup">
+  <h2>我的阵容（5 人制）</h2>
+  <p id="powerInfo"></p>
+  <div class="grid" id="lineupGrid"></div>
+  <div class="row">
+    <label>战术 <select id="tacticSel"><option>全力进攻</option><option>控球推进</option><option>防守反击</option></select></label>
+    <span class="hint">进攻克控球、控球克防守、防守克进攻：克制 +15、被克 −10。</span>
+    <button class="btn ghost" id="autoLineupBtn">自动组队</button>
+  </div>
+  <div class="row">
+    <span>换人：</span>
+    <button class="btn ghost" data-pospick="GK">门将</button>
+    <button class="btn ghost" data-pospick="DF">后卫</button>
+    <button class="btn ghost" data-pospick="MF">中场</button>
+    <button class="btn ghost" data-pospick="WG">边锋</button>
+    <button class="btn ghost" data-pospick="ST">中锋</button>
+  </div>
+  <div id="lineupPick"></div>
+</section>
+
+<section class="page" id="page-league">
+  <h2>联赛</h2>
+  <p id="leagueInfo"></p>
+  <div class="row">
+    <button class="btn" id="playBtn">⚽ 开赛一场</button>
+    <button class="btn ghost" id="adLeagueBtn">📺 广告 +3 场</button>
+    <button class="btn" id="weekBtn" style="display:none">领取周结算</button>
+    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 5 场。</span>
+  </div>
+  <div id="matchResult"></div>
+</section>
+
+<section class="page" id="page-dex">
+  <h2>图鉴</h2>
+  <p id="dexInfo"></p>
+  <div class="grid" id="dexGrid"></div>
+  <h2>我的卡库（<span id="libCount">0</span> 张）</h2>
+  <div class="row">
+    <label>排序 <select id="sortSel"><option value="tier">稀有度</option><option value="rating">评分</option><option value="value">身价（行情）</option></select></label>
+    <button class="btn ghost" id="resetBtn">删档重开</button>
+  </div>
+  <div class="grid" id="libGrid"></div>
+  <h2>合成炉</h2>
+  <div id="synthArea"></div>
+  <h2>套卡</h2>
+  <div id="setGrid" class="achgrid"></div>
+  <h2>成就</h2>
+  <p class="hint" id="recordsLine"></p>
+  <div id="achGrid" class="achgrid"></div>
+  <h2>今日行情（A 股口径：红涨绿跌）</h2>
+  <p class="hint" id="mktHot"></p>
+  <div class="cols"><div><b>涨幅榜</b><div id="mktGain"></div></div><div><b>跌幅榜</b><div id="mktLose"></div></div></div>
+</section>
+
+<footer>
+  评分由制作组按「现役看近两年表现、名宿看巅峰能力与历史地位」拟定，属游戏内设计数值（版本 v0.2），不代表任何官方评价。本游戏无任何充值入口，广告纯自愿、不看也能完整游玩。
+</footer>
+<div id="toast"></div>
+<div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><button class="btn" id="posterClose">关闭</button></div></div>
+<script>
+// ===== players.js =====
+// Generated from 卡池v0.2.csv (FROZEN v0.2 + errata 2026-11-01: 孙兴慜换恩凯提亚) - do not edit by hand
+const PLAYERS = [{"id": 1, "name": "雅辛", "pos": "GK", "tier": "传世", "rating": 94, "series": "名宿", "tag": "金球门将"}, {"id": 2, "name": "布冯", "pos": "GK", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 3, "name": "库尔图瓦", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 4, "name": "多纳鲁马", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 5, "name": "阿利松", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 6, "name": "奥布拉克", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 7, "name": "索默", "pos": "GK", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 8, "name": "拉亚", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 9, "name": "马马尔达什维利", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 10, "name": "迪奥戈·科斯塔", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 11, "name": "乌奈·西蒙", "pos": "GK", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 12, "name": "特拉普", "pos": "GK", "tier": "史诗", "rating": 85, "series": "现役", "tag": ""}, {"id": 13, "name": "斯维拉尔", "pos": "GK", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 14, "name": "奥纳纳", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 15, "name": "皮克福德", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 16, "name": "凯帕", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 17, "name": "拉姆斯代尔", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 18, "name": "罗伯特·桑切斯", "pos": "GK", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 19, "name": "马特·瑞安", "pos": "GK", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 20, "name": "铃木彩艳", "pos": "GK", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 21, "name": "王大雷", "pos": "GK", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 22, "name": "颜骏凌", "pos": "GK", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 23, "name": "韩佳奇", "pos": "GK", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 24, "name": "鲍亚雄", "pos": "GK", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}, {"id": 25, "name": "贝肯鲍尔", "pos": "DF", "tier": "传世", "rating": 95, "series": "名宿", "tag": "足球皇帝"}, {"id": 26, "name": "马尔蒂尼", "pos": "DF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 27, "name": "拉莫斯", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 28, "name": "卡纳瓦罗", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 29, "name": "范戴克", "pos": "DF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 30, "name": "鲁本·迪亚斯", "pos": "DF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 31, "name": "萨利巴", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 32, "name": "巴斯托尼", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 33, "name": "加布里埃尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 34, "name": "格瓦迪奥尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 35, "name": "孔德", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 36, "name": "金玟哉", "pos": "DF", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 37, "name": "什克里尼亚尔", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 38, "name": "卢卡斯·埃尔南德斯", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 39, "name": "富安健洋", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 40, "name": "阿坎吉", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 41, "name": "托莫里", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 42, "name": "板仓滉", "pos": "DF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 43, "name": "吉田麻也", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 44, "name": "朴志洙", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 45, "name": "蒋光太", "pos": "DF", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 46, "name": "蒋圣龙", "pos": "DF", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 47, "name": "朱辰杰", "pos": "DF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 48, "name": "刘洋", "pos": "DF", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 49, "name": "马拉多纳", "pos": "MF", "tier": "传世", "rating": 96, "series": "名宿", "tag": "球王"}, {"id": 50, "name": "齐达内", "pos": "MF", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 51, "name": "伊涅斯塔", "pos": "MF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 52, "name": "罗德里", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 53, "name": "卡卡", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 54, "name": "哈维", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 55, "name": "莫德里奇", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 56, "name": "德布劳内", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 57, "name": "贝林厄姆", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 58, "name": "穆西亚拉", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 59, "name": "皮尔洛", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 60, "name": "克罗斯", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 61, "name": "维尔茨", "pos": "MF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 62, "name": "佩德里", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 63, "name": "维蒂尼亚", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 64, "name": "麦卡利斯特", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 65, "name": "巴雷拉", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 66, "name": "恰尔汗奥卢", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 67, "name": "恩佐·费尔南德斯", "pos": "MF", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 68, "name": "京多安", "pos": "MF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 69, "name": "卡塞米罗", "pos": "MF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 70, "name": "若日尼奥", "pos": "MF", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 71, "name": "南野拓实", "pos": "MF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 72, "name": "吴曦", "pos": "MF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 73, "name": "梅西", "pos": "WG", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 74, "name": "罗纳尔迪尼奥", "pos": "WG", "tier": "传世", "rating": 94, "series": "名宿", "tag": "足球精灵"}, {"id": 75, "name": "亨利", "pos": "WG", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 76, "name": "姆巴佩", "pos": "WG", "tier": "传说", "rating": 92, "series": "现役", "tag": ""}, {"id": 77, "name": "亚马尔", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 78, "name": "维尼修斯", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 79, "name": "萨拉赫", "pos": "WG", "tier": "传说", "rating": 90, "series": "现役", "tag": "争议评分"}, {"id": 80, "name": "萨卡", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 81, "name": "莱奥", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 82, "name": "克瓦拉茨赫利亚", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 83, "name": "福登", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 84, "name": "罗德里戈", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 85, "name": "三笘薰", "pos": "WG", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 86, "name": "奥尔莫", "pos": "WG", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 87, "name": "久保建英", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 88, "name": "鲍恩", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 89, "name": "库杜斯", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 90, "name": "马丁内利", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 91, "name": "安东尼", "pos": "WG", "tier": "稀有", "rating": 79, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 92, "name": "伊东纯也", "pos": "WG", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 93, "name": "韦世豪", "pos": "WG", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 94, "name": "林良铭", "pos": "WG", "tier": "普通", "rating": 73, "series": "现役", "tag": ""}, {"id": 95, "name": "杨立瑜", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 96, "name": "王钰栋", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 97, "name": "贝利", "pos": "ST", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 98, "name": "C罗", "pos": "ST", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 99, "name": "克鲁伊夫", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": ""}, {"id": 100, "name": "罗纳尔多", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": "外星人"}, {"id": 101, "name": "哈兰德", "pos": "ST", "tier": "传说", "rating": 92, "series": "现役", "tag": "争议评分"}, {"id": 102, "name": "凯恩", "pos": "ST", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 103, "name": "莱万多夫斯基", "pos": "ST", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 104, "name": "孙兴慜", "pos": "ST", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 105, "name": "奥斯梅恩", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 106, "name": "劳塔罗·马丁内斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 107, "name": "伊萨克", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 108, "name": "阿尔瓦雷斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 109, "name": "哲凯赖什", "pos": "ST", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 110, "name": "沃特金斯", "pos": "ST", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 111, "name": "加克波", "pos": "ST", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 112, "name": "哈弗茨", "pos": "ST", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 113, "name": "努涅斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 114, "name": "热苏斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 115, "name": "费兰·托雷斯", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 116, "name": "理查利森", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 117, "name": "希门尼斯", "pos": "ST", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 118, "name": "武磊", "pos": "ST", "tier": "普通", "rating": 76, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 119, "name": "张玉宁", "pos": "ST", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 120, "name": "拜合拉木", "pos": "ST", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}];
+if (typeof module!=="undefined") module.exports = PLAYERS;
+
+// ===== engine.js =====
+// 《开包大亨》M1 开包引擎 — 规格 FROZEN v0.2 §5/§6/§7
+// Pure logic: no DOM. RNG injectable for tests.
+const KBEngine = (() => {
+  const TIERS = ["普通", "稀有", "史诗", "传说", "传世"];
+  const BASE = { "普通": 80, "稀有": 250, "史诗": 800, "传说": 2500, "传世": 9000 };
+  const PACKS = {
+    normal: { name: "普通包", price: 400, cur: "coins", size: 5, odds: { "普通": .62, "稀有": .26, "史诗": .09, "传说": .027, "传世": .003 }, minPos: 3 },
+    premium: { name: "高级包", price: 1400, cur: "coins", size: 5, odds: { "普通": .32, "稀有": .38, "史诗": .21, "传说": .081, "传世": .009 }, minPos: 3 },
+    urbox: { name: "传世箱", price: 40, cur: "dia", size: 3, odds: { "普通": 0, "稀有": .24, "史诗": .50, "传说": .22, "传世": .04 }, minPos: 2, epicPlus: true }
+  };
+  const STAMPS = [ // name, prob, valueMult, idleBonus
+    ["无编", .70, 1.0, 0], ["/99", .18, 1.8, .2], ["/25", .08, 3.2, .5], ["/10", .03, 5.5, 1.0], ["/1", .01, 20.0, 3.0]
+  ];
+  const PITY_UR = 240;      // §6: 第240张必传世
+  const PITY_LEGEND_PACKS = 10; // §6: 高级包连10包无传说+，第10包首张必传说
+  const byTier = t => PLAYERS.filter(p => p.tier === t);
+  const byTierPos = (t, pos) => PLAYERS.filter(p => p.tier === t && p.pos === pos);
+  const playerById = id => PLAYERS.find(p => p.id === id);
+
+  function rollStamp(rng) {
+    let x = rng(), c = 0;
+    for (const [n, p, m, b] of STAMPS) { c += p; if (x < c) return { stamp: n, mult: m, idleBonus: b }; }
+    return { stamp: "无编", mult: 1.0, idleBonus: 0 };
+  }
+  function rollTier(pack, rng) {
+    let x = rng(), c = 0;
+    for (const t of TIERS) { c += pack.odds[t]; if (x < c) return t; }
+    return "普通";
+  }
+  function cardValue(tier, rating, mult) {
+    return Math.round(BASE[tier] * (0.9 + (rating % 10) / 50) * mult);
+  }
+  function rollInstance(state, tier, rng) {
+    const pool = byTier(tier);
+    const p = pool[Math.floor(rng() * pool.length)];
+    const s = rollStamp(rng);
+    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult) };
+  }
+  // Draw one delivered card for a pack, applying UR pity. forceTier overrides odds (legend pity / box guarantee handled by caller).
+  function drawOne(state, pack, rng, forceTier) {
+    let tier;
+    if (state.pity >= PITY_UR - 1) tier = "传世";        // this draw is the 240th
+    else if (forceTier) tier = forceTier;
+    else tier = rollTier(pack, rng);
+    const card = rollInstance(state, tier, rng);
+    state.draws++;
+    if (card.tier === "传世") state.pity = 0; else state.pity++;
+    return card;
+  }
+  function distinctPos(cards) { return new Set(cards.map(c => c.pos)).size; }
+
+  function openPack(state, packKey, rng, opts) {
+    rng = rng || Math.random;
+    const pack = PACKS[packKey];
+    const cost = pack.price;
+    if (opts && opts.free) { /* 每日免费包：不扣费 */ }
+    else {
+      if (state[pack.cur] < cost) return { ok: false, reason: "货币不足" };
+      state[pack.cur] -= cost;
+    }
+    const forceLegendFirst = (packKey === "premium" && state.hjNoLegend >= PITY_LEGEND_PACKS - 1);
+    const cards = [];
+    for (let i = 0; i < pack.size; i++) {
+      cards.push(drawOne(state, pack, rng, (i === 0 && forceLegendFirst) ? "传说" : null));
+    }
+    // 位置分布规则（§6）：5张≥3位置 / 3张≥2位置；只重roll非传世、非保底位的重复位置卡
+    let guard = 0;
+    while (distinctPos(cards) < pack.minPos && guard++ < 30) {
+      const counts = {};
+      cards.forEach(c => counts[c.pos] = (counts[c.pos] || 0) + 1);
+      const idx = cards.findIndex((c, i) => counts[c.pos] > 1 && c.tier !== "传世" && !(forceLegendFirst && i === 0));
+      if (idx < 0) break;
+      const nc = rollInstance(state, rollTier(pack, rng), rng);
+      nc.uid = cards[idx].uid; cards[idx] = nc;
+      if (nc.tier === "传世") state.pity = 0;
+    }
+    // 传世箱：每箱至少 1 张史诗+（§6）— 在位置分布之后执行，用同位置史诗替换最后一张，保证不破坏位置覆盖
+    if (pack.epicPlus && !cards.some(c => ["史诗", "传说", "传世"].includes(c.tier))) {
+      const idx = cards.length - 1;
+      const old = cards[idx];
+      const pool = byTierPos("史诗", old.pos);
+      const p = pool[Math.floor(rng() * pool.length)];
+      const s = rollStamp(rng);
+      cards[idx] = { uid: old.uid, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult) };
+    }
+    // 高级包传说保底计数
+    if (packKey === "premium") {
+      if (cards.some(c => ["传说", "传世"].includes(c.tier))) state.hjNoLegend = 0;
+      else state.hjNoLegend++;
+    }
+    state.cards.push(...cards);
+    return { ok: true, cards };
+  }
+
+  function starterFive(state, rng) {
+    rng = rng || Math.random;
+    const positions = ["GK", "DF", "MF", "WG", "ST"];
+    const epicPos = positions[Math.floor(rng() * positions.length)];
+    return positions.map(pos => {
+      const tier = pos === epicPos ? "史诗" : "稀有";
+      const pool = byTierPos(tier, pos);
+      const p = pool[Math.floor(rng() * pool.length)];
+      const s = rollStamp(rng);
+      return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult), starter: true };
+    });
+  }
+  function newSave(rng) {
+    const st = { version: 3, coins: 1500, dia: 40, cards: [], pity: 0, hjNoLegend: 0, draws: 0, uid: 1, freeDay: "", shopLv: 1, createdAt: Date.now(),
+      display: [], lineup: { GK: null, DF: null, MF: null, WG: null, ST: null }, captainUid: null, tactic: "全力进攻",
+      division: 0, stars: 0, streak: 0, matchesLeft: 5, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null,
+      signTotal: 0, lastSignDay: "", daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
+      weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
+      achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
+      adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, weekKey: "", weekPending: false };
+    st.cards = starterFive(st, rng);
+    return st;
+  }
+  function sellCard(state, uid, valueNow) {
+    const i = state.cards.findIndex(c => c.uid === uid);
+    if (i < 0) return { ok: false };
+    const c = state.cards[i];
+    const gain = Math.floor((valueNow !== undefined ? valueNow : c.value) * 0.85);
+    state.cards.splice(i, 1);
+    state.display = state.display.filter(u => u !== uid);
+    for (const pos of Object.keys(state.lineup || {})) if (state.lineup[pos] === uid) state.lineup[pos] = null;
+    if (state.captainUid === uid) state.captainUid = null;
+    state.coins += gain;
+    return { ok: true, gain, card: c };
+  }
+  return { TIERS, BASE, PACKS, STAMPS, PITY_UR, PITY_LEGEND_PACKS, rollTier, rollStamp, cardValue, openPack, starterFive, newSave, sellCard, playerById, _rollInstance: rollInstance, _byTier: byTier, _drawOne: drawOne };
+})();
+if (typeof module !== "undefined") module.exports = KBEngine;
+
+// ===== save.js =====
+// 存档：localStorage kaibao_save_v1（规格 §12，与前作全隔离）
+const KBSave = (() => {
+  const KEY = "kaibao_save_v1";
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      const st = JSON.parse(raw);
+      if (!st || !Array.isArray(st.cards)) return null;
+      if (st.version === 1) { // M1 → M2 迁移：补 M2 字段
+        st.version = 2;
+        st.display = []; st.lineup = { GK: null, DF: null, MF: null, WG: null, ST: null };
+        st.captainUid = null; st.tactic = "全力进攻";
+        st.division = 0; st.stars = 0; st.streak = 0; st.matchesLeft = 5; st.matchDay = "";
+        st.idlePending = 0; st.lastTs = Date.now(); st.commission = null;
+      }
+      if (st.version === 2) { // M2 → M3 迁移：补 M3 字段
+        st.version = 3;
+        st.signTotal = 0; st.lastSignDay = "";
+        st.daily = { day: "", packs: 0, matches: 0, idle: 0, claimed: false };
+        st.weekly = { key: "", synth: 0, wins: 0, dexBase: new Set(st.cards.map(c => c.pid)).size, claimed: false };
+        st.achClaimed = {}; st.setsClaimed = {};
+        st.records = { total: 0, single: 0, cabinet: 0, curTotal: 0 }; st.flags = {};
+        st.adDay = { day: "", counts: {} }; st.adGrants = {}; st.adPending = null;
+        st.weekKey = st.weekKey || ""; st.weekPending = false;
+      }
+      if (st.version !== 3) return null;
+      return st;
+    } catch (e) { return null; }
+  }
+  function save(st) {
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* 存储满/隐私模式：本局内存继续 */ }
+  }
+  function wipe() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  return { KEY, load, save, wipe };
+})();
+if (typeof module !== "undefined") module.exports = KBSave;
+
+// ===== systems.js =====
+// 《开包大亨》M2 系统 — 规格 FROZEN v0.2 §7/§8/§9：卡店挂机、行情、阵容联赛、收藏家委托
+const KBSystems = (() => {
+  const E = KBEngine;
+  // ---------- 通用确定性随机（按字符串种子） ----------
+  function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function gauss(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  const EPOCH = Date.UTC(2026, 9, 1); // 行情起始日 2026-10-01
+  function dayIndex(ts) { return Math.floor((ts - EPOCH) / 86400000); }
+  function todayIndex() { const n = new Date(); return dayIndex(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); }
+
+  // ---------- 卡店（§7） ----------
+  const SHOP = { 1: { slots: 4, cost: 0 }, 2: { slots: 5, cost: 1000 }, 3: { slots: 6, cost: 2200 }, 4: { slots: 7, cost: 4500 }, 5: { slots: 8, cost: 7500 }, 6: { slots: 9, cost: 12000 }, 7: { slots: 10, cost: 18000 }, 8: { slots: 11, cost: 26000 }, 9: { slots: 12, cost: 38000 }, 10: { slots: 13, cost: 55000 } };
+  const IDLE = { "普通": 1, "稀有": 3, "史诗": 8, "传说": 22, "传世": 60 };
+  const UNLOCKS = { 2: "高级包", 3: "合成炉", 4: "传世箱", 5: "行情榜", 7: "名宿系列包" };
+  function idleRate(state) {
+    let r = 8;
+    for (const uid of state.display) { const c = state.cards.find(x => x.uid === uid); if (c) r += IDLE[c.tier] * (1 + (c.idleBonus || stampBonus(c.stamp))); }
+    return r;
+  }
+  function stampBonus(stamp) { const s = E.STAMPS.find(x => x[0] === stamp); return s ? s[3] : 0; }
+  function accrueIdle(state, now) {
+    const rate = idleRate(state);
+    const hours = Math.max(0, (now - (state.lastTs || now)) / 3600000);
+    state.idlePending = Math.min(rate * 8, (state.idlePending || 0) + rate * hours); // 离线封顶 8 小时
+    state.lastTs = now;
+    return state.idlePending;
+  }
+  function claimIdle(state) { const g = Math.floor(state.idlePending || 0); state.coins += g; state.idlePending = 0; return g; }
+
+  // ---------- 行情（§8）：按日期种子逐日演化，2%/日回归，事件卡周轮换 ----------
+  const ASIA = new Set(["武磊", "王大雷", "韦世豪", "张玉宁", "王钰栋", "拜合拉木", "蒋光太", "朱辰杰", "蒋圣龙", "刘洋", "吴曦", "谢文能", "杨立瑜", "林良铭", "孙兴慜", "黄喜灿", "金玟哉", "李刚仁", "富安健洋", "板仓滉", "吉田麻也", "朴志洙", "铃木彩艳", "三笘薰", "久保建英", "伊东纯也", "南野拓实", "堂安律", "远藤航", "守田英正", "田中碧"]);
+  const factorCache = {};
+  function hotPlayers(weekIdx) {
+    const rng = rng32(hashStr("hot-" + weekIdx));
+    const pool = PLAYERS.filter(p => p.tier !== "普通");
+    const out = new Set();
+    while (out.size < 3) out.add(pool[Math.floor(rng() * pool.length)].id);
+    return out;
+  }
+  function factorAt(pid, dIdx) {
+    const key = pid + "@" + dIdx;
+    if (factorCache[key] !== undefined) return factorCache[key];
+    const p = E.playerById(pid);
+    const sigma = p.tier === "传世" ? .09 : .06, cap = p.tier === "传世" ? .28 : .18;
+    let f = 1;
+    for (let d = 1; d <= dIdx; d++) {
+      const rng = rng32(hashStr("mkt-" + pid + "-" + d));
+      let shock = gauss(rng) * sigma;
+      shock = Math.max(-cap, Math.min(cap, shock));
+      const week = Math.floor(d / 7);
+      if (hotPlayers(week).has(pid) && (d % 7) < 2) shock = Math.max(shock, .08); // 状态火热：当周前 2 日涨幅下限 +8%
+      f = f + shock * f + (1 - f) * .02;
+      f = Math.max(.4, Math.min(2.0, f));
+    }
+    return (factorCache[key] = f);
+  }
+  function changeToday(pid, dIdx) { if (dIdx <= 0) return 0; return factorAt(pid, dIdx) / factorAt(pid, dIdx - 1) - 1; }
+  function marketBoard(dIdx) {
+    const rows = PLAYERS.map(p => ({ p, chg: changeToday(p.id, dIdx), f: factorAt(p.id, dIdx) }));
+    const gain = [...rows].sort((a, b) => b.chg - a.chg).slice(0, 10);
+    const lose = [...rows].sort((a, b) => a.chg - b.chg).slice(0, 10);
+    return { gain, lose };
+  }
+  // 实例当前身价：新卡首日锁定基础价（bornDay==今天 → 系数 1）
+  function instanceValue(state, card, dIdx) {
+    const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult;
+    if (card.bornDay === dIdx) return Math.round(base); // 新卡首日锁定基础价（§8 防刷）
+    return Math.round(base * factorAt(card.pid, dIdx));
+  }
+
+  // ---------- 阵容与战力（§9） ----------
+  const TACTICS = ["全力进攻", "控球推进", "防守反击"];
+  const BEATS = { "全力进攻": "控球推进", "控球推进": "防守反击", "防守反击": "全力进攻" };
+  function tacticAdj(myTac, oppTac) { if (BEATS[myTac] === oppTac) return 15; if (BEATS[oppTac] === myTac) return -10; return 0; }
+  function lineupCards(state) {
+    const out = {};
+    for (const pos of ["GK", "DF", "MF", "WG", "ST"]) { const uid = state.lineup[pos]; out[pos] = state.cards.find(c => c.uid === uid) || null; }
+    return out;
+  }
+  function powerOf(cards5, captainUid) {
+    const arr = Object.values(cards5).filter(Boolean);
+    if (arr.length < 5) return null;
+    let sum = 0; const detail = [];
+    for (const c of arr) { const eff = c.uid === captainUid ? c.rating * 1.1 : c.rating; sum += eff; }
+    const legends = arr.filter(c => c.series === "名宿").length;
+    let bond = 0;
+    if (legends >= 4) bond += 12; else if (legends >= 2) bond += 6;
+    if (arr.every(c => ["史诗", "传说", "传世"].includes(c.tier))) bond += 5;
+    if (cards5.GK && ["传说", "传世"].includes(cards5.GK.tier)) bond += 3;
+    return { power: Math.round(sum) + bond, base: Math.round(sum), bond, legends };
+  }
+  function autoLineup(state) {
+    for (const pos of ["GK", "DF", "MF", "WG", "ST"]) {
+      const best = state.cards.filter(c => c.pos === pos).sort((a, b) => b.rating - a.rating)[0];
+      state.lineup[pos] = best ? best.uid : null;
+    }
+    const arr = Object.values(lineupCards(state)).filter(Boolean);
+    if (arr.length) state.captainUid = arr.sort((a, b) => b.rating - a.rating)[0].uid;
+  }
+
+  // ---------- 联赛（§9） ----------
+  const DIVISIONS = [
+    { name: "青铜", target: 350, reward: 60 }, { name: "白银", target: 385, reward: 100 },
+    { name: "黄金", target: 415, reward: 140 }, { name: "铂金", target: 440, reward: 180 },
+    { name: "钻石", target: 460, reward: 220 }, { name: "大师", target: 478, reward: 260 }
+  ];
+  const TEAM_NAMES = ["虎扑联队", "街角FC", "夜市竞技", "老男孩队", "键盘侠FC", "仓前联队", "河畔流浪者", "周末公园队"];
+  function genOpponent(div, rng) {
+    const target = div.target + Math.round((rng() - .5) * 12);
+    const positions = ["GK", "DF", "MF", "WG", "ST"];
+    const sorted = {}; // 每位置按评分排序，用于向目标战力逼近
+    for (const pos of positions) sorted[pos] = PLAYERS.filter(p => p.pos === pos).sort((a, b) => a.rating - b.rating);
+    const picks = {};
+    for (const pos of positions) {
+      const pool = sorted[pos];
+      picks[pos] = pool[Math.floor(rng() * pool.length)];
+    }
+    const sum = () => Object.values(picks).reduce((s, p) => s + p.rating, 0);
+    // 逼近目标总战力（±3）：反复把差距最大的位置换成更接近的球员
+    for (let iter = 0; iter < 60 && Math.abs(sum() - target) > 3; iter++) {
+      const need = target - sum();
+      let bestPos = null, bestPick = null, bestGap = Math.abs(need);
+      for (const pos of positions) {
+        for (const cand of sorted[pos]) {
+          if (cand.id === picks[pos].id) continue;
+          const gap = Math.abs(need - (cand.rating - picks[pos].rating));
+          if (gap < bestGap) { bestGap = gap; bestPos = pos; bestPick = cand; }
+        }
+      }
+      if (!bestPick) break;
+      picks[bestPos] = bestPick;
+    }
+    const power = sum();
+    return { name: TEAM_NAMES[Math.floor(rng() * TEAM_NAMES.length)], picks, power, tactic: TACTICS[Math.floor(rng() * TACTICS.length)] };
+  }
+  function playMatch(state, rng) {
+    rng = rng || Math.random;
+    const mine = lineupCards(state);
+    const pw = powerOf(mine, state.captainUid);
+    if (!pw) return { ok: false, reason: "阵容未组齐（缺位置）" };
+    if (state.matchesLeft <= 0) return { ok: false, reason: "今日场次已用完（每日 5 场）" };
+    const div = DIVISIONS[state.division];
+    const opp = genOpponent(div, rng);
+    const adj = tacticAdj(state.tactic, opp.tactic);
+    // 胜负按冻结版胜率曲线判定（§9/§13：有效战力差 logistic 尺度 20），对位线随后生成并向胜负对齐（赢线数即比分）
+    const pWin = 1 / (1 + Math.exp(-(pw.power - opp.power + adj) / 20));
+    const won = rng() < pWin;
+    const lines = [];
+    for (const pos of ["GK", "DF", "MF", "WG", "ST"]) {
+      const mc = mine[pos], oc = opp.picks[pos];
+      const myEff = (mc.uid === state.captainUid ? mc.rating * 1.1 : mc.rating);
+      const p = 1 / (1 + Math.exp(-(myEff - oc.rating) / 12));
+      lines.push({ pos, myName: mc.name, myRating: mc.rating, myTier: mc.tier, opName: oc.name, opRating: oc.rating, win: rng() < p, p, captain: mc.uid === state.captainUid });
+    }
+    let myWins = lines.filter(l => l.win).length, opWins = 5 - myWins;
+    while ((myWins > opWins) !== won) { // 翻转胜率最接近五五开的一条线，使比分与胜负一致
+      const cand = lines.filter(l => l.win === (myWins > opWins)).sort((a, b) => Math.abs(a.p - .5) - Math.abs(b.p - .5))[0];
+      cand.win = !cand.win;
+      myWins = lines.filter(l => l.win).length; opWins = 5 - myWins;
+    }
+    lines.forEach(l => delete l.p);
+    state.matchesLeft--;
+    let reward = 0, promoted = false, streakBonus = null;
+    if (won) {
+      reward = div.reward; state.coins += reward;
+      state.streak++;
+      if (state.streak % 3 === 0) streakBonus = true;
+      if (state.division < DIVISIONS.length - 1) {
+        state.stars++;
+        if (state.stars >= 3) { state.division++; state.stars = 0; promoted = true; }
+      }
+    } else state.streak = 0;
+    return { ok: true, won, lines, myWins, opWins, myPower: pw.power, oppPower: opp.power, oppName: opp.name, oppTactic: opp.tactic, adj, reward, promoted, streakBonus, divName: div.name };
+  }
+
+  // ---------- 收藏家委托（§8） ----------
+  const PERSONAS = [
+    { name: "名宿收藏家", desc: "只收名宿系列", test: c => c.series === "名宿" },
+    { name: "限编收藏家", desc: "只收 /25 及更稀编号", test: c => ["/25", "/10"].includes(c.stamp) },
+    { name: "亚洲收藏家", desc: "只收亚洲球员", test: c => ASIA.has(c.name) }
+  ];
+  function genCommission(state, dIdx) {
+    const rng = rng32(hashStr("comm-" + dIdx));
+    const persona = PERSONAS[dIdx % 3];
+    const dispSet = new Set(state.display);
+    const cands = state.cards.filter(c => ["稀有", "史诗", "传说", "传世"].includes(c.tier) && c.stamp !== "/1" && !dispSet.has(c.uid) && persona.test(c));
+    if (!cands.length) return null;
+    const w = c => Math.pow(E.TIERS.indexOf(c.tier) + 1, 2);
+    let tot = cands.reduce((s, c) => s + w(c), 0), x = rng() * tot, target = cands[0];
+    for (const c of cands) { x -= w(c); if (x <= 0) { target = c; break; } }
+    let mult;
+    if (["普通", "稀有"].includes(target.tier)) mult = 1.3 + rng() * .2;
+    else if (target.tier === "史诗") mult = 1.2 + rng() * .2;
+    else mult = 1.1 + rng() * .15;
+    const price = Math.floor(instanceValue(state, target, dIdx) * mult);
+    return { day: dIdx, persona: persona.name, desc: persona.desc, uid: target.uid, price, mult: Math.round(mult * 100) / 100, done: false };
+  }
+
+  // ---------- 合成炉（§7，Lv.3） ----------
+  function synthCost(targetTier) { return Math.round(E.BASE[targetTier] * .10); }
+  function synthesize(state, tier, rng) {
+    rng = rng || Math.random;
+    const order = { "普通": 0, "稀有": 1, "史诗": 2 };
+    if (!(tier in order)) return { ok: false, reason: "该档不可合成" };
+    const target = E.TIERS[order[tier] + 1];
+    const fee = synthCost(target);
+    const inLineup = new Set(Object.values(state.lineup)); const inDisp = new Set(state.display);
+    const pool = state.cards.filter(c => c.tier === tier && !inLineup.has(c.uid) && !inDisp.has(c.uid))
+      .sort((a, b) => a.value - b.value);
+    if (pool.length < 3) return { ok: false, reason: tier + "卡不足 3 张（阵容/展示中与首发组不计）" };
+    if (state.coins < fee) return { ok: false, reason: "手续费不足" };
+    const used = pool.slice(0, 3);
+    state.coins -= fee;
+    for (const c of used) state.cards.splice(state.cards.findIndex(x => x.uid === c.uid), 1);
+    // 生成目标档新卡（位置随机、编号重 roll，§7）
+    const players = PLAYERS.filter(p => p.tier === target);
+    const p = players[Math.floor(rng() * players.length)];
+    const s = (() => { let x = rng(), c = 0; for (const [n, pr, m] of E.STAMPS) { c += pr; if (x < c) return { stamp: n, mult: m }; } return { stamp: "无编", mult: 1 }; })();
+    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: E.cardValue(p.tier, p.rating, s.mult), bornDay: state.dayIndex };
+    state.cards.push(card);
+    if (card.tier === "传说") { state.flags = state.flags || {}; state.flags.synthLegend = 1; }
+    return { ok: true, card, used: used.map(c => c.name), fee };
+  }
+
+  // 名宿系列包（§7 Lv.7 解锁）：1800 金 5 张，高级包概率；抽到传说/传世时必为名宿
+  function openLegendPack(state, rng) {
+    rng = rng || Math.random;
+    if (state.coins < 1800) return { ok: false, reason: "金币不足" };
+    state.coins -= 1800;
+    const pack = E.PACKS.premium;
+    const cards = [];
+    for (let i = 0; i < 5; i++) {
+      let tier;
+      if (state.pity >= E.PITY_UR - 1) tier = "传世";
+      else tier = E.rollTier(pack, rng);
+      // 传说/传世从名宿子池抽，其余档位从全池抽（名宿只存在于传说/传世，低档天然无名宿）
+      const pool = ["传说", "传世"].includes(tier)
+        ? PLAYERS.filter(p => p.tier === tier && p.series === "名宿")
+        : PLAYERS.filter(p => p.tier === tier);
+      const p = pool[Math.floor(rng() * pool.length)];
+      const s = E.rollStamp(rng);
+      const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: E.cardValue(p.tier, p.rating, s.mult), bornDay: state.dayIndex };
+      state.draws++;
+      if (tier === "传世") state.pity = 0; else state.pity++;
+      cards.push(card);
+    }
+    state.cards.push(...cards);
+    return { ok: true, cards };
+  }
+
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, hotPlayers, lineupCards, powerOf, autoLineup, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, openLegendPack };
+})();
+if (typeof module !== "undefined") module.exports = KBSystems;
+
+// ===== ads.js =====
+// 广告桥（规格 §11）：统一 watch(kind) 入口
+// - 虎扑容器内：走平台激励视频桥（vatask 风格），PENDING 落标，重载后凭 pending 记录补发
+// - 普通浏览器（Pages/本地）：模拟广告浮层（3 秒），行为与真桥一致，供试玩验收
+// 幂等：每次观看有 runId；奖励发放由调用方凭 runId+日期+kind 去重（state.adGrants）
+const KBAds = (() => {
+  const LIMITS = { free: 1, double: 2, dia: 1, league: 1, urdraw: 1 }; // 五点位日限，合计封顶 6
+  const TOTAL_CAP = 6;
+  function nativeBridge() {
+    try {
+      if (typeof window !== "undefined") {
+        if (window.vatask && typeof window.vatask.completeRewardVideo === "function") return window.vatask;
+        if (window.HupuJSBridge && typeof window.HupuJSBridge.showRewardVideo === "function") return window.HupuJSBridge;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function isNative() { return !!nativeBridge(); }
+  function todayCount(state) { return Object.values(state.adDay.counts).reduce((s, n) => s + n, 0); }
+  function canWatch(state, kind) {
+    if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
+    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 6" };
+    if (state.adPending) return { ok: false, reason: "上一条广告待确认中" };
+    return { ok: true };
+  }
+  // 模拟广告浮层（浏览器环境）
+  function simulatedWatch(kind) {
+    return new Promise(resolve => {
+      const div = document.createElement("div");
+      div.style.cssText = "position:fixed;inset:0;background:rgba(8,10,14,.96);z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e8ebef;font-size:16px;gap:14px";
+      div.innerHTML = `<div style="font-size:44px">📺</div><div>模拟广告播放中…</div><div id="adCount" style="font-size:28px;font-weight:700">3</div><div style="color:#8b95a3;font-size:12px">虎扑容器内将播放真实激励广告</div>`;
+      document.body.appendChild(div);
+      let n = 3;
+      const iv = setInterval(() => {
+        n--;
+        const el = div.querySelector("#adCount");
+        if (el) el.textContent = Math.max(n, 0);
+        if (n <= 0) { clearInterval(iv); div.remove(); resolve(true); }
+      }, 1000);
+    });
+  }
+  function nativeWatch(kind, runId) {
+    return new Promise(resolve => {
+      const bridge = nativeBridge();
+      let settled = false;
+      const done = ok => { if (!settled) { settled = true; resolve(ok); } };
+      try {
+        if (bridge === window.vatask) {
+          bridge.completeRewardVideo({ taskId: kind, runId }, res => done(!!(res && (res.completed || res.status === "completed"))));
+        } else {
+          bridge.showRewardVideo({ kind, runId }, res => done(!!(res && res.completed)));
+        }
+      } catch (e) { done(false); }
+      setTimeout(() => done(false), 120000); // 2 分钟无回调视为失败
+    });
+  }
+  // 发起观看：先落 PENDING（state.adPending），成功后由调用方 grant(runId) 发奖并清 pending
+  async function watch(state, kind) {
+    const chk = canWatch(state, kind);
+    if (!chk.ok) return chk;
+    const runId = kind + "-" + Date.now() + "-" + Math.floor(Math.random() * 1e6);
+    state.adPending = { runId, kind, ts: Date.now() };
+    const ok = isNative() ? await nativeWatch(kind, runId) : await simulatedWatch(kind);
+    if (!ok) { state.adPending = null; return { ok: false, reason: "广告未完整观看" }; }
+    return { ok: true, runId };
+  }
+  // 发奖（幂等）：同一 runId 只发一次；计入当日点位计数
+  function grant(state, runId, kind, applyFn) {
+    if (!state.adPending || state.adPending.runId !== runId) return false;
+    if (state.adGrants[runId]) { state.adPending = null; return false; }
+    applyFn();
+    state.adGrants[runId] = 1;
+    state.adDay.counts[kind] = (state.adDay.counts[kind] || 0) + 1;
+    state.adPending = null;
+    return true;
+  }
+  // 启动时处理遗留 PENDING（容器重载场景）：超过 10 分钟未确认视为未完成，清标不发奖；
+  // 10 分钟内且原生桥存在时，无法二次确认的按平台惯例保留至下次 watch 前（此处清标并提示）
+  function settlePendingOnBoot(state) {
+    if (!state.adPending) return null;
+    const p = state.adPending;
+    state.adPending = null;
+    return p;
+  }
+  return { LIMITS, TOTAL_CAP, isNative, canWatch, watch, grant, settlePendingOnBoot, todayCount };
+})();
+if (typeof module !== "undefined") module.exports = KBAds;
+
+// ===== m3.js =====
+// 《开包大亨》M3 — 规格 §10/§9/§12：签到、每日/每周任务、成就、套卡、纪录、赛报文案池、存档码
+const KBMeta = (() => {
+  const E = KBEngine, S = KBSystems;
+  // ---------- 签到（§10）：日奖 150 金，第 7 天另 +10 钻 ----------
+  function signIn(state, dayStr) {
+    if (state.lastSignDay === dayStr) return { ok: false, reason: "今日已签到" };
+    state.lastSignDay = dayStr;
+    state.signTotal++;
+    const cycleDay = ((state.signTotal - 1) % 7) + 1;
+    state.coins += 150;
+    let diaBonus = 0;
+    if (cycleDay === 7) { diaBonus = 10; state.dia += 10; }
+    return { ok: true, cycleDay, diaBonus };
+  }
+  // ---------- 每日任务（§10）：开1包/打1场/收1次挂机 → 200 金 + 3 钻 ----------
+  function dailyDone(state) { const d = state.daily; return d.packs >= 1 && d.matches >= 1 && d.idle >= 1; }
+  function claimDaily(state) {
+    if (state.daily.claimed) return { ok: false, reason: "今日任务奖励已领取" };
+    if (!dailyDone(state)) return { ok: false, reason: "任务未全部完成" };
+    state.daily.claimed = true; state.coins += 200; state.dia += 3;
+    return { ok: true };
+  }
+  // ---------- 每周任务（§10）：合成1次/赢5场/图鉴+5 → 20 钻 ----------
+  function weeklyProgress(state) {
+    const dexNow = new Set(state.cards.map(c => c.pid)).size;
+    return { synth: state.weekly.synth, wins: state.weekly.wins, dexGain: Math.max(0, dexNow - state.weekly.dexBase) };
+  }
+  function weeklyDone(state) { const p = weeklyProgress(state); return p.synth >= 1 && p.wins >= 5 && p.dexGain >= 5; }
+  function claimWeekly(state) {
+    if (state.weekly.claimed) return { ok: false, reason: "本周任务奖励已领取" };
+    if (!weeklyDone(state)) return { ok: false, reason: "每周任务未全部完成" };
+    state.weekly.claimed = true; state.dia += 20;
+    return { ok: true };
+  }
+  // ---------- 成就（§10 + 纪录系） ----------
+  const ACHS = [
+    { id: "firstUR", name: "首抽传世", dia: 10, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
+    { id: "firstOne", name: "首张 /1", dia: 10, test: st => st.cards.some(c => c.stamp === "/1") },
+    { id: "dex30", name: "图鉴 30", dia: 5, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
+    { id: "dex60", name: "图鉴 60", dia: 10, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
+    { id: "dex90", name: "图鉴 90", dia: 15, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
+    { id: "dex120", name: "图鉴全集 120", dia: 30, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
+    { id: "shop5", name: "卡店 Lv.5", dia: 5, test: st => st.shopLv >= 5 },
+    { id: "shop10", name: "卡店 Lv.10", dia: 20, test: st => st.shopLv >= 10 },
+    { id: "rich100k", name: "全仓身价破 10 万", dia: 10, test: st => st.records.total >= 100000 },
+    { id: "rich500k", name: "全仓身价破 50 万", dia: 25, test: st => st.records.total >= 500000 },
+    { id: "master", name: "联赛大师段位", dia: 15, test: st => st.division >= 5 },
+    { id: "synthLegend", name: "合成出传说", dia: 10, test: st => !!st.flags.synthLegend },
+    { id: "ur3", name: "传世收藏 3", dia: 10, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 3 },
+    { id: "ur6", name: "传世收藏 6", dia: 20, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 6 },
+    { id: "ur10", name: "传世收藏 10 · 卡王", dia: 50, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 10 }
+  ];
+  function claimAchievement(state, id) {
+    const a = ACHS.find(x => x.id === id);
+    if (!a || state.achClaimed[id]) return { ok: false };
+    if (!a.test(state)) return { ok: false, reason: "尚未达成" };
+    state.achClaimed[id] = 1; state.dia += a.dia;
+    return { ok: true, dia: a.dia, name: a.name };
+  }
+  function titleOf(state) {
+    if (state.achClaimed.ur10 || ACHS.find(a => a.id === "ur10").test(state)) return "👑 卡王";
+    if (state.records.total >= 500000) return "💰 身价半百万";
+    if (state.division >= 5) return "🏆 大师玩家";
+    if (state.records.total >= 100000) return "小有身家";
+    return "卡店店主";
+  }
+  // ---------- 套卡（§10） ----------
+  const SETS = [
+    { id: "kings", name: "球王谱", desc: "任意 5 张不同传世", test: st => new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size >= 5, prog: st => `${Math.min(5, new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size)}/5`, rewardText: "传世箱 ×1" },
+    { id: "boots", name: "金靴四杰", desc: "哈兰德/凯恩/莱万/姆巴佩 任意 3 人", test: st => ["哈兰德", "凯恩", "莱万多夫斯基", "姆巴佩"].filter(n => st.cards.some(c => c.name === n)).length >= 3, prog: st => `${["哈兰德", "凯恩", "莱万多夫斯基", "姆巴佩"].filter(n => st.cards.some(c => c.name === n)).length}/3`, rewardText: "高级包 ×1" },
+    { id: "cn", name: "国足锋线", desc: "武磊/张玉宁/王钰栋/拜合拉木 集齐", test: st => ["武磊", "张玉宁", "王钰栋", "拜合拉木"].every(n => st.cards.some(c => c.name === n)), prog: st => `${["武磊", "张玉宁", "王钰栋", "拜合拉木"].filter(n => st.cards.some(c => c.name === n)).length}/4`, rewardText: "高级包 ×2" },
+    { id: "gks", name: "门神谱", desc: "任意 3 位传说+ 门将", test: st => new Set(st.cards.filter(c => c.pos === "GK" && ["传说", "传世"].includes(c.tier)).map(c => c.pid)).size >= 3, prog: st => `${Math.min(3, new Set(st.cards.filter(c => c.pos === "GK" && ["传说", "传世"].includes(c.tier)).map(c => c.pid)).size)}/3`, rewardText: "高级包 ×1" }
+  ];
+  // ---------- 纪录（§10 纪录系） ----------
+  function updateRecords(state, dIdx) {
+    let total = 0, single = 0, cabinet = 0;
+    const disp = new Set(state.display);
+    for (const c of state.cards) { const v = S.instanceValue(state, c, dIdx); total += v; if (v > single) single = v; if (disp.has(c.uid)) cabinet += v; }
+    state.records.total = Math.max(state.records.total || 0, total);
+    state.records.single = Math.max(state.records.single || 0, single);
+    state.records.cabinet = Math.max(state.records.cabinet || 0, cabinet);
+    state.records.curTotal = total;
+    return state.records;
+  }
+  // ---------- 赛报文案池（§9；球风梗、无人身攻击，待主人过目定稿） ----------
+  function reportLine(m) {
+    const lines = m.lines || [];
+    const upset = lines.find(l => l.win && l.myRating <= l.opRating - 8);
+    const cap = lines.find(l => l.captain);
+    const ur = lines.find(l => l.win && l.myTier === "传世");
+    if (m.myWins === 5) return "五条线全赢，这不叫比赛，这叫教学局。";
+    if (upset) return `冷门制造机：你的 ${upset.myRating} 分 ${upset.myName} 把对面 ${upset.opRating} 分 ${upset.opName} 顶翻了！`;
+    if (ur) return `${ur.myName} 一张传世卡踢出了降维打击，对面直接破防。`;
+    if (cap && cap.win) return `队长 ${cap.myName} 扛起全队：这条线，我说了算。`;
+    const wulei = lines.find(l => l.myName === "武磊");
+    if (wulei && wulei.win) return "武磊这条线赢了！跑位这块，他从来没输过。";
+    if (m.won && m.adj > 0) return "战术克制拿捏到位，赢球先赢一半在排兵布阵。";
+    if (m.won) return "稳稳拿下，今天的卡店配享太庙。";
+    if (m.myWins === 2) return "就差一条线，惜败。下场把场子找回来。";
+    return "对面今天状态太热，回去开两包压压惊。";
+  }
+  const POSTER_LINES = {
+    ur: ["天选之人，这手气没谁了", "卡王之路，从这一张开始", "欧皇本皇，鉴定完毕", "这一包，值回票价", "传世降临，卡店今日封神"],
+    one: ["全游戏独一份，这就是命", "1/1！独一无二，只此一张", "这张卡，全服就这一张", "限编之王，非你莫属"]
+  };
+  function posterLine(card, rng) {
+    rng = rng || Math.random;
+    const pool = card.stamp === "/1" ? POSTER_LINES.one : POSTER_LINES.ur;
+    return pool[Math.floor(rng() * pool.length)];
+  }
+  // ---------- 存档码（§12）：完整存档 + 校验和，同版本校验 ----------
+  function checksum(str) { return S.hashStr(str).toString(36); }
+  function exportCode(state) {
+    const payload = JSON.stringify(state);
+    const b64 = btoa(unescape(encodeURIComponent(payload)));
+    return "KB2." + checksum(payload) + "." + b64;
+  }
+  function importCode(code) {
+    try {
+      const parts = String(code).trim().split(".");
+      if (parts.length !== 3 || parts[0] !== "KB2") return { ok: false, reason: "存档码格式不对" };
+      const payload = decodeURIComponent(escape(atob(parts[2])));
+      if (checksum(payload) !== parts[1]) return { ok: false, reason: "校验和不符，存档码已损坏" };
+      const st = JSON.parse(payload);
+      if (!st || !Array.isArray(st.cards) || typeof st.coins !== "number") return { ok: false, reason: "存档内容不完整" };
+      if (st.version !== 3 && st.version !== 2) return { ok: false, reason: "存档版本不匹配（需 v2/v3）" };
+      return { ok: true, state: st };
+    } catch (e) { return { ok: false, reason: "存档码解析失败" }; }
+  }
+  return { signIn, dailyDone, claimDaily, weeklyProgress, weeklyDone, claimWeekly, ACHS, claimAchievement, titleOf, SETS, updateRecords, reportLine, posterLine, exportCode, importCode };
+})();
+if (typeof module !== "undefined") module.exports = KBMeta;
+
+// ===== main.js =====
+// 《开包大亨》M2 页面逻辑：卡店 / 开包 / 阵容 / 联赛 / 图鉴
+const TIER_COLOR = { "普通": "#9aa3ad", "稀有": "#4da3ff", "史诗": "#b678ff", "传说": "#ffb02e", "传世": "#ff4d5e" };
+const S = KBSystems, E = KBEngine;
+let state = KBSave.load();
+if (!state) { state = E.newSave(); }
+const D = S.todayIndex();
+state.dayIndex = D;
+if (state.matchDay !== String(D)) { state.matchesLeft = 5; state.matchDay = String(D); }
+if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
+// M3 每日/每周/广告日计数重置
+if (state.daily.day !== todayStr()) state.daily = { day: todayStr(), packs: 0, matches: 0, idle: 0, claimed: false };
+if (state.adDay.day !== todayStr()) state.adDay = { day: todayStr(), counts: {} };
+const _bootPending = KBAds.settlePendingOnBoot(state);
+S.accrueIdle(state, Date.now());
+// 周结算（§7）：新的一周生成待领奖励
+const weekKey = (() => { const d = new Date(); const onejan = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + "-W" + Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7); })();
+if (state.weekKey && state.weekKey !== weekKey) state.weekPending = true;
+if (state.weekly.key !== weekKey) state.weekly = { key: weekKey, synth: 0, wins: 0, dexBase: new Set(state.cards.map(c => c.pid)).size, claimed: false };
+state.weekKey = weekKey;
+if (!state.lineup || Object.values(state.lineup).every(v => !v)) S.autoLineup(state);
+KBSave.save(state);
+
+let lastDraw = [], sortMode = "tier", lastMatch = null, pickSlot = null, pickPos = null;
+const $ = s => document.querySelector(s);
+function persist() { KBSave.save(state); }
+function todayStr() { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+const avatarCache = {};
+function avatarURL(p) {
+  if (avatarCache[p.id]) return avatarCache[p.id];
+  let seed = p.id * 2654435761 % 4294967296;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const skins = ["#f2c79b", "#e0ac7e", "#c68863", "#8d5524", "#ffdbac"];
+  const hairs = ["#201a17", "#3a2a1a", "#5b3a1e", "#888", "#111", "#6e4f2a"];
+  const shirts = ["#d33", "#36c", "#3a3", "#fc3", "#fff", "#222", "#f60", "#93c", "#09c", "#c09"];
+  const skin = skins[Math.floor(rnd() * skins.length)], hair = hairs[Math.floor(rnd() * hairs.length)], shirt = shirts[p.id % shirts.length];
+  const hairStyle = Math.floor(rnd() * 3);
+  const cv = document.createElement("canvas"); cv.width = cv.height = 48;
+  const g = cv.getContext("2d");
+  g.fillStyle = "#2a2f3a"; g.fillRect(0, 0, 48, 48);
+  g.fillStyle = shirt; g.fillRect(10, 32, 28, 16);
+  g.fillStyle = skin; g.fillRect(17, 12, 14, 18);
+  g.fillStyle = hair;
+  if (hairStyle === 0) g.fillRect(17, 8, 14, 6);
+  else if (hairStyle === 1) { g.fillRect(17, 8, 14, 5); g.fillRect(22, 4, 4, 5); }
+  else { g.fillRect(16, 9, 16, 5); g.fillRect(16, 9, 3, 10); g.fillRect(29, 9, 3, 10); }
+  g.fillStyle = "#1c1c1c"; g.fillRect(20, 19, 3, 3); g.fillRect(26, 19, 3, 3);
+  g.fillStyle = "rgba(255,255,255,.85)"; g.font = "bold 11px sans-serif"; g.textAlign = "center";
+  g.fillText(String(p.rating), 24, 45);
+  return (avatarCache[p.id] = cv.toDataURL());
+}
+function playerOf(c) { return E.playerById(c.pid); }
+function cardHTML(c, opts) {
+  opts = opts || {};
+  const col = TIER_COLOR[c.tier];
+  const val = S.instanceValue(state, c, D);
+  const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
+  const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
+  const sell = opts.sell ? `<button class="sell" data-sell="${c.uid}">卖 ${Math.floor(val * 0.85)} 金</button>` : "";
+  return `<div class="card" style="--tc:${col}">
+    <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${c.rating}</span></div>
+    <img class="avatar" src="${avatarURL(playerOf(c))}" alt="">
+    <div class="cname">${c.name}</div>
+    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}</div>
+    <div class="cval">身价 ${val}</div>
+    ${stamp}${hot}${sell}</div>`;
+}
+let toastTimer = null;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400); }
+
+function render() {
+  S.accrueIdle(state, Date.now());
+  $("#coins").textContent = state.coins;
+  $("#dia").textContent = state.dia;
+  $("#pityFill").style.width = (state.pity / E.PITY_UR * 100) + "%";
+  $("#pityText").textContent = `传世保底 ${state.pity}/${E.PITY_UR}`;
+  KBMeta.updateRecords(state, D);
+  $("#titleTag").textContent = KBMeta.titleOf(state);
+  renderShop(); renderPacks(); renderLineup(); renderLeague(); renderDex(); renderMeta();
+  bindDynamic();
+  persist();
+}
+// ---------- 卡店 ----------
+function renderShop() {
+  const lv = state.shopLv, shop = S.SHOP[lv], next = S.SHOP[lv + 1];
+  $("#shopInfo").innerHTML = `卡店 Lv.${lv} · 展示位 ${state.display.length}/${shop.slots} · 时薪 <b>${S.idleRate(state)}</b> 金币`;
+  $("#idlePending").textContent = Math.floor(state.idlePending || 0);
+  $("#upgradeBtn").style.display = next ? "" : "none";
+  if (next) $("#upgradeBtn").textContent = `升级 Lv.${lv + 1}（${next.cost} 金币${S.UNLOCKS[lv + 1] ? " · 解锁" + S.UNLOCKS[lv + 1] : ""}）`;
+  const slots = [];
+  for (let i = 0; i < shop.slots; i++) {
+    const uid = state.display[i];
+    const c = state.cards.find(x => x.uid === uid);
+    slots.push(c ? `<div class="slot filled" data-slot="${i}">${cardHTML(c)}</div>` : `<div class="slot" data-slot="${i}"><div class="empty">＋ 空位</div></div>`);
+  }
+  $("#cabinet").innerHTML = slots.join("");
+  // 选卡面板
+  let pick = "";
+  if (pickSlot !== null) {
+    const used = new Set([...state.display, ...Object.values(state.lineup)]);
+    const idleOf = c => S.IDLE[c.tier] * (1 + ((E.STAMPS.find(s => s[0] === c.stamp) || [])[3] || 0));
+    const cands = state.cards.filter(c => !used.has(c.uid) || state.display[pickSlot] === c.uid)
+      .sort((a, b) => idleOf(b) - idleOf(a) || b.rating - a.rating);
+    pick = `<div class="row"><b>为展示位 ${pickSlot + 1} 选卡（按挂机档位排序）：</b><button class="btn ghost" id="pickCancel">取消</button></div><div class="grid">` +
+      cands.slice(0, 24).map(c => `<div class="pickable" data-pick="${c.uid}">${cardHTML(c)}</div>`).join("") + "</div>";
+  }
+  $("#pickArea").innerHTML = pick;
+  // 委托
+  const cm = state.commission;
+  if (!cm) $("#commArea").innerHTML = `<p class="hint">今日暂无收藏家委托（需要持有符合偏好的稀有以上卡）。</p>`;
+  else if (cm.done) $("#commArea").innerHTML = `<p class="hint">今日委托已成交，明日再来。</p>`;
+  else {
+    const c = state.cards.find(x => x.uid === cm.uid);
+    $("#commArea").innerHTML = c ? `<div class="row"><b>🤝 ${cm.persona}</b><span class="hint">${cm.desc}</span></div>
+      <div class="row">${cardHTML(c)}<div><p>出价 <b style="color:#ffd257">${cm.price} 金币</b>（身价 ×${cm.mult}）</p>
+      <p class="hint">${Object.values(state.lineup).includes(c.uid) ? "⚠️ 该卡在阵容中，成交后自动卸下。" : ""}</p>
+      <button class="btn" id="commYes">卖给他</button> <button class="btn ghost" id="commNo">拒绝</button></div></div>`
+      : `<p class="hint">委托目标卡已不在卡库。</p>`;
+  }
+}
+// ---------- 开包 ----------
+function renderPacks() {
+  $("#freeBtn").disabled = state.freeDay === todayStr();
+  $("#freeBtn").textContent = state.freeDay === todayStr() ? "今日免费包已领" : "领今日免费包";
+  document.querySelector('[data-pack="premium"]').disabled = state.shopLv < 2;
+  document.querySelector('[data-pack="premium"]').textContent = state.shopLv < 2 ? "卡店 Lv.2 解锁" : "1400 金币";
+  document.querySelector('[data-pack="urbox"]').disabled = state.shopLv < 4;
+  document.querySelector('[data-pack="urbox"]').textContent = state.shopLv < 4 ? "卡店 Lv.4 解锁" : "40 钻石";
+  $("#legendPackBtn").disabled = state.shopLv < 7;
+  $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "1800 金币";
+  $("#drawGrid").innerHTML = lastDraw.map(c => cardHTML(c)).join("");
+}
+// ---------- 阵容 ----------
+function renderLineup() {
+  const mine = S.lineupCards(state);
+  const pw = S.powerOf(mine, state.captainUid);
+  const posNames = { GK: "门将", DF: "后卫", MF: "中场", WG: "边锋", ST: "中锋" };
+  $("#lineupGrid").innerHTML = ["GK", "DF", "MF", "WG", "ST"].map(pos => {
+    const c = mine[pos];
+    if (!c) return `<div class="slot"><div class="empty">${posNames[pos]} · 空缺</div></div>`;
+    const isCap = c.uid === state.captainUid;
+    return `<div class="slot filled"><div class="postag">${posNames[pos]}${isCap ? " · ⭐队长" : ""}</div>${cardHTML(c)}<button class="btn ghost capbtn" data-cap="${c.uid}">${isCap ? "已是队长" : "设为队长"}</button></div>`;
+  }).join("");
+  $("#powerInfo").innerHTML = pw ? `阵容战力 <b>${pw.power}</b>（评分 ${pw.base}＋羁绊 ${pw.bond}，名宿 ${pw.legends} 人）· 队长评分 ×1.1 计入` : "阵容未组齐，先去开包或点「自动组队」。";
+  // 换人面板
+  let html = "";
+  if (pickPos) {
+    const cands = state.cards.filter(c => c.pos === pickPos).sort((a, b) => b.rating - a.rating);
+    html = `<div class="row"><b>选择${posNames[pickPos]}：</b><button class="btn ghost" id="pickPosCancel">取消</button></div><div class="grid">` +
+      cands.map(c => `<div class="pickable" data-lineup-pick="${c.uid}">${cardHTML(c)}</div>`).join("") + "</div>";
+  }
+  $("#lineupPick").innerHTML = html;
+  $("#tacticSel").value = state.tactic;
+}
+// ---------- 联赛 ----------
+function renderLeague() {
+  const div = S.DIVISIONS[state.division];
+  const mine = S.lineupCards(state); const pw = S.powerOf(mine, state.captainUid);
+  $("#leagueInfo").innerHTML = `当前段位 <b>${div.name}</b> · 星 ${"★".repeat(state.stars)}${"☆".repeat(Math.max(0, 3 - state.stars))} · 连胜 ${state.streak} · 今日剩余场次 <b>${state.matchesLeft}</b>/5 · 我的战力 ${pw ? pw.power : "—"}`;
+  $("#weekBtn").style.display = state.weekPending ? "" : "none";
+  if (lastMatch) {
+    const m = lastMatch;
+    $("#matchResult").innerHTML = `<p class="reportline">📰 ${m.report || ""}</p><p><b>${m.won ? "🏆 胜利" : "惜败"} ${m.myWins}:${m.opWins}</b> vs ${m.oppName}（${m.divName} · 对手战力 ${m.oppPower} · 战术 ${m.oppTactic}${m.adj > 0 ? " · 我方克制 +" + m.adj : m.adj < 0 ? " · 被克制 " + m.adj : ""}）${m.won ? ` · 奖金 +${m.reward} 金币` : ""}${m.promoted ? " · 🎉 升段！" : ""}${m.streakBonus ? " · 三连胜奖励包已开（见开包页）" : ""}</p>` +
+      m.lines.map(l => `<p class="hint">${l.pos}：${l.myName} ${l.myRating}${l.captain ? "⭐" : ""} ${l.win ? "＞" : "＜"} ${l.opName} ${l.opRating} ${l.win ? "✅" : "❌"}</p>`).join("");
+  }
+}
+// ---------- 图鉴 / 卡库 / 行情 / 合成 ----------
+function renderDex() {
+  const ownedIds = new Set(state.cards.map(c => c.pid));
+  $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/100 · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/20`;
+  $("#dexGrid").innerHTML = PLAYERS.map(p => {
+    const own = ownedIds.has(p.id);
+    return own ? cardHTML(state.cards.filter(c => c.pid === p.id).sort((a, b) => b.value - a.value)[0])
+      : `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
+  }).join("");
+  const sorted = [...state.cards].sort((a, b) => {
+    if (sortMode === "tier") return E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.rating - a.rating;
+    if (sortMode === "value") return S.instanceValue(state, b, D) - S.instanceValue(state, a, D);
+    return b.rating - a.rating;
+  });
+  $("#libCount").textContent = state.cards.length;
+  $("#libGrid").innerHTML = sorted.map(c => cardHTML(c, { sell: true })).join("");
+  // 行情
+  if (state.shopLv >= 5) {
+    const board = S.marketBoard(D);
+    const row = r => `<p class="hint">${r.p.name}（${r.p.tier}）<b style="color:${r.chg >= 0 ? "#ff6b6b" : "#4ade80"}">${r.chg >= 0 ? "+" : ""}${(r.chg * 100).toFixed(1)}%</b></p>`;
+    $("#mktGain").innerHTML = board.gain.map(row).join("");
+    $("#mktLose").innerHTML = board.lose.map(row).join("");
+    const hot = S.hotPlayers(Math.floor(D / 7));
+    $("#mktHot").textContent = "本周状态火热：" + [...hot].map(id => E.playerById(id).name).join("、");
+  } else { $("#mktGain").innerHTML = "<p class='hint'>卡店 Lv.5 解锁行情榜。</p>"; $("#mktLose").innerHTML = ""; $("#mktHot").textContent = ""; }
+  // 合成炉
+  const syn = $("#synthArea");
+  if (state.shopLv >= 3) {
+    syn.innerHTML = ["普通", "稀有", "史诗"].map(t => {
+      const used = new Set([...state.display, ...Object.values(state.lineup)]);
+      const n = state.cards.filter(c => c.tier === t && !used.has(c.uid)).length;
+      const target = E.TIERS[E.TIERS.indexOf(t) + 1];
+      return `<button class="btn ghost" data-synth="${t}" ${n < 3 ? "disabled" : ""}>${t} 3 合 1 → ${target}（有 ${n} 张 · 手续费 ${S.synthCost(target)}）</button>`;
+    }).join(" ");
+  } else syn.innerHTML = "<span class='hint'>卡店 Lv.3 解锁合成炉。</span>";
+}
+function bindDynamic() {
+  document.querySelectorAll("[data-sell]").forEach(btn => btn.onclick = () => {
+    const uid = +btn.dataset.sell;
+    const c = state.cards.find(x => x.uid === uid);
+    const val = S.instanceValue(state, c, D);
+    if ((c.tier === "传世" || c.stamp === "/1") && !confirm(`这张是${c.tier}${c.stamp !== "无编" ? " " + c.stamp : ""}，确定要卖掉？`)) return;
+    const r = E.sellCard(state, uid, val);
+    if (r.ok) { render(); toast(`卖出 ${r.card.name}，+${r.gain} 金币`); }
+  });
+  document.querySelectorAll("[data-slot]").forEach(el => el.onclick = () => { pickSlot = +el.dataset.slot; render(); });
+  const pc = $("#pickCancel"); if (pc) pc.onclick = () => { pickSlot = null; render(); };
+  document.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
+    const uid = +el.dataset.pick;
+    state.display[pickSlot] = uid;
+    state.display = state.display.filter((u, i) => u !== uid || i === pickSlot); // 同卡不重复上柜
+    pickSlot = null; render(); toast("已上展示柜");
+  });
+  const cy = $("#commYes"); if (cy) cy.onclick = () => {
+    const cm = state.commission; const c = state.cards.find(x => x.uid === cm.uid);
+    if (!c) return;
+    if (Object.values(state.lineup).includes(c.uid) && !confirm("该卡在阵容中，成交后将自动卸下，确定卖出？")) return;
+    state.cards.splice(state.cards.findIndex(x => x.uid === cm.uid), 1);
+    state.display = state.display.filter(u => u !== cm.uid);
+    for (const pos of Object.keys(state.lineup)) if (state.lineup[pos] === cm.uid) state.lineup[pos] = null;
+    state.coins += cm.price; cm.done = true;
+    render(); toast(`委托成交：${c.name} +${cm.price} 金币`);
+  };
+  const cn = $("#commNo"); if (cn) cn.onclick = () => { state.commission.done = true; state.commission = { ...state.commission, done: true, rejected: true }; render(); toast("已拒绝，明日刷新新委托"); };
+  document.querySelectorAll("[data-cap]").forEach(b => b.onclick = () => { state.captainUid = +b.dataset.cap; render(); });
+  document.querySelectorAll("[data-lineup-pick]").forEach(el => el.onclick = () => { state.lineup[pickPos] = +el.dataset.lineupPick; pickPos = null; render(); });
+  const ppc = $("#pickPosCancel"); if (ppc) ppc.onclick = () => { pickPos = null; render(); };
+  document.querySelectorAll("[data-synth]").forEach(b => b.onclick = () => {
+    const tier = b.dataset.synth;
+    const used = new Set([...state.display, ...Object.values(state.lineup)]);
+    const pool = state.cards.filter(c => c.tier === tier && !used.has(c.uid)).sort((a, b2) => a.value - b2.value).slice(0, 3);
+    if (!confirm(`将合成掉身价最低的 3 张${tier}：${pool.map(c => c.name).join("、")}，确定？`)) return;
+    const r = S.synthesize(state, tier);
+    if (r.ok) { state.weekly.synth++; lastDraw = [r.card]; render(); toast(`合成成功：${r.card.tier} ${r.card.name}！`); }
+    else toast(r.reason);
+  });
+}
+// ---------- 静态绑定 ----------
+function doOpen(key, free) {
+  const res = E.openPack(state, key, Math.random, free ? { free: true } : undefined);
+  if (!res.ok) { toast(res.reason); return; }
+  if (free) state.freeDay = todayStr();
+  for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
+  state.daily.packs++;
+  lastDraw = res.cards; render(); checkPoster(res.cards);
+  const ur = res.cards.find(c => c.tier === "传世");
+  if (ur) toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`);
+  document.querySelectorAll("#drawGrid .card").forEach((el, i) => { el.style.animationDelay = (i * 0.12) + "s"; el.classList.add("flip"); });
+}
+document.querySelectorAll("[data-pack]").forEach(b => b.onclick = () => doOpen(b.dataset.pack, false));
+$("#legendPackBtn").onclick = () => {
+  const res = S.openLegendPack(state);
+  if (!res.ok) { toast(res.reason); return; }
+  for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
+  state.daily.packs++;
+  lastDraw = res.cards; render(); checkPoster(res.cards); toast("名宿系列包已开");
+};
+$("#freeBtn").onclick = () => doOpen("normal", true);
+$("#claimBtn").onclick = () => { const g = S.claimIdle(state); if (g > 0) state.daily.idle = 1; render(); toast(g > 0 ? `领取挂机收益 +${g} 金币` : "暂无可领取收益"); };
+$("#upgradeBtn").onclick = () => {
+  const next = S.SHOP[state.shopLv + 1];
+  if (!next) return;
+  if (state.coins < next.cost) { toast("金币不足"); return; }
+  state.coins -= next.cost; state.shopLv++;
+  render(); toast(`卡店升到 Lv.${state.shopLv}${S.UNLOCKS[state.shopLv] ? "，解锁" + S.UNLOCKS[state.shopLv] : ""}`);
+};
+$("#autoDispBtn").onclick = () => {
+  const slots = S.SHOP[state.shopLv].slots;
+  state.display = state.cards.slice()
+    .sort((a, b) => (S.IDLE[b.tier] * (1 + (E.STAMPS.find(s => s[0] === b.stamp) || [])[3] || 0)) - (S.IDLE[a.tier] * (1 + (E.STAMPS.find(s => s[0] === a.stamp) || [])[3] || 0)))
+    .slice(0, slots).map(c => c.uid);
+  render(); toast("已自动摆上时薪最高的卡");
+};
+$("#autoLineupBtn").onclick = () => { S.autoLineup(state); render(); toast("已按各位置最高评分组队"); };
+document.querySelectorAll("[data-pospick]").forEach(b => b.onclick = () => { pickPos = b.dataset.pospick; renderLineup(); bindDynamic(); });
+$("#tacticSel").onchange = e => { state.tactic = e.target.value; render(); };
+$("#playBtn").onclick = () => {
+  const r = S.playMatch(state);
+  if (!r.ok) { toast(r.reason); return; }
+  lastMatch = r;
+  state.daily.matches++; if (r.won) state.weekly.wins++;
+  r.report = KBMeta.reportLine(r);
+  if (r.streakBonus) { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; lastDraw = res.cards; } }
+  render();
+  toast(r.won ? (r.streakBonus ? "三连胜！奖励免费包已开出（见开包页）" : `胜利！+${r.reward} 金币`) : "惜败，下场再战");
+};
+$("#weekBtn").onclick = () => {
+  const packs = 1 + state.division;
+  let got = [];
+  for (let i = 0; i < packs; i++) { const res = E.openPack(state, "premium", Math.random, { free: true }); if (res.ok) got.push(...res.cards); }
+  for (const c of got) if (c.bornDay === undefined) c.bornDay = D;
+  state.coins += 300 * (state.division + 1);
+  state.weekPending = false; lastDraw = got;
+  render(); toast(`周结算：${packs} 个高级包 + ${300 * (state.division + 1)} 金币（见开包页）`);
+};
+$("#sortSel").onchange = e => { sortMode = e.target.value; render(); };
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+  document.querySelectorAll(".page").forEach(x => x.classList.remove("on"));
+  t.classList.add("on"); $("#page-" + t.dataset.tab).classList.add("on");
+});
+$("#resetBtn").onclick = () => { if (confirm("确定删档重开？当前卡库和保底进度都会清空。")) { KBSave.wipe(); state = E.newSave(); state.dayIndex = D; state.matchDay = String(D); state.commission = S.genCommission(state, D); lastDraw = []; lastMatch = null; render(); toast("已重开新档"); } };
+// ================= M3：签到/任务/成就/套卡/纪录/广告/晒单卡/存档码 =================
+function renderMeta() {
+  // 签到与任务（卡店页）
+  const d = state.daily;
+  $("#signBtn").textContent = state.lastSignDay === todayStr() ? `已签到（累计 ${state.signTotal} 天）` : "每日签到 +150 金";
+  $("#signBtn").disabled = state.lastSignDay === todayStr();
+  const task = (label, cur, goal) => `<span class="taskchip ${cur >= goal ? "done" : ""}">${label} ${Math.min(cur, goal)}/${goal}</span>`;
+  $("#dailyTasks").innerHTML = task("开 1 包", d.packs, 1) + task("打 1 场联赛", d.matches, 1) + task("领 1 次挂机", d.idle, 1);
+  $("#dailyClaim").disabled = !(KBMeta.dailyDone(state) && !d.claimed);
+  $("#dailyClaim").textContent = d.claimed ? "今日任务奖励已领（200 金+3 钻）" : "领取每日任务奖励 200 金 + 3 钻";
+  const wp = KBMeta.weeklyProgress(state);
+  $("#weeklyTasks").innerHTML = task("合成 1 次", wp.synth, 1) + task("联赛赢 5 场", wp.wins, 5) + task("图鉴新增 5", wp.dexGain, 5);
+  $("#weeklyClaim").disabled = !(KBMeta.weeklyDone(state) && !state.weekly.claimed);
+  $("#weeklyClaim").textContent = state.weekly.claimed ? "本周任务奖励已领（20 钻）" : "领取每周任务奖励 20 钻";
+  // 广告点位状态
+  const cnt = k => state.adDay.counts[k] || 0;
+  $("#adFreeBtn").disabled = !(state.freeDay === todayStr() && cnt("free") < 1);
+  $("#adDoubleBtn").disabled = cnt("double") >= 2 || Math.floor(state.idlePending || 0) <= 0;
+  $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/2）`;
+  $("#adDiaBtn").disabled = cnt("dia") >= 1;
+  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 1);
+  $("#adUrBtn").disabled = cnt("urdraw") >= 1;
+  $("#adTotal").textContent = `今日广告 ${KBAds.todayCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）`;
+  // 成就（图鉴页）
+  $("#achGrid").innerHTML = KBMeta.ACHS.map(a => {
+    const done = a.test(state), claimed = !!state.achClaimed[a.id];
+    return `<div class="ach ${done ? "done" : ""}"><b>${a.name}</b><span>💎${a.dia}</span>${claimed ? "<em>已领取</em>" : done ? `<button class="btn achbtn" data-ach="${a.id}">领取</button>` : "<em>未达成</em>"}</div>`;
+  }).join("");
+  document.querySelectorAll("[data-ach]").forEach(b => b.onclick = () => { const r = KBMeta.claimAchievement(state, b.dataset.ach); if (r.ok) { render(); toast(`成就「${r.name}」+${r.dia} 钻石`); } });
+  // 套卡
+  $("#setGrid").innerHTML = KBMeta.SETS.map(set => {
+    const done = set.test(state), claimed = !!state.setsClaimed[set.id];
+    return `<div class="ach ${done ? "done" : ""}"><b>${set.name}</b><span>${set.prog(state)}</span><em>${set.desc} · 奖 ${set.rewardText}</em>${claimed ? "<em>已领取</em>" : done ? `<button class="btn achbtn" data-set="${set.id}">领取</button>` : ""}</div>`;
+  }).join("");
+  document.querySelectorAll("[data-set]").forEach(b => b.onclick = () => claimSet(b.dataset.set));
+  // 纪录
+  const r = state.records;
+  $("#recordsLine").textContent = `个人纪录 · 单卡最高身价 ${r.single} · 全仓峰值 ${r.total} · 展示柜峰值 ${r.cabinet} · 当前全仓 ${r.curTotal || 0}`;
+}
+function claimSet(id) {
+  const set = KBMeta.SETS.find(x => x.id === id);
+  if (!set || state.setsClaimed[id] || !set.test(state)) return;
+  state.setsClaimed[id] = 1;
+  let got = [];
+  const openFree = (key, n) => { for (let i = 0; i < n; i++) { const res = E.openPack(state, key, Math.random, { free: true }); if (res.ok) got.push(...res.cards); } };
+  if (id === "kings") openFree("urbox", 1);
+  if (id === "boots" || id === "gks") openFree("premium", 1);
+  if (id === "cn") openFree("premium", 2);
+  for (const c of got) if (c.bornDay === undefined) c.bornDay = D;
+  lastDraw = got;
+  render(); checkPoster(got);
+  toast(`套卡「${set.name}」奖励已开包（见开包页）`);
+  switchTab("packs");
+}
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.dataset.tab === name));
+  document.querySelectorAll(".page").forEach(x => x.classList.toggle("on", x.id === "page-" + name));
+}
+// ----- 广告点位 -----
+async function adWatch(kind, applyFn, okMsg) {
+  const res = await KBAds.watch(state, kind);
+  if (!res.ok) { persist(); toast(res.reason); return; }
+  const granted = KBAds.grant(state, res.runId, kind, applyFn);
+  render();
+  toast(granted ? okMsg : "奖励已发放过（幂等拦截）");
+}
+$("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +150 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
+$("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +200 金 +3 钻"); } else toast(r.reason); };
+$("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +20 钻"); } else toast(r.reason); };
+$("#adFreeBtn").onclick = () => adWatch("free", () => { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }, "广告免费包已到账（见开包结果）");
+$("#adDoubleBtn").onclick = () => adWatch("double", () => { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }, "挂机收益双倍领取成功");
+$("#adDiaBtn").onclick = () => adWatch("dia", () => { state.dia += 10; }, "钻石小包 +10 钻");
+$("#adLeagueBtn").onclick = () => adWatch("league", () => { state.matchesLeft += 3; }, "联赛场次 +3");
+$("#adUrBtn").onclick = () => adWatch("urdraw", () => { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }, "传世箱体验抽已出卡（助力卡，图鉴照常点亮）");
+// ----- 晒单卡 -----
+function checkPoster(cards) {
+  const hit = cards.find(c => c.tier === "传世") || cards.find(c => c.stamp === "/1");
+  if (hit) showPoster(hit);
+}
+function showPoster(card) {
+  const cv = document.createElement("canvas"); cv.width = 750; cv.height = 1000;
+  const g = cv.getContext("2d");
+  const col = TIER_COLOR[card.tier];
+  const grad = g.createLinearGradient(0, 0, 0, 1000); grad.addColorStop(0, "#232833"); grad.addColorStop(1, "#12151c");
+  g.fillStyle = grad; g.fillRect(0, 0, 750, 1000);
+  g.strokeStyle = col; g.lineWidth = 10; g.strokeRect(16, 16, 718, 968);
+  g.fillStyle = col; g.font = "bold 44px sans-serif"; g.textAlign = "center";
+  g.fillText(card.tier === "传世" ? "传 世 降 临" : "限 编 /1", 375, 110);
+  const img = new Image();
+  img.onload = () => {
+    g.imageSmoothingEnabled = false;
+    g.drawImage(img, 235, 150, 280, 280);
+    g.fillStyle = "#fff"; g.font = "bold 84px sans-serif"; g.fillText(card.name, 375, 540);
+    g.font = "bold 40px sans-serif"; g.fillStyle = col;
+    g.fillText(`${card.pos} · 评分 ${card.rating} · ${card.tier}${card.series === "名宿" ? " · 名宿" : ""}`, 375, 610);
+    if (card.stamp !== "无编") { g.fillStyle = "#ff4d5e"; g.font = "bold 54px sans-serif"; g.fillText(`限编 ${card.stamp}`, 375, 690); }
+    g.fillStyle = "#ffd257"; g.font = "30px sans-serif"; g.fillText(`身价 ${S.instanceValue(state, card, D)} 金币`, 375, 750);
+    g.fillStyle = "#e8ebef"; g.font = "italic 34px sans-serif"; g.fillText("「" + KBMeta.posterLine(card) + "」", 375, 840);
+    g.fillStyle = "#8b95a3"; g.font = "24px sans-serif";
+    g.fillText("开包大亨 · 无充值球星卡 · 长按图片保存晒单", 375, 930);
+    $("#posterImg").src = cv.toDataURL("image/png");
+    $("#posterModal").classList.add("show");
+  };
+  img.src = avatarURL(playerOf(card));
+}
+$("#posterClose").onclick = () => $("#posterModal").classList.remove("show");
+// ----- 存档码 -----
+$("#exportBtn").onclick = () => { $("#codeBox").value = KBMeta.exportCode(state); $("#codeBox").select(); toast("存档码已生成，复制保存好"); };
+$("#importBtn").onclick = () => {
+  const code = $("#codeBox").value;
+  if (!code) { toast("先把存档码粘贴到框里"); return; }
+  const r = KBMeta.importCode(code);
+  if (!r.ok) { toast("导入失败：" + r.reason); return; }
+  if (!confirm("导入将覆盖当前存档，确定？")) return;
+  try { localStorage.setItem(KBSave.KEY, JSON.stringify(r.state)); } catch (e) {}
+  state = KBSave.load() || r.state; // 经存档层加载以便 v2 自动迁移
+  state.dayIndex = D;
+  lastDraw = []; lastMatch = null;
+  render(); toast("存档导入成功");
+};
+
+render();
+
+</script>
+</body>
+</html>
