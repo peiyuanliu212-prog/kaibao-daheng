@@ -204,9 +204,9 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="row">
     <button class="btn" id="playBtn">⚽ 开赛一场</button>
     <button class="btn ghost" id="play5Btn">⏩ 快速 ×5</button>
-    <button class="btn ghost" id="adLeagueBtn">📺 广告 +5 场</button>
+    <button class="btn ghost" id="adLeagueBtn">📺 广告 +10 场</button>
     <button class="btn" id="weekBtn" style="display:none">领取周结算</button>
-    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 20 场，场次用完可看广告 +5 场（每天 4 次）。</span>
+    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 20 场，场次用完可看广告 +10 场（每天 2 次）。</span>
   </div>
   <div id="matchResult"></div>
 </section>
@@ -809,7 +809,7 @@ const KBTrack = (() => {
 // 重载后凭平台任务状态 = completed 才补发（30 分钟内有效），核对不上不发。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { free: 1, double: 2, dia: 1, league: 4, urdraw: 1 }; // 游戏侧点位日限（C2 案），合计封顶 12
+  const LIMITS = { free: 1, double: 3, dia: 2, league: 2, urdraw: 1 }; // 游戏侧点位日限（C2 案+重度玩家修正：联赛 2 次×+10 场、双倍 3、钻石 2），合计封顶 12
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   function vatask() {
@@ -1421,10 +1421,10 @@ function renderMeta() {
   // 广告点位状态
   const cnt = k => state.adDay.counts[k] || 0;
   $("#adFreeBtn").disabled = !(state.freeDay === todayStr() && cnt("free") < 1);
-  $("#adDoubleBtn").disabled = cnt("double") >= 2 || Math.floor(state.idlePending || 0) <= 0;
-  $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/2）`;
+  $("#adDoubleBtn").disabled = cnt("double") >= 3 || Math.floor(state.idlePending || 0) <= 0;
+  $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/3）`;
   $("#adDiaBtn").disabled = cnt("dia") >= 1;
-  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 4);
+  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 2);
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
   $("#adTotal").textContent = `今日广告 ${KBAds.todayCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）`;
   // 成就（图鉴页）
@@ -1467,10 +1467,10 @@ function applyAdReward(kind) {
   if (kind === "free") { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }
   else if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
   else if (kind === "dia") { state.dia += 10; }
-  else if (kind === "league") { state.matchesLeft += 5; }
+  else if (kind === "league") { state.matchesLeft += 10; }
   else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
 }
-const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +5", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
+const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
 async function adWatch(kind) {
   const res = await KBAds.watch(state, kind);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
