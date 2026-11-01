@@ -102,6 +102,26 @@ h1 { background: linear-gradient(92deg, #ffe9a8, #f5b942 55%, #c47f17); -webkit-
 .card .chead, .card .cfoot { z-index: 3; }
 .slot { width: 122px; min-height: 168px; }
 .slot .card { width: 108px; }
+
+/* ===== 平行版（银折/红折/签字/球衣） ===== */
+.card .vb { position: absolute; top: 58px; left: 6px; z-index: 4; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; }
+.vb-银折 { background: linear-gradient(120deg, #dfe9f5, #9fb6cc); color: #22303e; }
+.vb-红折 { background: linear-gradient(120deg, #ff7a5c, #c81e2b); color: #fff; }
+.vb-签字 { background: linear-gradient(120deg, #ffe9a8, #d4a017); color: #4a3200; }
+.vb-球衣 { background: linear-gradient(120deg, #7dd87d, #1e7a34); color: #fff; }
+.card.v-银折::after { content: ""; position: absolute; inset: 0; border-radius: 12px; z-index: 2; pointer-events: none; background: linear-gradient(115deg, transparent 25%, rgba(190,215,255,.38) 42%, rgba(255,255,255,.55) 50%, rgba(170,200,255,.38) 58%, transparent 75%); background-size: 260% 100%; animation: foilmove 3.4s ease-in-out infinite; }
+.card.v-红折::after { content: ""; position: absolute; inset: 0; border-radius: 12px; z-index: 2; pointer-events: none; background: conic-gradient(from 200deg, rgba(255,50,50,.22), rgba(255,160,60,.18), rgba(255,50,90,.22), rgba(255,120,40,.16), rgba(255,50,50,.22)); }
+.card.v-红折 { box-shadow: inset 0 0 0 2px #ff5340, inset 0 0 0 4px rgba(0,0,0,.55), 0 0 14px -2px rgba(255,60,40,.55); }
+.card .sig { position: absolute; left: 8px; bottom: 46px; z-index: 4; font-family: "KaiTi", "STKaiti", "楷体", cursive; font-size: 17px; font-style: italic; color: #ffe9a8; transform: rotate(-7deg); text-shadow: 0 1px 3px rgba(0,0,0,.85), 0 0 8px rgba(255,215,90,.45); pointer-events: none; }
+.card .jpatch { position: absolute; right: 6px; bottom: 46px; z-index: 4; width: 34px; height: 26px; border-radius: 4px; background: repeating-linear-gradient(45deg, #f2f2f2 0 5px, #d8d8d8 5px 10px); border: 2px solid #ffd24d; color: #8a6d00; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.dexcell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pips { display: flex; gap: 3px; }
+.pip { width: 17px; height: 17px; border-radius: 50%; background: #232833; color: #5b636e; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.pip.on { color: #10131a; font-weight: 800; }
+.pip.p-银折 { background: linear-gradient(120deg, #dfe9f5, #9fb6cc); }
+.pip.p-红折 { background: linear-gradient(120deg, #ff7a5c, #c81e2b); color: #fff; }
+.pip.p-签字 { background: linear-gradient(120deg, #ffe9a8, #d4a017); }
+.pip.p-球衣 { background: linear-gradient(120deg, #7dd87d, #1e7a34); color: #fff; }
 footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8; }
 .titletag { font-size: 12px; color: #ffd257; border: 1px solid #ffd257; border-radius: 999px; padding: 2px 8px; letter-spacing: 0; }
 .taskchip { background: #1d2129; border: 1px solid #3a4150; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
@@ -267,6 +287,14 @@ const KBEngine = (() => {
   const STAMPS = [ // name, prob, valueMult, idleBonus
     ["无编", .70, 1.0, 0], ["/99", .18, 1.8, .2], ["/25", .08, 3.2, .5], ["/10", .03, 5.5, 1.0], ["/1", .01, 20.0, 3.0]
   ];
+  const VARIANTS = [ // 平行版（全套版 2026-11-01）：name, prob, valueMult — 与限编戳正交叠加
+    ["base", .88, 1.0], ["银折", .07, 1.8], ["红折", .035, 3.0], ["签字", .012, 5.0], ["球衣", .003, 10.0]
+  ];
+  function rollVariant(rng) {
+    let x = rng(), c = 0;
+    for (const [n, p, m] of VARIANTS) { c += p; if (x < c) return { variant: n, vmult: m }; }
+    return { variant: "base", vmult: 1.0 };
+  }
   const PITY_UR = 240;      // §6: 第240张必传世
   const PITY_LEGEND_PACKS = 10; // §6: 高级包连10包无传说+，第10包首张必传说
   const byTier = t => PLAYERS.filter(p => p.tier === t);
@@ -289,8 +317,8 @@ const KBEngine = (() => {
   function rollInstance(state, tier, rng) {
     const pool = byTier(tier);
     const p = pool[Math.floor(rng() * pool.length)];
-    const s = rollStamp(rng);
-    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult) };
+    const s = rollStamp(rng); const v = rollVariant(rng);
+    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult) };
   }
   // Draw one delivered card for a pack, applying UR pity. forceTier overrides odds (legend pity / box guarantee handled by caller).
   function drawOne(state, pack, rng, forceTier) {
@@ -336,8 +364,8 @@ const KBEngine = (() => {
       const old = cards[idx];
       const pool = byTierPos("史诗", old.pos);
       const p = pool[Math.floor(rng() * pool.length)];
-      const s = rollStamp(rng);
-      cards[idx] = { uid: old.uid, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult) };
+      const s = rollStamp(rng); const v = rollVariant(rng);
+      cards[idx] = { uid: old.uid, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult) };
     }
     // 高级包传说保底计数
     if (packKey === "premium") {
@@ -356,8 +384,8 @@ const KBEngine = (() => {
       const tier = pos === epicPos ? "史诗" : "稀有";
       const pool = byTierPos(tier, pos);
       const p = pool[Math.floor(rng() * pool.length)];
-      const s = rollStamp(rng);
-      return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, value: cardValue(p.tier, p.rating, s.mult), starter: true };
+      const s = rollStamp(rng); const v = rollVariant(rng);
+      return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), starter: true };
     });
   }
   function newSave(rng) {
@@ -383,7 +411,7 @@ const KBEngine = (() => {
     state.coins += gain;
     return { ok: true, gain, card: c };
   }
-  return { TIERS, BASE, PACKS, STAMPS, PITY_UR, PITY_LEGEND_PACKS, rollTier, rollStamp, cardValue, openPack, starterFive, newSave, sellCard, playerById, _rollInstance: rollInstance, _byTier: byTier, _drawOne: drawOne };
+  return { TIERS, BASE, PACKS, STAMPS, VARIANTS, rollVariant, PITY_UR, PITY_LEGEND_PACKS, rollTier, rollStamp, cardValue, openPack, starterFive, newSave, sellCard, playerById, _rollInstance: rollInstance, _byTier: byTier, _drawOne: drawOne };
 })();
 if (typeof module !== "undefined") module.exports = KBEngine;
 
@@ -414,6 +442,7 @@ const KBSave = (() => {
         st.adDay = { day: "", counts: {} }; st.adGrants = {}; st.adPending = null;
         st.weekKey = st.weekKey || ""; st.weekPending = false;
       }
+      (st.cards || []).forEach(c => { if (!c.variant) { c.variant = "base"; c.vmult = 1; } }); // 平行版字段补齐（旧档）
       if (st.version !== 3) return null;
       if (st.adLocked === undefined) st.adLocked = false;
       return st;
@@ -494,7 +523,7 @@ const KBSystems = (() => {
   }
   // 实例当前身价：新卡首日锁定基础价（bornDay==今天 → 系数 1）
   function instanceValue(state, card, dIdx) {
-    const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult;
+    const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult * (card.vmult || 1);
     if (card.bornDay === dIdx) return Math.round(base); // 新卡首日锁定基础价（§8 防刷）
     return Math.round(base * factorAt(card.pid, dIdx));
   }
@@ -943,6 +972,9 @@ const KBMeta = (() => {
   const ACHS = [
     { id: "firstUR", name: "首抽传世", dia: 10, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
     { id: "firstOne", name: "首张 /1", dia: 10, test: st => st.cards.some(c => c.stamp === "/1") },
+    { id: "firstPara", name: "首张平行版", dia: 5, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
+    { id: "para10", name: "平行收藏 10", dia: 10, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
+    { id: "jersey1", name: "球衣卡到手", dia: 15, test: st => st.cards.some(c => c.variant === "球衣") },
     { id: "dex30", name: "图鉴 30", dia: 5, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
     { id: "dex60", name: "图鉴 60", dia: 10, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
     { id: "dex90", name: "图鉴 90", dia: 15, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
@@ -1121,13 +1153,17 @@ function cardHTML(c, opts) {
   const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
   const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
   const sell = opts.sell ? `<button class="sell" data-sell="${c.uid}">卖 ${Math.floor(val * 0.85)} 金</button>` : "";
-  return `<div class="card t-${c.tier}${s1}${popCls}"${popStyle}>
+  const vv = c.variant && c.variant !== "base" ? c.variant : "";
+  const vbadge = vv ? `<span class="vb vb-${vv}">${vv}</span>` : "";
+  const sig = vv === "签字" ? `<div class="sig">${c.name}</div>` : "";
+  const jpatch = vv === "球衣" ? `<div class="jpatch">球衣</div>` : "";
+  return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
     <img class="cart${(typeof PORTRAITS !== "undefined" && PORTRAITS[c.pid]) ? " photo" : ""}" src="${avatarURL(playerOf(c))}" alt="">
     <div class="cshade"></div>
     <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${c.rating}</span></div>
     <div class="cfoot"><div class="cname">${c.name}</div>
     <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""} · 身价 ${val}</div></div>
-    ${stamp}${hot}${sell}</div>`;
+    ${stamp}${hot}${vbadge}${sig}${jpatch}${sell}</div>`;
 }
 let toastTimer = null;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400); }
@@ -1233,10 +1269,13 @@ function renderLeague() {
 // ---------- 图鉴 / 卡库 / 行情 / 合成 ----------
 function renderDex() {
   const ownedIds = new Set(state.cards.map(c => c.pid));
-  $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length}`;
+  const paraSet = new Set(state.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant));
+  $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480`;
   $("#dexGrid").innerHTML = PLAYERS.map(p => {
     const own = ownedIds.has(p.id);
-    return own ? cardHTML(state.cards.filter(c => c.pid === p.id).sort((a, b) => b.value - a.value)[0])
+    if (own) { const mine = state.cards.filter(c => c.pid === p.id); const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
+      return `<div class="dexcell">${cardHTML(mine.sort((a, b) => b.value - a.value)[0])}<div class="pips">${pips}</div></div>`; }
+    return own ? ""
       : `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
   }).join("");
   const sorted = [...state.cards].sort((a, b) => {
