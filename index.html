@@ -203,9 +203,10 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <p id="leagueInfo"></p>
   <div class="row">
     <button class="btn" id="playBtn">⚽ 开赛一场</button>
-    <button class="btn ghost" id="adLeagueBtn">📺 广告 +3 场</button>
+    <button class="btn ghost" id="play5Btn">⏩ 快速 ×5</button>
+    <button class="btn ghost" id="adLeagueBtn">📺 广告 +5 场</button>
     <button class="btn" id="weekBtn" style="display:none">领取周结算</button>
-    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 5 场。</span>
+    <span class="hint">胜 +1 星，3 星升段；负不扣星但断连胜；连胜 3 场奖 1 个普通包。每日 20 场，场次用完可看广告 +5 场（每天 4 次）。</span>
   </div>
   <div id="matchResult"></div>
 </section>
@@ -362,7 +363,7 @@ const KBEngine = (() => {
   function newSave(rng) {
     const st = { version: 3, coins: 1500, dia: 40, cards: [], pity: 0, hjNoLegend: 0, draws: 0, uid: 1, freeDay: "", shopLv: 1, createdAt: Date.now(),
       display: [], lineup: { GK: null, DF: null, MF: null, WG: null, ST: null }, captainUid: null, tactic: "全力进攻",
-      division: 0, stars: 0, streak: 0, matchesLeft: 5, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null,
+      division: 0, stars: 0, streak: 0, matchesLeft: 20, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null,
       signTotal: 0, lastSignDay: "", daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
@@ -400,7 +401,7 @@ const KBSave = (() => {
         st.version = 2;
         st.display = []; st.lineup = { GK: null, DF: null, MF: null, WG: null, ST: null };
         st.captainUid = null; st.tactic = "全力进攻";
-        st.division = 0; st.stars = 0; st.streak = 0; st.matchesLeft = 5; st.matchDay = "";
+        st.division = 0; st.stars = 0; st.streak = 0; st.matchesLeft = 20; st.matchDay = "";
         st.idlePending = 0; st.lastTs = Date.now(); st.commission = null;
       }
       if (st.version === 2) { // M2 → M3 迁移：补 M3 字段
@@ -530,9 +531,9 @@ const KBSystems = (() => {
 
   // ---------- 联赛（§9） ----------
   const DIVISIONS = [
-    { name: "青铜", target: 350, reward: 60 }, { name: "白银", target: 385, reward: 100 },
-    { name: "黄金", target: 415, reward: 140 }, { name: "铂金", target: 440, reward: 180 },
-    { name: "钻石", target: 460, reward: 220 }, { name: "大师", target: 478, reward: 260 }
+    { name: "青铜", target: 350, reward: 40 }, { name: "白银", target: 385, reward: 65 },
+    { name: "黄金", target: 415, reward: 90 }, { name: "铂金", target: 440, reward: 115 },
+    { name: "钻石", target: 460, reward: 140 }, { name: "大师", target: 478, reward: 165 }
   ];
   const TEAM_NAMES = ["虎扑联队", "街角FC", "夜市竞技", "老男孩队", "键盘侠FC", "仓前联队", "河畔流浪者", "周末公园队"];
   function genOpponent(div, rng) {
@@ -568,7 +569,7 @@ const KBSystems = (() => {
     const mine = lineupCards(state);
     const pw = powerOf(mine, state.captainUid);
     if (!pw) return { ok: false, reason: "阵容未组齐（缺位置）" };
-    if (state.matchesLeft <= 0) return { ok: false, reason: "今日场次已用完（每日 5 场）" };
+    if (state.matchesLeft <= 0) return { ok: false, reason: "今日场次已用完（每日 20 场+广告）" };
     const div = DIVISIONS[state.division];
     const opp = genOpponent(div, rng);
     const adj = tacticAdj(state.tactic, opp.tactic);
@@ -808,8 +809,8 @@ const KBTrack = (() => {
 // 重载后凭平台任务状态 = completed 才补发（30 分钟内有效），核对不上不发。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { free: 1, double: 2, dia: 1, league: 1, urdraw: 1 }; // 游戏侧点位日限，合计封顶 6
-  const TOTAL_CAP = 6;
+  const LIMITS = { free: 1, double: 2, dia: 1, league: 4, urdraw: 1 }; // 游戏侧点位日限（C2 案），合计封顶 12
+  const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   function vatask() {
     try {
@@ -823,7 +824,7 @@ const KBAds = (() => {
   function canWatch(state, kind) {
     if (state.adLocked) return { ok: false, reason: "今日广告奖励已领完（平台返回）" };
     if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
-    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 6" };
+    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 12" };
     return { ok: true };
   }
   function simulatedWatch() {
@@ -1044,7 +1045,7 @@ let state = KBSave.load();
 if (!state) { state = E.newSave(); }
 const D = S.todayIndex();
 state.dayIndex = D;
-if (state.matchDay !== String(D)) { state.matchesLeft = 5; state.matchDay = String(D); }
+if (state.matchDay !== String(D)) { state.matchesLeft = 20; state.matchDay = String(D); }
 if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
 // M3 每日/每周/广告日计数重置
 ensurePeriods();
@@ -1220,7 +1221,7 @@ function renderLineup() {
 function renderLeague() {
   const div = S.DIVISIONS[state.division];
   const mine = S.lineupCards(state); const pw = S.powerOf(mine, state.captainUid);
-  $("#leagueInfo").innerHTML = `当前段位 <b>${div.name}</b> · 星 ${"★".repeat(state.stars)}${"☆".repeat(Math.max(0, 3 - state.stars))} · 连胜 ${state.streak} · 今日剩余场次 <b>${state.matchesLeft}</b>/5 · 我的战力 ${pw ? pw.power : "—"}`;
+  $("#leagueInfo").innerHTML = `当前段位 <b>${div.name}</b> · 星 ${"★".repeat(state.stars)}${"☆".repeat(Math.max(0, 3 - state.stars))} · 连胜 ${state.streak} · 今日剩余场次 <b>${state.matchesLeft}</b> · 我的战力 ${pw ? pw.power : "—"}`;
   $("#weekBtn").style.display = state.weekPending ? "" : "none";
   if (lastMatch) {
     const m = lastMatch;
@@ -1354,6 +1355,21 @@ $("#playBtn").onclick = () => {
   render();
   toast(r.won ? (r.streakBonus ? "三连胜！奖励免费包已开出（见开包页）" : `胜利！+${r.reward} 金币`) : "惜败，下场再战");
 };
+$("#play5Btn").onclick = () => {
+  let played = 0, wins = 0, coins = 0, promos = 0, bonusPacks = 0, lastR = null;
+  while (played < 5 && state.matchesLeft > 0) {
+    const r = S.playMatch(state);
+    if (!r.ok) break;
+    played++; lastR = r;
+    state.daily.matches++; if (r.won) { state.weekly.wins++; wins++; coins += r.reward; }
+    if (r.promoted) promos++;
+    if (r.streakBonus) { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; lastDraw = res.cards; bonusPacks++; } }
+  }
+  if (!played) { toast(state.matchesLeft <= 0 ? "今日场次已用完" : "阵容未组齐（缺位置）"); return; }
+  lastMatch = lastR;
+  render();
+  toast(`快速 ${played} 场：${wins} 胜 ${played - wins} 负 · +${coins} 金币${promos ? " · 升段×" + promos : ""}${bonusPacks ? " · 连胜奖包×" + bonusPacks + "（见开包页）" : ""}`);
+};
 $("#weekBtn").onclick = () => {
   const packs = 1 + state.division;
   let got = [];
@@ -1408,7 +1424,7 @@ function renderMeta() {
   $("#adDoubleBtn").disabled = cnt("double") >= 2 || Math.floor(state.idlePending || 0) <= 0;
   $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/2）`;
   $("#adDiaBtn").disabled = cnt("dia") >= 1;
-  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 1);
+  $("#adLeagueBtn").disabled = !(state.matchesLeft <= 0 && cnt("league") < 4);
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
   $("#adTotal").textContent = `今日广告 ${KBAds.todayCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）`;
   // 成就（图鉴页）
@@ -1451,10 +1467,10 @@ function applyAdReward(kind) {
   if (kind === "free") { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }
   else if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
   else if (kind === "dia") { state.dia += 10; }
-  else if (kind === "league") { state.matchesLeft += 3; }
+  else if (kind === "league") { state.matchesLeft += 5; }
   else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
 }
-const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +3", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
+const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +5", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
 async function adWatch(kind) {
   const res = await KBAds.watch(state, kind);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
