@@ -7,7 +7,7 @@
 <style>
 :root { --safe-top: 0px; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #14171d; color: #e8ebef; padding-top: var(--safe-top); }
+body { padding-top: var(--safe-top); font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #14171d; color: #e8ebef; padding-top: var(--safe-top); }
 header { padding: 14px 16px 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 h1 { font-size: 20px; letter-spacing: 2px; }
 h1 small { font-size: 11px; color: #8b95a3; letter-spacing: 0; }
@@ -77,7 +77,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </head>
 <body>
 <header>
-  <h1>开包大亨 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span></h1>
+  <h1>开包大亨 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span> <span id="nickTag" class="hint"></span></h1>
   <div class="wallet"><span>🪙 <b id="coins">0</b> 金币</span><span class="d">💎 <b id="dia">0</b> 钻石</span></div>
 </header>
 <div class="pitybar"><div id="pityFill"></div><span id="pityText"></span></div>
@@ -170,7 +170,8 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>我的卡库（<span id="libCount">0</span> 张）</h2>
   <div class="row">
     <label>排序 <select id="sortSel"><option value="tier">稀有度</option><option value="rating">评分</option><option value="value">身价（行情）</option></select></label>
-    <button class="btn ghost" id="resetBtn">删档重开</button>
+    <button class="btn ghost" id="deskBtn" style="display:none">添加到桌面</button>
+  <button class="btn ghost" id="resetBtn">删档重开</button>
   </div>
   <div class="grid" id="libGrid"></div>
   <h2>合成炉</h2>
@@ -189,11 +190,11 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   评分由制作组按「现役看近两年表现、名宿看巅峰能力与历史地位」拟定，属游戏内设计数值（版本 v0.2），不代表任何官方评价。本游戏无任何充值入口，广告纯自愿、不看也能完整游玩。
 </footer>
 <div id="toast"></div>
-<div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><button class="btn" id="posterClose">关闭</button></div></div>
+<div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button><button class="btn" id="posterClose">关闭</button></div></div></div>
 <script>
 // ===== players.js =====
-// Generated from 卡池v0.2.csv (FROZEN v0.2 + errata 2026-11-01: 孙兴慜换恩凯提亚) - do not edit by hand
-const PLAYERS = [{"id": 1, "name": "雅辛", "pos": "GK", "tier": "传世", "rating": 94, "series": "名宿", "tag": "金球门将"}, {"id": 2, "name": "布冯", "pos": "GK", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 3, "name": "库尔图瓦", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 4, "name": "多纳鲁马", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 5, "name": "阿利松", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 6, "name": "奥布拉克", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 7, "name": "索默", "pos": "GK", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 8, "name": "拉亚", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 9, "name": "马马尔达什维利", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 10, "name": "迪奥戈·科斯塔", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 11, "name": "乌奈·西蒙", "pos": "GK", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 12, "name": "特拉普", "pos": "GK", "tier": "史诗", "rating": 85, "series": "现役", "tag": ""}, {"id": 13, "name": "斯维拉尔", "pos": "GK", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 14, "name": "奥纳纳", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 15, "name": "皮克福德", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 16, "name": "凯帕", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 17, "name": "拉姆斯代尔", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 18, "name": "罗伯特·桑切斯", "pos": "GK", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 19, "name": "马特·瑞安", "pos": "GK", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 20, "name": "铃木彩艳", "pos": "GK", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 21, "name": "王大雷", "pos": "GK", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 22, "name": "颜骏凌", "pos": "GK", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 23, "name": "韩佳奇", "pos": "GK", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 24, "name": "鲍亚雄", "pos": "GK", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}, {"id": 25, "name": "贝肯鲍尔", "pos": "DF", "tier": "传世", "rating": 95, "series": "名宿", "tag": "足球皇帝"}, {"id": 26, "name": "马尔蒂尼", "pos": "DF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 27, "name": "拉莫斯", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 28, "name": "卡纳瓦罗", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 29, "name": "范戴克", "pos": "DF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 30, "name": "鲁本·迪亚斯", "pos": "DF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 31, "name": "萨利巴", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 32, "name": "巴斯托尼", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 33, "name": "加布里埃尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 34, "name": "格瓦迪奥尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 35, "name": "孔德", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 36, "name": "金玟哉", "pos": "DF", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 37, "name": "什克里尼亚尔", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 38, "name": "卢卡斯·埃尔南德斯", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 39, "name": "富安健洋", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 40, "name": "阿坎吉", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 41, "name": "托莫里", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 42, "name": "板仓滉", "pos": "DF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 43, "name": "吉田麻也", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 44, "name": "朴志洙", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 45, "name": "蒋光太", "pos": "DF", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 46, "name": "蒋圣龙", "pos": "DF", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 47, "name": "朱辰杰", "pos": "DF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 48, "name": "刘洋", "pos": "DF", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 49, "name": "马拉多纳", "pos": "MF", "tier": "传世", "rating": 96, "series": "名宿", "tag": "球王"}, {"id": 50, "name": "齐达内", "pos": "MF", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 51, "name": "伊涅斯塔", "pos": "MF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 52, "name": "罗德里", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 53, "name": "卡卡", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 54, "name": "哈维", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 55, "name": "莫德里奇", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 56, "name": "德布劳内", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 57, "name": "贝林厄姆", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 58, "name": "穆西亚拉", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 59, "name": "皮尔洛", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 60, "name": "克罗斯", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 61, "name": "维尔茨", "pos": "MF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 62, "name": "佩德里", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 63, "name": "维蒂尼亚", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 64, "name": "麦卡利斯特", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 65, "name": "巴雷拉", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 66, "name": "恰尔汗奥卢", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 67, "name": "恩佐·费尔南德斯", "pos": "MF", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 68, "name": "京多安", "pos": "MF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 69, "name": "卡塞米罗", "pos": "MF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 70, "name": "若日尼奥", "pos": "MF", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 71, "name": "南野拓实", "pos": "MF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 72, "name": "吴曦", "pos": "MF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 73, "name": "梅西", "pos": "WG", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 74, "name": "罗纳尔迪尼奥", "pos": "WG", "tier": "传世", "rating": 94, "series": "名宿", "tag": "足球精灵"}, {"id": 75, "name": "亨利", "pos": "WG", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 76, "name": "姆巴佩", "pos": "WG", "tier": "传说", "rating": 92, "series": "现役", "tag": ""}, {"id": 77, "name": "亚马尔", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 78, "name": "维尼修斯", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 79, "name": "萨拉赫", "pos": "WG", "tier": "传说", "rating": 90, "series": "现役", "tag": "争议评分"}, {"id": 80, "name": "萨卡", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 81, "name": "莱奥", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 82, "name": "克瓦拉茨赫利亚", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 83, "name": "福登", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 84, "name": "罗德里戈", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 85, "name": "三笘薰", "pos": "WG", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 86, "name": "奥尔莫", "pos": "WG", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 87, "name": "久保建英", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 88, "name": "鲍恩", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 89, "name": "库杜斯", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 90, "name": "马丁内利", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 91, "name": "安东尼", "pos": "WG", "tier": "稀有", "rating": 79, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 92, "name": "伊东纯也", "pos": "WG", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 93, "name": "韦世豪", "pos": "WG", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 94, "name": "林良铭", "pos": "WG", "tier": "普通", "rating": 73, "series": "现役", "tag": ""}, {"id": 95, "name": "杨立瑜", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 96, "name": "王钰栋", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 97, "name": "贝利", "pos": "ST", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 98, "name": "C罗", "pos": "ST", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 99, "name": "克鲁伊夫", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": ""}, {"id": 100, "name": "罗纳尔多", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": "外星人"}, {"id": 101, "name": "哈兰德", "pos": "ST", "tier": "传说", "rating": 92, "series": "现役", "tag": "争议评分"}, {"id": 102, "name": "凯恩", "pos": "ST", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 103, "name": "莱万多夫斯基", "pos": "ST", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 104, "name": "孙兴慜", "pos": "ST", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 105, "name": "奥斯梅恩", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 106, "name": "劳塔罗·马丁内斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 107, "name": "伊萨克", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 108, "name": "阿尔瓦雷斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 109, "name": "哲凯赖什", "pos": "ST", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 110, "name": "沃特金斯", "pos": "ST", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 111, "name": "加克波", "pos": "ST", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 112, "name": "哈弗茨", "pos": "ST", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 113, "name": "努涅斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 114, "name": "热苏斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 115, "name": "费兰·托雷斯", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 116, "name": "理查利森", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 117, "name": "希门尼斯", "pos": "ST", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 118, "name": "武磊", "pos": "ST", "tier": "普通", "rating": 76, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 119, "name": "张玉宁", "pos": "ST", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 120, "name": "拜合拉木", "pos": "ST", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}];
+// Generated from 卡池v0.2.csv (FROZEN v0.2 + errata: 孙兴慜换恩凯提亚; 梅西/C罗系列纠正为现役) - do not edit by hand
+const PLAYERS = [{"id": 1, "name": "雅辛", "pos": "GK", "tier": "传世", "rating": 94, "series": "名宿", "tag": "金球门将"}, {"id": 2, "name": "布冯", "pos": "GK", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 3, "name": "库尔图瓦", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 4, "name": "多纳鲁马", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 5, "name": "阿利松", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 6, "name": "奥布拉克", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 7, "name": "索默", "pos": "GK", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 8, "name": "拉亚", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 9, "name": "马马尔达什维利", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 10, "name": "迪奥戈·科斯塔", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 11, "name": "乌奈·西蒙", "pos": "GK", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 12, "name": "特拉普", "pos": "GK", "tier": "史诗", "rating": 85, "series": "现役", "tag": ""}, {"id": 13, "name": "斯维拉尔", "pos": "GK", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 14, "name": "奥纳纳", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 15, "name": "皮克福德", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 16, "name": "凯帕", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 17, "name": "拉姆斯代尔", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 18, "name": "罗伯特·桑切斯", "pos": "GK", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 19, "name": "马特·瑞安", "pos": "GK", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 20, "name": "铃木彩艳", "pos": "GK", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 21, "name": "王大雷", "pos": "GK", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 22, "name": "颜骏凌", "pos": "GK", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 23, "name": "韩佳奇", "pos": "GK", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 24, "name": "鲍亚雄", "pos": "GK", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}, {"id": 25, "name": "贝肯鲍尔", "pos": "DF", "tier": "传世", "rating": 95, "series": "名宿", "tag": "足球皇帝"}, {"id": 26, "name": "马尔蒂尼", "pos": "DF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 27, "name": "拉莫斯", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 28, "name": "卡纳瓦罗", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 29, "name": "范戴克", "pos": "DF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 30, "name": "鲁本·迪亚斯", "pos": "DF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 31, "name": "萨利巴", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 32, "name": "巴斯托尼", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 33, "name": "加布里埃尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 34, "name": "格瓦迪奥尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 35, "name": "孔德", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 36, "name": "金玟哉", "pos": "DF", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 37, "name": "什克里尼亚尔", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 38, "name": "卢卡斯·埃尔南德斯", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 39, "name": "富安健洋", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 40, "name": "阿坎吉", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 41, "name": "托莫里", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 42, "name": "板仓滉", "pos": "DF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 43, "name": "吉田麻也", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 44, "name": "朴志洙", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 45, "name": "蒋光太", "pos": "DF", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 46, "name": "蒋圣龙", "pos": "DF", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 47, "name": "朱辰杰", "pos": "DF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 48, "name": "刘洋", "pos": "DF", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 49, "name": "马拉多纳", "pos": "MF", "tier": "传世", "rating": 96, "series": "名宿", "tag": "球王"}, {"id": 50, "name": "齐达内", "pos": "MF", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 51, "name": "伊涅斯塔", "pos": "MF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 52, "name": "罗德里", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 53, "name": "卡卡", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 54, "name": "哈维", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 55, "name": "莫德里奇", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 56, "name": "德布劳内", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 57, "name": "贝林厄姆", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 58, "name": "穆西亚拉", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 59, "name": "皮尔洛", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 60, "name": "克罗斯", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 61, "name": "维尔茨", "pos": "MF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 62, "name": "佩德里", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 63, "name": "维蒂尼亚", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 64, "name": "麦卡利斯特", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 65, "name": "巴雷拉", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 66, "name": "恰尔汗奥卢", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 67, "name": "恩佐·费尔南德斯", "pos": "MF", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 68, "name": "京多安", "pos": "MF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 69, "name": "卡塞米罗", "pos": "MF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 70, "name": "若日尼奥", "pos": "MF", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 71, "name": "南野拓实", "pos": "MF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 72, "name": "吴曦", "pos": "MF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 73, "name": "梅西", "pos": "WG", "tier": "传世", "rating": 97, "series": "现役", "tag": "球王"}, {"id": 74, "name": "罗纳尔迪尼奥", "pos": "WG", "tier": "传世", "rating": 94, "series": "名宿", "tag": "足球精灵"}, {"id": 75, "name": "亨利", "pos": "WG", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 76, "name": "姆巴佩", "pos": "WG", "tier": "传说", "rating": 92, "series": "现役", "tag": ""}, {"id": 77, "name": "亚马尔", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 78, "name": "维尼修斯", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 79, "name": "萨拉赫", "pos": "WG", "tier": "传说", "rating": 90, "series": "现役", "tag": "争议评分"}, {"id": 80, "name": "萨卡", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 81, "name": "莱奥", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 82, "name": "克瓦拉茨赫利亚", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 83, "name": "福登", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 84, "name": "罗德里戈", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 85, "name": "三笘薰", "pos": "WG", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 86, "name": "奥尔莫", "pos": "WG", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 87, "name": "久保建英", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 88, "name": "鲍恩", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 89, "name": "库杜斯", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 90, "name": "马丁内利", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 91, "name": "安东尼", "pos": "WG", "tier": "稀有", "rating": 79, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 92, "name": "伊东纯也", "pos": "WG", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 93, "name": "韦世豪", "pos": "WG", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 94, "name": "林良铭", "pos": "WG", "tier": "普通", "rating": 73, "series": "现役", "tag": ""}, {"id": 95, "name": "杨立瑜", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 96, "name": "王钰栋", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 97, "name": "贝利", "pos": "ST", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 98, "name": "C罗", "pos": "ST", "tier": "传世", "rating": 95, "series": "现役", "tag": ""}, {"id": 99, "name": "克鲁伊夫", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": ""}, {"id": 100, "name": "罗纳尔多", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": "外星人"}, {"id": 101, "name": "哈兰德", "pos": "ST", "tier": "传说", "rating": 92, "series": "现役", "tag": "争议评分"}, {"id": 102, "name": "凯恩", "pos": "ST", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 103, "name": "莱万多夫斯基", "pos": "ST", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 104, "name": "孙兴慜", "pos": "ST", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 105, "name": "奥斯梅恩", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 106, "name": "劳塔罗·马丁内斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 107, "name": "伊萨克", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 108, "name": "阿尔瓦雷斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 109, "name": "哲凯赖什", "pos": "ST", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 110, "name": "沃特金斯", "pos": "ST", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 111, "name": "加克波", "pos": "ST", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 112, "name": "哈弗茨", "pos": "ST", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 113, "name": "努涅斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 114, "name": "热苏斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 115, "name": "费兰·托雷斯", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 116, "name": "理查利森", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 117, "name": "希门尼斯", "pos": "ST", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 118, "name": "武磊", "pos": "ST", "tier": "普通", "rating": 76, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 119, "name": "张玉宁", "pos": "ST", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 120, "name": "拜合拉木", "pos": "ST", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}];
 if (typeof module!=="undefined") module.exports = PLAYERS;
 
 // ===== engine.js =====
@@ -310,7 +311,7 @@ const KBEngine = (() => {
       signTotal: 0, lastSignDay: "", daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
-      adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, weekKey: "", weekPending: false };
+      adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, adLocked: false, weekKey: "", weekPending: false };
     st.cards = starterFive(st, rng);
     return st;
   }
@@ -358,6 +359,7 @@ const KBSave = (() => {
         st.weekKey = st.weekKey || ""; st.weekPending = false;
       }
       if (st.version !== 3) return null;
+      if (st.adLocked === undefined) st.adLocked = false;
       return st;
     } catch (e) { return null; }
   }
@@ -625,33 +627,129 @@ const KBSystems = (() => {
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
-// ===== ads.js =====
-// 广告桥（规格 §11）：统一 watch(kind) 入口
-// - 虎扑容器内：走平台激励视频桥（vatask 风格），PENDING 落标，重载后凭 pending 记录补发
-// - 普通浏览器（Pages/本地）：模拟广告浮层（3 秒），行为与真桥一致，供试玩验收
-// 幂等：每次观看有 runId；奖励发放由调用方凭 runId+日期+kind 去重（state.adGrants）
-const KBAds = (() => {
-  const LIMITS = { free: 1, double: 2, dia: 1, league: 1, urdraw: 1 }; // 五点位日限，合计封顶 6
-  const TOTAL_CAP = 6;
-  function nativeBridge() {
+// ===== platform.js =====
+// 虎扑容器（ColorboxAI）平台能力——特性检测、静默降级（口径同《大金撤离》已验证版）：
+// cloudSave 云存档镜像/恢复、auth 昵称、oss+bbs 海报发帖、addToDesktop、全屏安全距。
+const KBPlatform = (() => {
+  const CB = () => (typeof window !== "undefined" ? window.ColorboxAI : undefined);
+  const CLOUD_KEY = "kaibao_save_v1";
+  function inContainer() { return !!CB(); }
+  let lastMirror = 0;
+  function mirrorCloudSave(state) {
+    const cb = CB();
+    if (!cb || !cb.cloudSave || typeof cb.cloudSave.setValue !== "function") return;
+    const now = Date.now();
+    if (now - lastMirror < 5000) return; // 节流 5 秒
+    lastMirror = now;
     try {
-      if (typeof window !== "undefined") {
-        if (window.vatask && typeof window.vatask.completeRewardVideo === "function") return window.vatask;
-        if (window.HupuJSBridge && typeof window.HupuJSBridge.showRewardVideo === "function") return window.HupuJSBridge;
+      const p = cb.cloudSave.setValue({ key: CLOUD_KEY, value: JSON.stringify(state) });
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+  }
+  async function restoreCloudIfLocalFresh(local) {
+    const cb = CB();
+    if (!cb || !cb.cloudSave || typeof cb.cloudSave.getValue !== "function") return null;
+    if ((local.draws || 0) > 0 || (local.cards || []).length > 5) return null; // 本地已有进度绝不覆盖
+    try {
+      const res = await cb.cloudSave.getValue({ key: CLOUD_KEY });
+      if (res && res.code === 200 && res.data) {
+        const cloud = JSON.parse(res.data);
+        if (cloud && ((cloud.draws || 0) > 0 || (cloud.cards || []).length > 5)) return cloud;
       }
     } catch (e) {}
     return null;
   }
-  function isNative() { return !!nativeBridge(); }
-  function todayCount(state) { return Object.values(state.adDay.counts).reduce((s, n) => s + n, 0); }
-  function canWatch(state, kind) {
-    if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
-    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 6" };
-    if (state.adPending) return { ok: false, reason: "上一条广告待确认中" };
+  async function fetchNickname() {
+    const cb = CB();
+    if (!cb || !cb.auth || typeof cb.auth.getUserInfo !== "function") return null;
+    try {
+      const r = await cb.auth.getUserInfo();
+      if (r && r.code === 200 && r.data && r.data.nickname) return r.data.nickname;
+    } catch (e) {}
+    return null;
+  }
+  async function postPoster(blob, title, content) {
+    const cb = CB();
+    if (!cb || !cb.oss || typeof cb.oss.uploadFile !== "function" || !cb.request || !cb.request.bbs || typeof cb.request.bbs.openPostEditor !== "function")
+      return { ok: false, message: "请在虎扑 App 内使用发帖" };
+    let up;
+    try { up = await cb.oss.uploadFile({ file: blob, filename: "kaibao-poster.png" }); }
+    catch (e) { return { ok: false, message: (e && e.message) || "海报上传失败，请重试" }; }
+    const imageUrl = up && up.downloadUrl;
+    if (!imageUrl) return { ok: false, message: (up && up.message) || "海报上传失败，请重试" };
+    const params = { title, content, imageUrl };
+    try {
+      const bbs = cb.bbsConfig && await cb.bbsConfig.get();
+      if (bbs && typeof bbs.bbsTagId === "string" && bbs.bbsTagId.trim() !== "") {
+        params.topicId = bbs.bbsTopicId; params.tagId = bbs.bbsTagId;
+        params.topicName = bbs.bbsTopicName; params.tagName = bbs.bbsTagName;
+      }
+    } catch (e) {}
+    let res;
+    try { res = await cb.request.bbs.openPostEditor(params); }
+    catch (e) { return { ok: false, message: (e && e.message) || "发帖编辑器打开失败" }; }
+    if (!res || res.code !== 200) return { ok: false, message: (res && res.message) || "发帖编辑器打开失败" };
     return { ok: true };
   }
-  // 模拟广告浮层（浏览器环境）
-  function simulatedWatch(kind) {
+  function desktopAvailable() { const cb = CB(); return !!cb && typeof cb.addToDesktop === "function"; }
+  async function addToDesktop() {
+    const cb = CB();
+    if (!desktopAvailable()) return { state: "unsupported", message: "请在虎扑 App 内使用" };
+    let res;
+    try { res = await cb.addToDesktop(); }
+    catch (e) { return { state: "error", message: (e && e.message) || "添加到桌面失败，请稍后重试" }; }
+    if (!res || res.code !== 200) return { state: "error", message: (res && res.message) || "添加到桌面失败，请稍后重试" };
+    const d = res.data || {};
+    if (d.alreadyAdded === true) return { state: "already", message: "已添加过，请勿重复添加" };
+    const br = d.bridgeResult;
+    if (br && br.result === false) return { state: "error", message: br.errorMsg || "添加到桌面失败，请稍后重试" };
+    if (br && br.result === true && d.platform === "android") return { state: "added", message: "已添加到桌面" };
+    return { state: "silent", message: "" };
+  }
+  // 全屏安全距：取一次写入 --safe-top，页面只在 body padding-top 引用一次，不叠加
+  function applySafeTop() {
+    try {
+      const cb = CB();
+      if (cb && typeof cb.getFullscreenSafeTop === "function") {
+        const h = cb.getFullscreenSafeTop();
+        if (typeof h === "number" && h > 0) document.documentElement.style.setProperty("--safe-top", h + "px");
+      }
+    } catch (e) {}
+  }
+  return { inContainer, mirrorCloudSave, restoreCloudIfLocalFresh, fetchNickname, postPoster, desktopAvailable, addToDesktop, applySafeTop };
+})();
+if (typeof module !== "undefined") module.exports = KBPlatform;
+
+// ===== ads.js =====
+// 广告桥（规格 §11）：统一 watch(kind) 入口
+// 虎扑容器真桥口径（与《乱世拼将》《大金撤离》同款，已实测）：
+//   window.ColorboxAI.vatask.completeRewardVideo() → {code:200, data:{rewarded}}
+//   window.ColorboxAI.vatask.getActivityTaskState() → {code:200, data:{tasks:[{taskCode:'reward', status}]}}
+// 平台侧只有一个 reward 任务、周期由运营配置；能否发奖以 SDK 本次返回为准，
+// 平台以 UNAVAILABLE 明确拒绝时才锁定按钮（不得用自设闸冒充平台规则）。
+// 容器可能在广告期间重载页面：拉起前在 localStorage 落 PENDING{kind,runId,ts}，
+// 重载后凭平台任务状态 = completed 才补发（30 分钟内有效），核对不上不发。
+// 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
+const KBAds = (() => {
+  const LIMITS = { free: 1, double: 2, dia: 1, league: 1, urdraw: 1 }; // 游戏侧点位日限，合计封顶 6
+  const TOTAL_CAP = 6;
+  const PENDING_KEY = "kaibao_pending_ad";
+  function vatask() {
+    try {
+      if (typeof window !== "undefined" && window.ColorboxAI && window.ColorboxAI.vatask
+        && typeof window.ColorboxAI.vatask.completeRewardVideo === "function") return window.ColorboxAI.vatask;
+    } catch (e) {}
+    return null;
+  }
+  function isNative() { return !!vatask(); }
+  function todayCount(state) { return Object.values(state.adDay.counts).reduce((s, n) => s + n, 0); }
+  function canWatch(state, kind) {
+    if (state.adLocked) return { ok: false, reason: "今日广告奖励已领完（平台返回）" };
+    if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
+    if (todayCount(state) >= TOTAL_CAP) return { ok: false, reason: "今日广告总次数已达上限 6" };
+    return { ok: true };
+  }
+  function simulatedWatch() {
     return new Promise(resolve => {
       const div = document.createElement("div");
       div.style.cssText = "position:fixed;inset:0;background:rgba(8,10,14,.96);z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e8ebef;font-size:16px;gap:14px";
@@ -662,33 +760,34 @@ const KBAds = (() => {
         n--;
         const el = div.querySelector("#adCount");
         if (el) el.textContent = Math.max(n, 0);
-        if (n <= 0) { clearInterval(iv); div.remove(); resolve(true); }
+        if (n <= 0) { clearInterval(iv); div.remove(); resolve({ ok: true }); }
       }, 1000);
     });
   }
-  function nativeWatch(kind, runId) {
-    return new Promise(resolve => {
-      const bridge = nativeBridge();
-      let settled = false;
-      const done = ok => { if (!settled) { settled = true; resolve(ok); } };
-      try {
-        if (bridge === window.vatask) {
-          bridge.completeRewardVideo({ taskId: kind, runId }, res => done(!!(res && (res.completed || res.status === "completed"))));
-        } else {
-          bridge.showRewardVideo({ kind, runId }, res => done(!!(res && res.completed)));
-        }
-      } catch (e) { done(false); }
-      setTimeout(() => done(false), 120000); // 2 分钟无回调视为失败
-    });
+  async function nativeWatch(kind, runId) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ kind, runId, ts: Date.now() })); } catch (e) {}
+    try {
+      const res = await vatask().completeRewardVideo();
+      try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+      if (res && res.code === 200 && res.data && res.data.rewarded) return { ok: true };
+      const msg = (res && (res.message || res.data && res.data.reason)) || "";
+      if (/UNAVAILABLE/i.test(JSON.stringify(res || {}))) return { ok: false, unavailable: true, reason: "今日广告奖励已领完" };
+      return { ok: false, reason: msg || "广告未完整观看" };
+    } catch (e) {
+      try { localStorage.removeItem(PENDING_KEY); } catch (e2) {}
+      return { ok: false, reason: "广告拉起失败，请重试" };
+    }
   }
-  // 发起观看：先落 PENDING（state.adPending），成功后由调用方 grant(runId) 发奖并清 pending
   async function watch(state, kind) {
     const chk = canWatch(state, kind);
     if (!chk.ok) return chk;
     const runId = kind + "-" + Date.now() + "-" + Math.floor(Math.random() * 1e6);
+    const r = isNative() ? await nativeWatch(kind, runId) : await simulatedWatch();
+    if (!r.ok) {
+      if (r.unavailable) state.adLocked = true; // 仅平台明拒才锁
+      return r;
+    }
     state.adPending = { runId, kind, ts: Date.now() };
-    const ok = isNative() ? await nativeWatch(kind, runId) : await simulatedWatch(kind);
-    if (!ok) { state.adPending = null; return { ok: false, reason: "广告未完整观看" }; }
     return { ok: true, runId };
   }
   // 发奖（幂等）：同一 runId 只发一次；计入当日点位计数
@@ -701,15 +800,28 @@ const KBAds = (() => {
     state.adPending = null;
     return true;
   }
-  // 启动时处理遗留 PENDING（容器重载场景）：超过 10 分钟未确认视为未完成，清标不发奖；
-  // 10 分钟内且原生桥存在时，无法二次确认的按平台惯例保留至下次 watch 前（此处清标并提示）
-  function settlePendingOnBoot(state) {
-    if (!state.adPending) return null;
-    const p = state.adPending;
-    state.adPending = null;
-    return p;
+  // 开机补发核对：返回 {kind, runId} 表示平台确认完成、可补发；否则 null（不发）
+  async function recoverPending(state) {
+    let raw = null;
+    try { raw = localStorage.getItem(PENDING_KEY); if (raw) localStorage.removeItem(PENDING_KEY); } catch (e) {}
+    // 模拟环境遗留的 state.adPending 不跨会话补发（模拟流程在页内闭环）
+    if (state.adPending && !isNative()) state.adPending = null;
+    if (!raw || !isNative() || typeof vatask().getActivityTaskState !== "function") return null;
+    try {
+      const j = JSON.parse(raw);
+      if (!j || !j.kind || Date.now() - (j.ts || 0) > 30 * 60 * 1000) return null;
+      const st = await vatask().getActivityTaskState();
+      if (st && st.code === 200 && st.data) {
+        const task = (st.data.tasks || []).find(x => x.taskCode === "reward");
+        if (task && task.status === "completed") {
+          state.adPending = { runId: j.runId, kind: j.kind, ts: j.ts };
+          return { kind: j.kind, runId: j.runId };
+        }
+      }
+    } catch (e) {}
+    return null;
   }
-  return { LIMITS, TOTAL_CAP, isNative, canWatch, watch, grant, settlePendingOnBoot, todayCount };
+  return { LIMITS, TOTAL_CAP, isNative, canWatch, watch, grant, recoverPending, todayCount };
 })();
 if (typeof module !== "undefined") module.exports = KBAds;
 
@@ -858,21 +970,24 @@ state.dayIndex = D;
 if (state.matchDay !== String(D)) { state.matchesLeft = 5; state.matchDay = String(D); }
 if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
 // M3 每日/每周/广告日计数重置
-if (state.daily.day !== todayStr()) state.daily = { day: todayStr(), packs: 0, matches: 0, idle: 0, claimed: false };
-if (state.adDay.day !== todayStr()) state.adDay = { day: todayStr(), counts: {} };
-const _bootPending = KBAds.settlePendingOnBoot(state);
+ensurePeriods();
+function ensurePeriods() {
+  if (state.daily.day !== todayStr()) state.daily = { day: todayStr(), packs: 0, matches: 0, idle: 0, claimed: false };
+  if (state.adDay.day !== todayStr()) { state.adDay = { day: todayStr(), counts: {} }; state.adLocked = false; }
+  const wk = (() => { const d = new Date(); const onejan = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + "-W" + Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7); })();
+  if (state.weekly.key !== wk) state.weekly = { key: wk, synth: 0, wins: 0, dexBase: new Set(state.cards.map(c => c.pid)).size, claimed: false };
+}
 S.accrueIdle(state, Date.now());
 // 周结算（§7）：新的一周生成待领奖励
 const weekKey = (() => { const d = new Date(); const onejan = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + "-W" + Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7); })();
 if (state.weekKey && state.weekKey !== weekKey) state.weekPending = true;
-if (state.weekly.key !== weekKey) state.weekly = { key: weekKey, synth: 0, wins: 0, dexBase: new Set(state.cards.map(c => c.pid)).size, claimed: false };
 state.weekKey = weekKey;
 if (!state.lineup || Object.values(state.lineup).every(v => !v)) S.autoLineup(state);
 KBSave.save(state);
 
 let lastDraw = [], sortMode = "tier", lastMatch = null, pickSlot = null, pickPos = null;
 const $ = s => document.querySelector(s);
-function persist() { KBSave.save(state); }
+function persist() { KBSave.save(state); KBPlatform.mirrorCloudSave(state); }
 function todayStr() { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 const avatarCache = {};
 function avatarURL(p) {
@@ -1214,21 +1329,45 @@ function switchTab(name) {
   document.querySelectorAll(".page").forEach(x => x.classList.toggle("on", x.id === "page-" + name));
 }
 // ----- 广告点位 -----
-async function adWatch(kind, applyFn, okMsg) {
+function applyAdReward(kind) {
+  if (kind === "free") { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }
+  else if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
+  else if (kind === "dia") { state.dia += 10; }
+  else if (kind === "league") { state.matchesLeft += 3; }
+  else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
+}
+const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +3", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
+async function adWatch(kind) {
   const res = await KBAds.watch(state, kind);
-  if (!res.ok) { persist(); toast(res.reason); return; }
-  const granted = KBAds.grant(state, res.runId, kind, applyFn);
+  if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
+  const granted = KBAds.grant(state, res.runId, kind, () => applyAdReward(kind));
   render();
-  toast(granted ? okMsg : "奖励已发放过（幂等拦截）");
+  toast(granted ? AD_OK_MSG[kind] : "奖励已发放过（幂等拦截）");
 }
 $("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +150 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +200 金 +3 钻"); } else toast(r.reason); };
 $("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +20 钻"); } else toast(r.reason); };
-$("#adFreeBtn").onclick = () => adWatch("free", () => { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }, "广告免费包已到账（见开包结果）");
-$("#adDoubleBtn").onclick = () => adWatch("double", () => { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }, "挂机收益双倍领取成功");
-$("#adDiaBtn").onclick = () => adWatch("dia", () => { state.dia += 10; }, "钻石小包 +10 钻");
-$("#adLeagueBtn").onclick = () => adWatch("league", () => { state.matchesLeft += 3; }, "联赛场次 +3");
-$("#adUrBtn").onclick = () => adWatch("urdraw", () => { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }, "传世箱体验抽已出卡（助力卡，图鉴照常点亮）");
+$("#adFreeBtn").onclick = () => adWatch("free");
+$("#adDoubleBtn").onclick = () => adWatch("double");
+$("#adDiaBtn").onclick = () => adWatch("dia");
+$("#adLeagueBtn").onclick = () => adWatch("league");
+$("#adUrBtn").onclick = () => adWatch("urdraw");
+// 开机：广告 PENDING 凭平台 completed 补发（仅容器内）
+KBAds.recoverPending(state).then(rec => {
+  if (!rec) return;
+  const granted = KBAds.grant(state, rec.runId, rec.kind, () => applyAdReward(rec.kind));
+  if (granted) { render(); toast("上次广告奖励已补发"); }
+});
+// 开机：云存档恢复（本地无进度才拉）+ 昵称 + 安全距 + 桌面按钮
+KBPlatform.applySafeTop();
+KBPlatform.restoreCloudIfLocalFresh(state).then(cloud => {
+  if (!cloud) return;
+  try { localStorage.setItem(KBSave.KEY, JSON.stringify(cloud)); } catch (e) {}
+  const loaded = KBSave.load();
+  if (loaded) { state = loaded; state.dayIndex = D; ensurePeriods(); S.accrueIdle(state); if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D); render(); toast("已从云端恢复存档"); }
+});
+KBPlatform.fetchNickname().then(n => { if (n) $("#nickTag").textContent = "店主 · " + n; });
+if (KBPlatform.desktopAvailable()) { $("#deskBtn").style.display = ""; $("#deskBtn").onclick = async () => { const r = await KBPlatform.addToDesktop(); if (r.message) toast(r.message); }; }
 // ----- 晒单卡 -----
 function checkPoster(cards) {
   const hit = cards.find(c => c.tier === "传世") || cards.find(c => c.stamp === "/1");
@@ -1255,12 +1394,23 @@ function showPoster(card) {
     g.fillStyle = "#e8ebef"; g.font = "italic 34px sans-serif"; g.fillText("「" + KBMeta.posterLine(card) + "」", 375, 840);
     g.fillStyle = "#8b95a3"; g.font = "24px sans-serif";
     g.fillText("开包大亨 · 无充值球星卡 · 长按图片保存晒单", 375, 930);
+    lastPoster = { canvas: cv, card };
     $("#posterImg").src = cv.toDataURL("image/png");
     $("#posterModal").classList.add("show");
   };
   img.src = avatarURL(playerOf(card));
 }
 $("#posterClose").onclick = () => $("#posterModal").classList.remove("show");
+let lastPoster = null;
+$("#posterPost").onclick = () => {
+  if (!lastPoster) return;
+  if (!KBPlatform.inContainer()) { toast("发帖请在虎扑 App 内使用，图片可长按保存"); return; }
+  lastPoster.canvas.toBlob(async blob => {
+    const card = lastPoster.card;
+    const r = await KBPlatform.postPoster(blob, `开包大亨｜${card.tier} ${card.name}${card.stamp !== "无编" ? " 限编" + card.stamp : ""}`, KBMeta.posterLine(card) + "（开包大亨 · 无充值球星卡）");
+    toast(r.ok ? "已唤起发帖编辑器" : r.message);
+  }, "image/png");
+};
 // ----- 存档码 -----
 $("#exportBtn").onclick = () => { $("#codeBox").value = KBMeta.exportCode(state); $("#codeBox").select(); toast("存档码已生成，复制保存好"); };
 $("#importBtn").onclick = () => {
