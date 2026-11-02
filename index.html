@@ -364,10 +364,10 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 
 <section class="page" id="page-packs">
   <div class="packs">
-    <div class="pack"><img class="packart" data-packart="normal" alt=""><h3>普通包</h3><p>5 张 · 传世 0.3%/张<br>普通62 稀有26 史诗9 传说2.7</p><button data-pack="normal">400 金币</button></div>
-    <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张 · 传世 0.9%/张<br>连 10 包无传说+ 保底传说</p><button data-pack="premium">1400 金币</button></div>
+    <div class="pack"><img class="packart" data-packart="normal" alt=""><h3>普通包</h3><p>5 张 · 最高史诗<br>普通62 稀有26 史诗12</p><button data-pack="normal">400 金币</button></div>
+    <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张 · 最高史诗<br>史诗 30% · 不出传说/传世</p><button data-pack="premium">1400 金币</button></div>
     <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>传世箱</h3><p>3 张 · 传世 4%/张<br>无普通档 · 保底 1 张史诗+</p><button data-pack="urbox">40 钻石</button></div>
-    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 高级包概率<br>传说/传世必为名宿</p><button id="legendPackBtn">1800 金币</button></div>
+    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说 24%/传世 8%<br>传说/传世必为名宿</p><button id="legendPackBtn">30 钻石</button></div>
   </div>
   <p id="pityLine" class="pityline"></p>
   <p class="hint">💎 钻石专开传世箱：无普通档，史诗 50% · 传说 22% · 传世 4%，每箱保底 1 张史诗+。钻石靠签到、每日任务、成就和广告攒，点顶部钻石数可直达。</p>
@@ -375,7 +375,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <button class="btn" id="freeBtn">领今日免费包</button>
     <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
     <button class="btn ghost" id="adUrBtn">📺 传世箱体验抽（助力）</button>
-    <span class="hint">保底：第 240 张必出传世（跨日累计）；每包至少覆盖 3 个位置（传世箱 2 个）。</span>
+    <span class="hint">保底：第 240 张必出传世（计数跨包累计，在传世箱/名宿系列包兑现）；每包至少覆盖 3 个位置（传世箱 2 个）。</span>
   </div>
   <div id="drawSummary"></div>
   <div class="grid" id="drawGrid"></div>
@@ -504,8 +504,8 @@ const KBEngine = (() => {
   const TIERS = ["普通", "稀有", "史诗", "传说", "传世"];
   const BASE = { "普通": 80, "稀有": 250, "史诗": 800, "传说": 2500, "传世": 9000 };
   const PACKS = {
-    normal: { name: "普通包", price: 400, cur: "coins", size: 5, odds: { "普通": .62, "稀有": .26, "史诗": .09, "传说": .027, "传世": .003 }, minPos: 3 },
-    premium: { name: "高级包", price: 1400, cur: "coins", size: 5, odds: { "普通": .32, "稀有": .38, "史诗": .21, "传说": .081, "传世": .009 }, minPos: 3 },
+    normal: { name: "普通包", price: 400, cur: "coins", size: 5, odds: { "普通": .62, "稀有": .26, "史诗": .12, "传说": 0, "传世": 0 }, minPos: 3 }, // 2026-11-03 主人拍板：金币包不出传说/传世（原 .027/.003 概率并入史诗）
+    premium: { name: "高级包", price: 1400, cur: "coins", size: 5, odds: { "普通": .32, "稀有": .38, "史诗": .30, "传说": 0, "传世": 0 }, minPos: 3 }, // 同上：原传说 .081/传世 .009 并入史诗，传说/传世只走钻石包
     urbox: { name: "传世箱", price: 40, cur: "dia", size: 3, odds: { "普通": 0, "稀有": .24, "史诗": .50, "传说": .22, "传世": .04 }, minPos: 2, epicPlus: true }
   };
   const STAMPS = [ // name, prob, valueMult, idleBonus
@@ -568,7 +568,7 @@ const KBEngine = (() => {
   // Draw one delivered card for a pack, applying UR pity. forceTier overrides odds (legend pity / box guarantee handled by caller).
   function drawOne(state, pack, rng, forceTier) {
     let tier;
-    if (state.pity >= PITY_UR - 1) tier = "传世";        // this draw is the 240th
+    if (state.pity >= PITY_UR - 1 && pack.odds["传世"] > 0) tier = "传世"; // 保底计数跨包累计，但只在能出传世的包（钻石包）兑现——金币包已封顶史诗
     else if (forceTier) tier = forceTier;
     else tier = rollTier(pack, rng);
     const card = rollInstance(state, tier, rng);
@@ -587,7 +587,7 @@ const KBEngine = (() => {
       if (state[pack.cur] < cost) return { ok: false, reason: "货币不足" };
       state[pack.cur] -= cost;
     }
-    const forceLegendFirst = (packKey === "premium" && state.hjNoLegend >= PITY_LEGEND_PACKS - 1);
+    const forceLegendFirst = (packKey === "premium" && pack.odds["传说"] > 0 && state.hjNoLegend >= PITY_LEGEND_PACKS - 1); // 金币包封顶后 odds 为 0，此保底自动停用
     const cards = [];
     for (let i = 0; i < pack.size; i++) {
       cards.push(drawOne(state, pack, rng, (i === 0 && forceLegendFirst) ? "传说" : null));
@@ -1197,12 +1197,14 @@ const KBSystems = (() => {
     return { sell, gain, prot };
   }
 
-  // 名宿系列包（§7 Lv.7 解锁）：1800 金 5 张，高级包概率；抽到传说/传世时必为名宿
+  // 名宿系列包（§7 Lv.7 解锁）：2026-11-03 改钻石包——30 钻 5 张，专属概率；抽到传说/传世时必为名宿
+  // （原 1800 金借高级包概率；金币包封顶史诗后传说/传世只走钻石，本包随之改钻价并自带概率表）
+  const LEGEND_ODDS = { "普通": 0, "稀有": .30, "史诗": .38, "传说": .24, "传世": .08 };
   function openLegendPack(state, rng) {
     rng = rng || Math.random;
-    if (state.coins < 1800) return { ok: false, reason: "金币不足" };
-    state.coins -= 1800;
-    const pack = E.PACKS.premium;
+    if (state.dia < 30) return { ok: false, reason: "钻石不足" };
+    state.dia -= 30;
+    const pack = { odds: LEGEND_ODDS };
     const cards = [];
     for (let i = 0; i < 5; i++) {
       let tier;
@@ -2029,7 +2031,7 @@ function renderPacks() {
   document.querySelector('[data-pack="urbox"]').disabled = state.shopLv < 4;
   document.querySelector('[data-pack="urbox"]').textContent = state.shopLv < 4 ? "卡店 Lv.4 解锁" : "40 钻石";
   $("#legendPackBtn").disabled = state.shopLv < 7;
-  $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "1800 金币";
+  $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "30 钻石";
   document.querySelectorAll("[data-packart]").forEach(im => { const k = im.dataset.packart; if (typeof KBPackArt !== "undefined" && KBPackArt[k]) { im.src = KBPackArt[k]; im.style.display = ""; } else im.style.display = "none"; });
   const pl = $("#pityLine"); if (pl) pl.textContent = `🎯 传世保底：还差 ${240 - state.pity} 张必出传世（已累计 ${state.pity}/240） · 高级包传说保底进度 ${state.hjNoLegend}/10`;
   const wall = [...lastDraw].sort((a, b) => E.TIERS.indexOf(a.tier) - E.TIERS.indexOf(b.tier) || a.value - b.value); // 压轴编排：按档位升序，最好的最后揭
@@ -2742,7 +2744,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "卡库大扫除 · 1/1 真唯一", items: ["🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
+  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包（普通/高级）最高出史诗，概率并入史诗；传说/传世去传世箱和名宿系列包开，名宿包改 30 钻——传说升星从此有门槛", "🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
   { v: "全场 11 人大改版", items: ["阵容升级全场 11 人：6 种阵型自由切换（4-4-2 / 4-3-3 / 4-2-3-1 / 5-3-2 / 3-5-2 / 4-5-1），每个阵型有专属加成", "联赛全面重做：11 条对位线按分钟播报，半场比分 + 终场比分，进球只由边锋/中锋线打进", "段位线随 11 人战力重标定：青铜 920 起、大师 1060，慢慢爬才有味", "新手礼包升级首发十一人组：领完直接摆满 4-4-2 开赛", "旧存档自动迁移：原来的 5 名首发直接进新阵容，其余位置按评分补齐，卡一张不少", "新 BGM：钢琴 + 弦乐的主题曲，和篮坛卡王同一首"] },
