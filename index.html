@@ -290,6 +290,10 @@ footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8
 .reportline { color: #ffd257; font-size: 14px; margin-bottom: 6px; }
 textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-radius: 8px; padding: 8px; font-size: 12px; }
 #posterModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 50; }
+#probModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 46; padding: 18px; }
+#probModal.on { display: flex; }
+#probModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
+#probModal p { font-size: 13.5px; line-height: 1.7; margin: 8px 0; }
 #packModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 45; padding: 14px; }
 #packModal.on { display: flex; }
 #packModal .packbox { width: 100%; max-width: 460px; max-height: 92vh; overflow: auto; text-align: center; }
@@ -374,18 +378,16 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 
 <section class="page" id="page-packs">
   <div class="packs">
-    <div class="pack"><img class="packart" data-packart="normal" alt=""><h3>普通包</h3><p>5 张 · 最高史诗<br>普通62 稀有26 史诗12</p><button data-pack="normal">400 金币</button></div>
-    <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张 · 最高史诗<br>史诗 30% · 不出传说/传世</p><button data-pack="premium">1400 金币</button></div>
-    <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>传世箱</h3><p>3 张 · 传世 4%/张<br>无普通档 · 保底 1 张史诗+</p><button data-pack="urbox">40 钻石</button></div>
-    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说 24%/传世 8%<br>传说/传世必为名宿</p><button id="legendPackBtn">30 钻石</button></div>
+    <div class="pack"><img class="packart" data-packart="normal" alt=""><h3>普通包</h3><p>5 张<br>普通 62% · 稀有 26% · 史诗 12%</p><button data-pack="normal">400 金币</button></div>
+    <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张<br>普通 32% · 稀有 38% · 史诗 30%</p><button data-pack="premium">1400 金币</button></div>
+    <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>传世箱</h3><p>3 张 · 保底 1 张史诗+<br>稀有 24% · 史诗 50% · 传说 22% · 传世 4%</p><button data-pack="urbox">40 钻石</button></div>
+    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说/传世必为名宿<br>稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><button id="legendPackBtn">30 钻石</button></div>
   </div>
-  <p id="pityLine" class="pityline"></p>
-  <p class="hint">💎 钻石专开传世箱：无普通档，史诗 50% · 传说 22% · 传世 4%，每箱保底 1 张史诗+。钻石靠签到、每日任务、成就和广告攒，点顶部钻石数可直达。</p>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
     <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
     <button class="btn ghost" id="adUrBtn">📺 传世箱体验抽（助力）</button>
-    <span class="hint">保底：第 240 张必出传世（计数跨包累计，在传世箱/名宿系列包兑现）；每包至少覆盖 3 个位置（传世箱 2 个）。</span>
+    <button class="btn ghost" id="probBtn">📊 概率与保底细则</button>
   </div>
   <div id="drawSummary"></div>
   <div class="grid" id="drawGrid"></div>
@@ -470,6 +472,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </footer>
 <div id="flash"></div>
 <div id="toast"></div>
+<div id="probModal"><div class="detailbox"><h3>📊 概率与保底细则</h3><p><b>各包概率（每张）</b><br>普通包：普通 62% · 稀有 26% · 史诗 12%<br>高级包：普通 32% · 稀有 38% · 史诗 30%<br>传世箱：稀有 24% · 史诗 50% · 传说 22% · 传世 4%<br>名宿系列包：稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><p><b>限编戳</b>：无编 70% · /99 18% · /25 8% · /10 3% · /1 1%<br><b>平行版</b>：普卡 88% · 银折 7% · 红折 3.5% · 签字 1.2% · 球衣 0.3%</p><p><b>保底</b>：传世保底跨包累计，第 240 张必出传世，只在传世箱/名宿系列包兑现（当前 <span id="probPity">0/240</span>）；传世箱每箱保底 1 张史诗+；每包至少覆盖 3 个位置（传世箱 2 个）；1/1 同一球员全版本只出一张，重复抽到自动变 /10。</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="probClose">关闭</button></div></div></div>
 <div id="packModal"><div class="packbox"><h3 id="packTitle">开包结果</h3><p class="hint" id="packSummary"></p><div class="grid" id="packGrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn gold" id="packClose">收下</button></div></div></div>
 <div id="detailModal"><div class="detailbox"><h3 id="detailTitle"></h3><div id="detailBody"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="detailClose">关闭</button></div></div></div>
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
@@ -2044,7 +2047,7 @@ function renderPacks() {
   $("#legendPackBtn").disabled = state.shopLv < 7;
   $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "30 钻石";
   document.querySelectorAll("[data-packart]").forEach(im => { const k = im.dataset.packart; if (typeof KBPackArt !== "undefined" && KBPackArt[k]) { im.src = KBPackArt[k]; im.style.display = ""; } else im.style.display = "none"; });
-  const pl = $("#pityLine"); if (pl) pl.textContent = `🎯 传世保底：还差 ${240 - state.pity} 张必出传世（已累计 ${state.pity}/240） · 高级包传说保底进度 ${state.hjNoLegend}/10`;
+  const pp = $("#probPity"); if (pp) pp.textContent = `${state.pity}/240`; // 保底进度收进概率细则弹窗（旧 pityLine 散文案与已停用的高级包传说保底计数已删）
   const wall = [...lastDraw].sort((a, b) => E.TIERS.indexOf(a.tier) - E.TIERS.indexOf(b.tier) || a.value - b.value); // 压轴编排：按档位升序，最好的最后揭
   $("#drawGrid").innerHTML = wall.map((c, i) => cardHTML(c, { pop: i, new: !!c._isNew })).join("");
   const ds = $("#drawSummary"); if (ds) ds.textContent = lastSummary;
@@ -2650,6 +2653,9 @@ $("#adUrBtn").onclick = () => adWatch("urdraw");
 $("#adHeatBtn").onclick = () => adWatch("heat");
 $("#packClose").onclick = () => $("#packModal").classList.remove("on");
 $("#packModal").addEventListener("click", e => { if (e.target.id === "packModal") $("#packModal").classList.remove("on"); });
+$("#probBtn").onclick = () => $("#probModal").classList.add("on");
+$("#probClose").onclick = () => $("#probModal").classList.remove("on");
+$("#probModal").addEventListener("click", e => { if (e.target.id === "probModal") $("#probModal").classList.remove("on"); });
 // 开机：广告 PENDING 凭服务端余额差量补发（仅容器内，v5.18 口径；核对不上保留标记下次再核）
 KBAds.recoverPending(state).then(rec => {
   if (!rec) return;
