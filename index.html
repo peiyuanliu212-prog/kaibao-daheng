@@ -441,7 +441,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   </div>
   <div id="fpanel-craft"><div id="synthArea"></div></div>
   <div id="fpanel-star" style="display:none">
-    <p class="hint">主卡 + 2 张材料（同球员重复卡或同档任意卡）→ +1 星：每星评分 +2、身价 ×1.25。1–3 星必成，4 星 80%、5 星 60%；失败只损材料、主卡不掉星，还攒幸运与炉温。</p>
+    <p class="hint">主卡 + 2 张材料（同球员重复卡或同系列同档卡）→ +1 星：每星评分 +2、身价 ×1.25。1–3 星必成，4 星 70%、5 星 50%；失败只损材料、主卡不掉星，还攒幸运与炉温。</p>
     <div id="starArea"></div>
   </div>
   <div id="fpanel-gamble" style="display:none">
@@ -846,7 +846,7 @@ const KBSystems = (() => {
   // 升星（2026-11-02 双游升星案，与篮坛同规）：每星有效评分 +2、身价 ×1.25
   function effRating(c) { return c.rating + 2 * (c.star || 0); }
   function starMult(c) { return Math.pow(1.25, c.star || 0); }
-  const STAR_RATES = { 1: 1, 2: 1, 3: 1, 4: 0.8, 5: 0.6 };
+  const STAR_RATES = { 1: 1, 2: 1, 3: 1, 4: 0.7, 5: 0.5 }; // 2026-11-03 主人令难度上调：4 星 80%→70%、5 星 60%→50%（双游同规）
   // 实例当前身价：新卡首日锁定基础价（bornDay==今天 → 系数 1）
   function instanceValue(state, card, dIdx) {
     const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult * (card.vmult || 1) * starMult(card);
@@ -1091,9 +1091,15 @@ const KBSystems = (() => {
   }
 
   // ---------- 升星与冲档（2026-11-02 双游升星案，与篮坛同规同值） ----------
+  // 升星材料口径配置（2026-11-03 主人要求留修改空间，上线实测后再定）：
+  // STAR_SAME_ONLY_TIERS 内的档位，其主卡只能用「同球员重复卡」升星（同系列同档也不行）。
+  // 当前未启用（空数组）；日后要让珍稀卡（如传世）必须同卡升星，把档位名加进数组即可，逻辑不用改。
+  const STAR_SAME_ONLY_TIERS = []; // 例：["传世"]
   function starCandidates(state, main) {
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
-    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && (c.pid === main.pid || c.tier === main.tier))
+    // 材料口径（2026-11-03 主人定版）：同球员重复卡，或与主卡同系列（名宿/现役）的同档卡
+    const sameOnly = STAR_SAME_ONLY_TIERS.includes(main.tier);
+    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && (c.pid === main.pid || (!sameOnly && c.tier === main.tier && c.series === main.series)))
       .sort((a, b) => a.value - b.value);
   }
   function starUp(state, mainUid, matUids, rng) {
@@ -1107,7 +1113,7 @@ const KBSystems = (() => {
     const cand = starCandidates(state, main); const byUid = {};
     cand.forEach(c => { byUid[c.uid] = c; });
     const mats = [];
-    for (const u of matUids) { if (!byUid[u]) return { ok: false, reason: "所选材料不可用（需同球员重复卡或同档卡，且不在阵容/展示中）" }; mats.push(byUid[u]); }
+    for (const u of matUids) { if (!byUid[u]) return { ok: false, reason: "所选材料不可用（需同球员重复卡或同系列同档卡，且不在阵容/展示中）" }; mats.push(byUid[u]); }
     if (mats[0].uid === mats[1].uid) return { ok: false, reason: "材料不能重复选择" };
     const target = star + 1;
     const rate = Math.min(1, STAR_RATES[target] + (main.starLuck || 0) / 100);
@@ -1117,6 +1123,26 @@ const KBSystems = (() => {
     main.starLuck = (main.starLuck || 0) + (target === 4 ? 20 : 40);
     state.furnaceHeat = Math.min(3, (state.furnaceHeat || 0) + 1);
     return { ok: true, success: false, boom: true, star, rate, luckNow: main.starLuck, heat: state.furnaceHeat };
+  }
+  // 一键升星（2026-11-03 主人拍板补做）：只连升到 3 星（必成段），4/5 星仍手动确认
+  // 自动喂料保护：跳过已升星与 /1 的材料（手动选料不受此限）；候选按身价升序，先喂便宜的
+  function starUpAuto(state, mainUid, rng) {
+    rng = rng || Math.random;
+    const main = state.cards.find(c => c.uid === mainUid);
+    if (!main) return { ok: false, reason: "主卡不存在", from: 0, to: 0, used: 0 };
+    const from = main.star || 0;
+    if (from >= 3) return { ok: false, reason: "已 3 星，4/5 星请手动升（有炸炉概率）", from, to: from, used: 0 };
+    let used = 0;
+    while ((main.star || 0) < 3) {
+      const pool = starCandidates(state, main).filter(c => !(c.star || 0) && c.stamp !== "/1");
+      const cand = [...pool.filter(c => c.pid === main.pid), ...pool.filter(c => c.pid !== main.pid)]; // 优先喂同球员重复卡（主人 2026-11-03），组内仍按身价升序
+      if (cand.length < 2) return { ok: used > 0, partial: true, from, to: main.star || 0, used, reason: "材料不足" };
+      const r = starUp(state, mainUid, [cand[0].uid, cand[1].uid], rng);
+      if (!r.ok) return { ok: used > 0, partial: true, from, to: main.star || 0, used, reason: r.reason };
+      if (!r.success) break; // 1–3 星必成，理论上不到此分支
+      used += 2;
+    }
+    return { ok: true, from, to: main.star || 0, used };
   }
   const GAMBLE_BASE = 0.35;
   function gamble(state, tier, rng) {
@@ -1199,7 +1225,7 @@ const KBSystems = (() => {
     return { ok: true, cards };
   }
 
-  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starCandidates, gamble, quickSellPlan, openLegendPack };
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, gamble, quickSellPlan, openLegendPack };
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
@@ -2171,7 +2197,7 @@ function renderFurnace() {
     const allMain = [...state.cards].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || S.instanceValue(state, b, D) - S.instanceValue(state, a, D));
     const matched = starQuery ? allMain.filter(c => c.name.includes(starQuery)) : allMain;
     const list = matched.slice(0, 60);
-    box.innerHTML = `<p class="hint">主卡 + 2 张材料（同球员重复卡或同档任意卡）→ +1 星。先搜名字，再点一张设为主卡：</p>` +
+    box.innerHTML = `<p class="hint">主卡 + 2 张材料（同球员重复卡或同系列同档卡）→ +1 星。先搜名字，再点一张设为主卡：</p>` +
       `<p><input id="starQ" type="search" placeholder="搜球员名（如 梅西）" value="${starQuery}" style="min-width:150px"> <button class="btn ghost" data-starq="1">搜索</button>${starQuery ? ` <button class="btn ghost" data-starqclear="1">清除</button>` : ""} <span class="hint">候选共 ${allMain.length} 张${starQuery ? `，匹配 ${matched.length} 张` : ""}（按档位/身价排）</span></p>` +
       (list.length ? list.map(c =>
       `<button class="btn ghost" data-starmain="${c.uid}" style="margin:0 6px 6px 0">${c.name} ${c.pos} ${c.tier} ${c.rating}${(c.star || 0) > 0 ? " ★" + c.star : ""} · 身价 ${S.instanceValue(state, c, D)}</button>`).join("") : "<p class='hint'>没有匹配的卡</p>");
@@ -2185,7 +2211,8 @@ function renderFurnace() {
     `<p class="hint">本次成功率 <b style="color:#ffb52e">${Math.round(rate * 100)}%</b>${target >= 4 ? `（失败 = 炸炉：只损材料，幸运 +${target === 4 ? 20 : 40}%、炉温 +1）` : "（低星必成）"} · 幸运条 ${main.starLuck || 0}%</p><div class="luckbar"><i style="width:${Math.min(100, main.starLuck || 0)}%"></i></div>` +
     `<p class="hint" style="margin-top:8px">选 2 张材料（已选 ${starMats.size}/2，候选 ${candAll.length} 张${starQuery ? `，按「${starQuery}」筛出 ${cand.length} 张` : ""}）：</p>` +
     cand.map(c => `<button class="btn ${starMats.has(c.uid) ? "" : "ghost"}" data-starmat="${c.uid}" style="margin:0 6px 6px 0">${starMats.has(c.uid) ? "☑ " : ""}${c.name} ${c.tier} ${c.rating}${c.pid === main.pid ? " · 同球员" : ""} · 身价 ${c.value}</button>`).join("") +
-    `<div style="margin-top:8px"><button class="btn" data-starup="1" ${starMats.size !== 2 ? "disabled" : ""}>⭐ 升星</button> <button class="btn ghost" data-starcancel="1">换主卡</button></div>`;
+    `<div style="margin-top:8px"><button class="btn" data-starup="1" ${starMats.size !== 2 ? "disabled" : ""}>⭐ 升星</button> ${(main.star || 0) < 3 ? `<button class="btn ghost" data-starauto="1">⚡ 一键升到 3 星</button>` : ""} <button class="btn ghost" data-starcancel="1">换主卡</button></div>
+     ${(main.star || 0) < 3 ? `<p class="hint">⚡ 一键升星：自动喂材料连升到 3 星，优先同球员重复卡、其次同系列同档卡（跳过已升星卡与 /1）；4/5 星有炸炉概率，仍需手动。</p>` : ""}`;
 }
 function bindDynamic() {
   document.querySelectorAll("[data-sell]").forEach(btn => btn.onclick = () => {
@@ -2269,6 +2296,16 @@ function bindDynamic() {
     renderDex(); bindDynamic();
   });
   document.querySelectorAll("[data-starcancel]").forEach(b => b.onclick = () => { starMainUid = null; starMats.clear(); renderDex(); bindDynamic(); });
+  document.querySelectorAll("[data-starauto]").forEach(b => b.onclick = () => {
+    const main = state.cards.find(c => c.uid === starMainUid); if (!main) return;
+    const r = S.starUpAuto(state, starMainUid);
+    if (!r.used) { toast(r.reason); return; }
+    starMats.clear(); persist(); render();
+    const now = state.cards.find(c => c.uid === starMainUid);
+    if (r.to >= 3) toast(`⚡ 一键升星完成：${main.name} 升到 ★3（共喂 ${r.used} 张材料），4/5 星请手动冲`);
+    else toast(`材料不足：${main.name} 只升到 ★${r.to}（共喂 ${r.used} 张），先攒同球员/同系列材料吧`);
+    void now;
+  });
   document.querySelectorAll("[data-starup]").forEach(b => b.onclick = () => {
     const main = state.cards.find(c => c.uid === starMainUid); if (!main) return;
     const r = S.starUp(state, starMainUid, [...starMats]);
@@ -2705,7 +2742,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "卡库大扫除 · 1/1 真唯一", items: ["🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
+  { v: "卡库大扫除 · 1/1 真唯一", items: ["🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
   { v: "全场 11 人大改版", items: ["阵容升级全场 11 人：6 种阵型自由切换（4-4-2 / 4-3-3 / 4-2-3-1 / 5-3-2 / 3-5-2 / 4-5-1），每个阵型有专属加成", "联赛全面重做：11 条对位线按分钟播报，半场比分 + 终场比分，进球只由边锋/中锋线打进", "段位线随 11 人战力重标定：青铜 920 起、大师 1060，慢慢爬才有味", "新手礼包升级首发十一人组：领完直接摆满 4-4-2 开赛", "旧存档自动迁移：原来的 5 名首发直接进新阵容，其余位置按评分补齐，卡一张不少", "新 BGM：钢琴 + 弦乐的主题曲，和篮坛卡王同一首"] },
