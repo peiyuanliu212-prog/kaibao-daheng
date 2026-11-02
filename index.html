@@ -295,6 +295,8 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 #detailModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
 #detailModal .drow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 13.5px; }
 .dexcell .owncount { text-align: center; font-size: 11px; color: var(--dim); margin-top: 2px; }
+.dexcell.unowned .card { opacity: .8; }
+.dexcell.unowned .card img.cart { filter: grayscale(1) brightness(.75); }
 #posterModal.show { display: flex; }
 .posterbox { text-align: center; max-width: 92vw; }
 .posterbox img { width: min(340px, 86vw); border-radius: 12px; }
@@ -2150,7 +2152,8 @@ function renderDex() {
     const own = mine.length > 0;
     if (own) { const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
       return `<div class="dexcell" data-detail="${p.id}" style="cursor:pointer">${cardHTML(mine.sort((a, b) => S.instanceValue(state, b, D) - S.instanceValue(state, a, D))[0])}<div class="pips">${pips}</div><div class="owncount">持有 ×${mine.length} · 点卡卖卡</div></div>`; }
-    return `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
+    // 未收集：直接亮出是谁（真卡面灰头像），还缺谁一目了然（2026-11-03 主人令，不再用问号藏）
+    return `<div class="dexcell unowned">${cardHTML({ pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", variant: "base", star: 0, starLuck: 0 })}<div class="owncount">未收集</div></div>`;
   }).join(""));
   const _fc = $("#fltCount"); if (_fc) _fc.textContent = (libFilter.tier || libFilter.variant || libFilter.stamp || libFilter.q) ? `筛出 ${$("#dexGrid").children.length} 人` : "";
   }
@@ -2759,7 +2762,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包（普通/高级）最高出史诗，概率并入史诗；传说/传世去传世箱和名宿系列包开，名宿包改 30 钻——传说升星从此有门槛", "📖 图鉴与卡库合并（对标篮坛）：一个网格看全，点开卡片逐张卖卡；工具栏新增身价倍率表（/1 ×20、红折 ×3 等一目了然）", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
+  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
   { v: "全场 11 人大改版", items: ["阵容升级全场 11 人：6 种阵型自由切换（4-4-2 / 4-3-3 / 4-2-3-1 / 5-3-2 / 3-5-2 / 4-5-1），每个阵型有专属加成", "联赛全面重做：11 条对位线按分钟播报，半场比分 + 终场比分，进球只由边锋/中锋线打进", "段位线随 11 人战力重标定：青铜 920 起、大师 1060，慢慢爬才有味", "新手礼包升级首发十一人组：领完直接摆满 4-4-2 开赛", "旧存档自动迁移：原来的 5 名首发直接进新阵容，其余位置按评分补齐，卡一张不少", "新 BGM：钢琴 + 弦乐的主题曲，和篮坛卡王同一首"] },
@@ -2845,7 +2848,7 @@ if (typeof KBArt !== "undefined") {
   $("#bootOv").style.background = `linear-gradient(180deg, rgba(10,12,16,.45), rgba(10,12,16,.78) 60%, rgba(10,12,16,.92)), url(${KBArt.boot || KBArt.start}) center 22% / cover no-repeat, #10131a`;
   setBg("shop");
 }
-$("#changelogBox").innerHTML = CHANGELOG.map(c => `<div class="cl-v">${c.v}</div><ul>${c.items.map(i => `<li>${i}</li>`).join("")}</ul>`).join("");
+$("#changelogBox").innerHTML = CHANGELOG.slice(0, 2).map(c => `<div class="cl-v">${c.v}</div><ul>${c.items.map(i => `<li>${i}</li>`).join("")}</ul>`).join(""); // 公告只展示最近两版（2026-11-03 主人嫌太长）
 renderSlots();
 setTimeout(() => { $("#bootOv").classList.add("done"); $("#startOv").classList.add("show"); }, 1000);
 
