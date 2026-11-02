@@ -247,6 +247,9 @@ body { padding-bottom: 78px; }
 #shopHero .hh-sub { color: #cfd6de; font-size: 12.5px; margin-top: 4px; }
 #drawSummary { margin-top: 12px; font-size: 13.5px; color: #ffd257; min-height: 18px; }
 .card .newb { position: absolute; top: 82px; left: 6px; z-index: 5; background: #2ecc71; color: #06280f; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: .5px; box-shadow: 0 2px 8px rgba(46,204,113,.5); }
+.card .erabadge { position: absolute; top: 56px; left: 6px; z-index: 5; background: linear-gradient(120deg, #f6c453, #e88f2a); color: #2a1802; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; box-shadow: 0 2px 8px rgba(246,196,83,.55); }
+.card .erabadge.duo { background: linear-gradient(120deg, #ffd9ec, #ff8fb8); color: #40061d; }
+.card .gradebadge { position: absolute; top: 56px; right: 6px; z-index: 5; background: rgba(10,12,18,.85); color: #ffd257; border: 1px solid #ffd257; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 4px; }
 .card .hot { top: 58px; }
 /* 卡面遮挡修复：徽章避开脸部，变体改铭牌文字，卖按钮移出卡面 */
 .card .hot { top: 30px; font-size: 9.5px; padding: 0 4px; }
@@ -325,6 +328,17 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 @keyframes boomfade{0%,70%{opacity:1}100%{opacity:0}}
 .shake{animation:shk .45s ease}
 @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+/* 排行榜（第二批） */
+.lb-row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+.lb-row.me{background:rgba(255,200,60,.13);border-radius:6px}
+.lb-rank{width:32px;text-align:center;font-weight:700;flex:none}
+.lb-av{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#334;flex:none}
+.lb-avf{width:28px;height:28px;border-radius:50%;background:#3a4bff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.lb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-sub{font-size:11px;opacity:.65}
+.lb-score{font-weight:700;flex:none}
+.lb-top1 .lb-rank{color:#ffd94d}.lb-top2 .lb-rank{color:#dfe6ee}.lb-top3 .lb-rank{color:#e8a06a}
 </style>
 </head>
 <body>
@@ -332,7 +346,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <header>
   <h1>足坛卡王 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span> <span id="nickTag" class="hint"></span></h1>
   <div class="wallet"><button id="homeBtn" title="开始页">🏠</button>
-    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><span>🪙 <b id="coins">0</b> 金币</span><span class="d" id="diaPill" title="钻石用于开传世箱，点我直达" style="cursor:pointer">💎 <b id="dia">0</b> 钻石</span></div>
+    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><span>🪙 <b id="coins">0</b> 金币</span><span class="d" id="diaPill" title="钻石用于开钻石包，点我直达" style="cursor:pointer">💎 <b id="dia">0</b> 钻石</span></div>
 </header>
 <div class="pitybar"><div id="pityFill"></div><span id="pityText"></span></div>
 <nav>
@@ -341,11 +355,13 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <button class="tab" data-tab="lineup"><span class="tic">👥</span>阵容</button>
   <button class="tab" data-tab="league"><span class="tic">🏆</span>联赛</button>
   <button class="tab" data-tab="dex"><span class="tic">📖</span>图鉴</button>
+  <button class="tab" data-tab="board"><span class="tic">📊</span>排行榜</button>
+  <button class="tab" data-tab="exchange"><span class="tic">🏛</span>交易所</button>
 </nav>
 
 <section class="page on" id="page-shop">
   <div id="shopHero"></div>
-  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页：点开卡片逐张卖，开业首日 85%、平时 50% 回收</span></div>
+  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 去开钻石包</button><span class="hint">卖卡在图鉴页：点开卡片逐张卖，开业首日 85%、平时 50% 回收</span></div>
   <h2>我的卡店</h2>
   <p id="shopInfo"></p>
   <div class="row">
@@ -357,7 +373,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：用来开钻石包（史诗 55% · 传说 35% · 传世 10%）与豪华钻石包（传说 55% · 传世 15% · 含时期卡惊喜槽），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告（钻石广告 +30/次、每日 30 次）。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
@@ -381,12 +397,14 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="packs">
     <div class="pack"><img class="packart" data-packart="normal" alt=""><h3>普通包</h3><p>5 张<br>普通 62% · 稀有 26% · 史诗 12%</p><button data-pack="normal">400 金币</button></div>
     <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张<br>普通 32% · 稀有 38% · 史诗 30%</p><button data-pack="premium">1400 金币</button></div>
-    <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>传世箱</h3><p>3 张 · 保底 1 张史诗+<br>稀有 24% · 史诗 50% · 传说 22% · 传世 4%</p><button data-pack="urbox">40 钻石</button></div>
+    <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>钻石包</h3><p>3 张 · 保底 1 张史诗+<br>史诗 55% · 传说 35% · 传世 10%</p><button data-pack="dia60">60 钻石</button></div>
+    <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>豪华钻石包</h3><p>5 张 · 含时期卡惊喜槽<br>史诗 30% · 传说 55% · 传世 15%</p><button data-pack="dia120">120 钻石</button></div>
     <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说/传世必为名宿<br>稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><button id="legendPackBtn">30 钻石</button></div>
   </div>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
-    <button class="btn ghost" id="adUrBtn">📺 传世箱体验抽（助力）</button>
+    <button class="btn ghost" id="adUrBtn">📺 钻石包体验抽（助力）</button>
+    <button class="btn ghost" id="adDia30Btn">📺 看广告 +30 钻（今日 0/30）</button>
     <button class="btn ghost" id="probBtn">📊 概率与保底细则</button>
   </div>
   <div id="drawSummary"></div>
@@ -467,12 +485,32 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="cols"><div><b>涨幅榜</b><div id="mktGain"></div></div><div><b>跌幅榜</b><div id="mktLose"></div></div></div>
 </section>
 
+<section class="page" id="page-exchange">
+  <h2>🏛 交易所 · 待开启</h2>
+  <p>交易所正在筹备中，敬请期待。开启后，你手里的稀有卡能挂牌卖给其他玩家，用<b>钻石</b>结算。</p>
+  <p><b>可交易范围（预告）</b><br>· 传世卡：钻石包、名宿包开出的传世卡<br>· 时期卡 / 双人卡：豪华钻石包惊喜槽限定，天然稀缺<br>· 已评级的高分卡会更抢手（评级标签随卡转移）</p>
+  <p><b>规则预告</b><br>· 只用钻石交易，金币不参与<br>· 成交收少量钻石手续费<br>· 交易所开启后，<b>史诗及以上卡的系统回收将同步调整</b>（普通/稀有回收不变）——想出手的趁现在，想留的放心留</p>
+  <p class="hint">先把传世和时期卡攒起来：升满 5 星、评个高分，开市那天就是硬通货。</p>
+</section>
+
+<section class="page" id="page-board">
+  <h2>📊 排行榜</h2>
+  <div class="row" style="gap:8px;margin-bottom:8px">
+    <button class="btn" id="lbTabPower">⚔️ 战力榜</button>
+    <button class="btn ghost" id="lbTabValue">💎 单卡价值榜</button>
+    <button class="btn ghost" id="lbRefresh">刷新</button>
+  </div>
+  <p class="hint" id="lbMe"></p>
+  <div id="lbList"><p class="hint">加载中…</p></div>
+  <p class="hint">战力＝首发 11 人评分之和（含星级与评级加成）；单卡价值＝你最贵一张卡的静态身价（不随每日行情浮动）。打开本页时自动提交成绩，只升不降。</p>
+</section>
+
 <footer>
   评分由制作组按「现役看近两年表现、名宿看巅峰能力与历史地位」拟定，属游戏内设计数值（版本 v0.2），不代表任何官方评价。本游戏无任何充值入口，广告纯自愿、不看也能完整游玩。
 </footer>
 <div id="flash"></div>
 <div id="toast"></div>
-<div id="probModal"><div class="detailbox"><h3>📊 概率与保底细则</h3><p><b>各包概率（每张）</b><br>普通包：普通 62% · 稀有 26% · 史诗 12%<br>高级包：普通 32% · 稀有 38% · 史诗 30%<br>传世箱：稀有 24% · 史诗 50% · 传说 22% · 传世 4%<br>名宿系列包：稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><p><b>限编戳</b>：无编 70% · /99 18% · /25 8% · /10 3% · /1 1%<br><b>平行版</b>：普卡 88% · 银折 7% · 红折 3.5% · 签字 1.2% · 球衣 0.3%</p><p><b>保底</b>：传世保底跨包累计，第 240 张必出传世，只在传世箱/名宿系列包兑现（当前 <span id="probPity">0/240</span>）；传世箱每箱保底 1 张史诗+；每包至少覆盖 3 个位置（传世箱 2 个）；1/1 同一球员全版本只出一张，重复抽到自动变 /10。</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="probClose">关闭</button></div></div></div>
+<div id="probModal"><div class="detailbox"><h3>📊 概率与保底细则</h3><p><b>各包概率（每张）</b><br>普通包：普通 62% · 稀有 26% · 史诗 12%<br>高级包：普通 32% · 稀有 38% · 史诗 30%<br>钻石包（60 钻）：史诗 55% · 传说 35% · 传世 10%<br>豪华钻石包（120 钻）：史诗 30% · 传说 55% · 传世 15%，另每包 12.5% 概率把 1 张换成时期卡/双人卡（7 张等权）<br>名宿系列包：稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><p><b>限编戳</b>：无编 70% · /99 18% · /25 8% · /10 3% · /1 1%<br><b>平行版</b>：普卡 88% · 银折 7% · 红折 3.5% · 签字 1.2% · 球衣 0.3%<br><b>金币包分层</b>：普通包/高级包的限编只出到 /99、平行版只出到银折；/25、/10、/1 与红折、签字、球衣只在钻石包、豪华钻石包、名宿系列包和合成/冲档产出。</p><p><b>评级出分</b>（5 星卡看广告评级，每卡 3 次，重评覆盖）：PSA 9 40%（身价 ×1.9 · 战力 +2）· BGS 9.5 25%（×2.6 · +4）· PSA 10 20%（×3.6 · +6）· BGS 10 10%（×6.2 · +8）· 黑标 5%（×9.5 · +12）</p><p><b>保底</b>：传世保底跨包累计，第 240 张必出传世，只在钻石包/豪华钻石包/名宿系列包兑现（当前 <span id="probPity">0/240</span>）；钻石包每包保底 1 张史诗+；每包至少覆盖 3 个位置（钻石包 2 个）；1/1 同一球员全版本只出一张，重复抽到自动变 /10。</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="probClose">关闭</button></div></div></div>
 <div id="packModal"><div class="packbox"><h3 id="packTitle">开包结果</h3><p class="hint" id="packSummary"></p><div class="grid" id="packGrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn gold" id="packClose">收下</button></div></div></div>
 <div id="detailModal"><div class="detailbox"><h3 id="detailTitle"></h3><div id="detailBody"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="detailClose">关闭</button></div></div></div>
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
@@ -503,7 +541,15 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <script>
 // ===== players.js =====
 // Generated from 卡池v0.2.csv (FROZEN v0.2 + errata x3) - do not edit by hand
-const PLAYERS = [{"id": 1, "name": "雅辛", "pos": "GK", "tier": "传世", "rating": 94, "series": "名宿", "tag": "金球门将"}, {"id": 2, "name": "布冯", "pos": "GK", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 3, "name": "库尔图瓦", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 4, "name": "多纳鲁马", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 5, "name": "阿利松", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 6, "name": "奥布拉克", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 7, "name": "索默", "pos": "GK", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 8, "name": "拉亚", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 9, "name": "马马尔达什维利", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 10, "name": "迪奥戈·科斯塔", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 11, "name": "乌奈·西蒙", "pos": "GK", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 12, "name": "特拉普", "pos": "GK", "tier": "史诗", "rating": 85, "series": "现役", "tag": ""}, {"id": 13, "name": "斯维拉尔", "pos": "GK", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 14, "name": "奥纳纳", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 15, "name": "皮克福德", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 16, "name": "凯帕", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 17, "name": "拉姆斯代尔", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 18, "name": "罗伯特·桑切斯", "pos": "GK", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 19, "name": "马特·瑞安", "pos": "GK", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 20, "name": "铃木彩艳", "pos": "GK", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 21, "name": "王大雷", "pos": "GK", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 22, "name": "颜骏凌", "pos": "GK", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 23, "name": "韩佳奇", "pos": "GK", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 24, "name": "鲍亚雄", "pos": "GK", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}, {"id": 25, "name": "贝肯鲍尔", "pos": "DF", "tier": "传世", "rating": 95, "series": "名宿", "tag": "足球皇帝"}, {"id": 26, "name": "马尔蒂尼", "pos": "DF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 27, "name": "拉莫斯", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 28, "name": "卡纳瓦罗", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 29, "name": "范戴克", "pos": "DF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 30, "name": "鲁本·迪亚斯", "pos": "DF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 31, "name": "萨利巴", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 32, "name": "巴斯托尼", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 33, "name": "加布里埃尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 34, "name": "格瓦迪奥尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 35, "name": "孔德", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 36, "name": "金玟哉", "pos": "DF", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 37, "name": "什克里尼亚尔", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 38, "name": "卢卡斯·埃尔南德斯", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 39, "name": "富安健洋", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 40, "name": "阿坎吉", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 41, "name": "托莫里", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 42, "name": "板仓滉", "pos": "DF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 43, "name": "吉田麻也", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 44, "name": "朴志洙", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 45, "name": "蒋光太", "pos": "DF", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 46, "name": "蒋圣龙", "pos": "DF", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 47, "name": "朱辰杰", "pos": "DF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 48, "name": "刘洋", "pos": "DF", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 49, "name": "马拉多纳", "pos": "MF", "tier": "传世", "rating": 96, "series": "名宿", "tag": "球王"}, {"id": 50, "name": "齐达内", "pos": "MF", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 51, "name": "伊涅斯塔", "pos": "MF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 52, "name": "罗德里", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 53, "name": "卡卡", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 54, "name": "哈维", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 55, "name": "莫德里奇", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 56, "name": "德布劳内", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 57, "name": "贝林厄姆", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 58, "name": "穆西亚拉", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 59, "name": "皮尔洛", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 60, "name": "克罗斯", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 61, "name": "维尔茨", "pos": "MF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 62, "name": "佩德里", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 63, "name": "维蒂尼亚", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 64, "name": "麦卡利斯特", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 65, "name": "巴雷拉", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 66, "name": "恰尔汗奥卢", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 67, "name": "恩佐·费尔南德斯", "pos": "MF", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 68, "name": "京多安", "pos": "MF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 69, "name": "卡塞米罗", "pos": "MF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 70, "name": "远藤航", "pos": "MF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 71, "name": "南野拓实", "pos": "MF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 72, "name": "吴曦", "pos": "MF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 73, "name": "梅西", "pos": "WG", "tier": "传世", "rating": 97, "series": "现役", "tag": "球王"}, {"id": 74, "name": "罗纳尔迪尼奥", "pos": "WG", "tier": "传世", "rating": 94, "series": "名宿", "tag": "足球精灵"}, {"id": 75, "name": "亨利", "pos": "WG", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 76, "name": "姆巴佩", "pos": "WG", "tier": "传说", "rating": 92, "series": "现役", "tag": ""}, {"id": 77, "name": "亚马尔", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 78, "name": "维尼修斯", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 79, "name": "萨拉赫", "pos": "WG", "tier": "传说", "rating": 90, "series": "现役", "tag": "争议评分"}, {"id": 80, "name": "萨卡", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 81, "name": "莱奥", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 82, "name": "克瓦拉茨赫利亚", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 83, "name": "福登", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 84, "name": "罗德里戈", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 85, "name": "三笘薰", "pos": "WG", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 86, "name": "奥尔莫", "pos": "WG", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 87, "name": "久保建英", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 88, "name": "鲍恩", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 89, "name": "库杜斯", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 90, "name": "马丁内利", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 91, "name": "安东尼", "pos": "WG", "tier": "稀有", "rating": 79, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 92, "name": "伊东纯也", "pos": "WG", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 93, "name": "韦世豪", "pos": "WG", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 94, "name": "林良铭", "pos": "WG", "tier": "普通", "rating": 73, "series": "现役", "tag": ""}, {"id": 95, "name": "杨立瑜", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 96, "name": "王钰栋", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 97, "name": "贝利", "pos": "ST", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 98, "name": "C罗", "pos": "ST", "tier": "传世", "rating": 95, "series": "现役", "tag": ""}, {"id": 99, "name": "克鲁伊夫", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": ""}, {"id": 100, "name": "罗纳尔多", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": "外星人"}, {"id": 101, "name": "哈兰德", "pos": "ST", "tier": "传说", "rating": 92, "series": "现役", "tag": "争议评分"}, {"id": 102, "name": "凯恩", "pos": "ST", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 103, "name": "莱万多夫斯基", "pos": "ST", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 104, "name": "孙兴慜", "pos": "ST", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 105, "name": "奥斯梅恩", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 106, "name": "劳塔罗·马丁内斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 107, "name": "伊萨克", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 108, "name": "阿尔瓦雷斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 109, "name": "哲凯赖什", "pos": "ST", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 110, "name": "沃特金斯", "pos": "ST", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 111, "name": "加克波", "pos": "ST", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 112, "name": "哈弗茨", "pos": "ST", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 113, "name": "努涅斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 114, "name": "热苏斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 115, "name": "费兰·托雷斯", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 116, "name": "理查利森", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 117, "name": "希门尼斯", "pos": "ST", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 118, "name": "武磊", "pos": "ST", "tier": "普通", "rating": 76, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 119, "name": "张玉宁", "pos": "ST", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 120, "name": "拜合拉木", "pos": "ST", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}];
+const PLAYERS = [{"id": 1, "name": "雅辛", "pos": "GK", "tier": "传世", "rating": 94, "series": "名宿", "tag": "金球门将"}, {"id": 2, "name": "布冯", "pos": "GK", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 3, "name": "库尔图瓦", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 4, "name": "多纳鲁马", "pos": "GK", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 5, "name": "阿利松", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 6, "name": "奥布拉克", "pos": "GK", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 7, "name": "索默", "pos": "GK", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 8, "name": "拉亚", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 9, "name": "马马尔达什维利", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 10, "name": "迪奥戈·科斯塔", "pos": "GK", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 11, "name": "乌奈·西蒙", "pos": "GK", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 12, "name": "特拉普", "pos": "GK", "tier": "史诗", "rating": 85, "series": "现役", "tag": ""}, {"id": 13, "name": "斯维拉尔", "pos": "GK", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 14, "name": "奥纳纳", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 15, "name": "皮克福德", "pos": "GK", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 16, "name": "凯帕", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 17, "name": "拉姆斯代尔", "pos": "GK", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 18, "name": "罗伯特·桑切斯", "pos": "GK", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 19, "name": "马特·瑞安", "pos": "GK", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 20, "name": "铃木彩艳", "pos": "GK", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 21, "name": "王大雷", "pos": "GK", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 22, "name": "颜骏凌", "pos": "GK", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 23, "name": "韩佳奇", "pos": "GK", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 24, "name": "鲍亚雄", "pos": "GK", "tier": "普通", "rating": 71, "series": "现役", "tag": ""}, {"id": 25, "name": "贝肯鲍尔", "pos": "DF", "tier": "传世", "rating": 95, "series": "名宿", "tag": "足球皇帝"}, {"id": 26, "name": "马尔蒂尼", "pos": "DF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 27, "name": "拉莫斯", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 28, "name": "卡纳瓦罗", "pos": "DF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 29, "name": "范戴克", "pos": "DF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 30, "name": "鲁本·迪亚斯", "pos": "DF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 31, "name": "萨利巴", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 32, "name": "巴斯托尼", "pos": "DF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 33, "name": "加布里埃尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 34, "name": "格瓦迪奥尔", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 35, "name": "孔德", "pos": "DF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 36, "name": "金玟哉", "pos": "DF", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 37, "name": "什克里尼亚尔", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 38, "name": "卢卡斯·埃尔南德斯", "pos": "DF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 39, "name": "富安健洋", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 40, "name": "阿坎吉", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 41, "name": "托莫里", "pos": "DF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 42, "name": "板仓滉", "pos": "DF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 43, "name": "吉田麻也", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 44, "name": "朴志洙", "pos": "DF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 45, "name": "蒋光太", "pos": "DF", "tier": "普通", "rating": 76, "series": "现役", "tag": ""}, {"id": 46, "name": "蒋圣龙", "pos": "DF", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 47, "name": "朱辰杰", "pos": "DF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 48, "name": "刘洋", "pos": "DF", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 49, "name": "马拉多纳", "pos": "MF", "tier": "传世", "rating": 96, "series": "名宿", "tag": "球王"}, {"id": 50, "name": "齐达内", "pos": "MF", "tier": "传世", "rating": 95, "series": "名宿", "tag": ""}, {"id": 51, "name": "伊涅斯塔", "pos": "MF", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 52, "name": "罗德里", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 53, "name": "卡卡", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 54, "name": "哈维", "pos": "MF", "tier": "传说", "rating": 91, "series": "名宿", "tag": ""}, {"id": 55, "name": "莫德里奇", "pos": "MF", "tier": "传说", "rating": 91, "series": "现役", "tag": ""}, {"id": 56, "name": "德布劳内", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 57, "name": "贝林厄姆", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 58, "name": "穆西亚拉", "pos": "MF", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 59, "name": "皮尔洛", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 60, "name": "克罗斯", "pos": "MF", "tier": "传说", "rating": 90, "series": "名宿", "tag": ""}, {"id": 61, "name": "维尔茨", "pos": "MF", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 62, "name": "佩德里", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 63, "name": "维蒂尼亚", "pos": "MF", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 64, "name": "麦卡利斯特", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 65, "name": "巴雷拉", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 66, "name": "恰尔汗奥卢", "pos": "MF", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 67, "name": "恩佐·费尔南德斯", "pos": "MF", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 68, "name": "京多安", "pos": "MF", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 69, "name": "卡塞米罗", "pos": "MF", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 70, "name": "远藤航", "pos": "MF", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 71, "name": "南野拓实", "pos": "MF", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 72, "name": "吴曦", "pos": "MF", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 73, "name": "梅西", "pos": "WG", "tier": "传世", "rating": 97, "series": "现役", "tag": "球王"}, {"id": 74, "name": "罗纳尔迪尼奥", "pos": "WG", "tier": "传世", "rating": 94, "series": "名宿", "tag": "足球精灵"}, {"id": 75, "name": "亨利", "pos": "WG", "tier": "传说", "rating": 92, "series": "名宿", "tag": ""}, {"id": 76, "name": "姆巴佩", "pos": "WG", "tier": "传说", "rating": 92, "series": "现役", "tag": ""}, {"id": 77, "name": "亚马尔", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 78, "name": "维尼修斯", "pos": "WG", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 79, "name": "萨拉赫", "pos": "WG", "tier": "传说", "rating": 90, "series": "现役", "tag": "争议评分"}, {"id": 80, "name": "萨卡", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 81, "name": "莱奥", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 82, "name": "克瓦拉茨赫利亚", "pos": "WG", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 83, "name": "福登", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 84, "name": "罗德里戈", "pos": "WG", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 85, "name": "三笘薰", "pos": "WG", "tier": "史诗", "rating": 85, "series": "现役", "tag": "争议评分"}, {"id": 86, "name": "奥尔莫", "pos": "WG", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 87, "name": "久保建英", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 88, "name": "鲍恩", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 89, "name": "库杜斯", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 90, "name": "马丁内利", "pos": "WG", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 91, "name": "安东尼", "pos": "WG", "tier": "稀有", "rating": 79, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 92, "name": "伊东纯也", "pos": "WG", "tier": "普通", "rating": 78, "series": "现役", "tag": ""}, {"id": 93, "name": "韦世豪", "pos": "WG", "tier": "普通", "rating": 75, "series": "现役", "tag": ""}, {"id": 94, "name": "林良铭", "pos": "WG", "tier": "普通", "rating": 73, "series": "现役", "tag": ""}, {"id": 95, "name": "杨立瑜", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 96, "name": "王钰栋", "pos": "WG", "tier": "普通", "rating": 72, "series": "现役", "tag": ""}, {"id": 97, "name": "贝利", "pos": "ST", "tier": "传世", "rating": 97, "series": "名宿", "tag": "球王"}, {"id": 98, "name": "C罗", "pos": "ST", "tier": "传世", "rating": 95, "series": "现役", "tag": ""}, {"id": 99, "name": "克鲁伊夫", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": ""}, {"id": 100, "name": "罗纳尔多", "pos": "ST", "tier": "传世", "rating": 94, "series": "名宿", "tag": "外星人"}, {"id": 101, "name": "哈兰德", "pos": "ST", "tier": "传说", "rating": 92, "series": "现役", "tag": "争议评分"}, {"id": 102, "name": "凯恩", "pos": "ST", "tier": "传说", "rating": 91, "series": "现役", "tag": "争议评分"}, {"id": 103, "name": "莱万多夫斯基", "pos": "ST", "tier": "传说", "rating": 90, "series": "现役", "tag": ""}, {"id": 104, "name": "孙兴慜", "pos": "ST", "tier": "传说", "rating": 89, "series": "现役", "tag": ""}, {"id": 105, "name": "奥斯梅恩", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 106, "name": "劳塔罗·马丁内斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 107, "name": "伊萨克", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 108, "name": "阿尔瓦雷斯", "pos": "ST", "tier": "史诗", "rating": 88, "series": "现役", "tag": ""}, {"id": 109, "name": "哲凯赖什", "pos": "ST", "tier": "史诗", "rating": 87, "series": "现役", "tag": ""}, {"id": 110, "name": "沃特金斯", "pos": "ST", "tier": "史诗", "rating": 86, "series": "现役", "tag": ""}, {"id": 111, "name": "加克波", "pos": "ST", "tier": "稀有", "rating": 83, "series": "现役", "tag": ""}, {"id": 112, "name": "哈弗茨", "pos": "ST", "tier": "稀有", "rating": 82, "series": "现役", "tag": ""}, {"id": 113, "name": "努涅斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 114, "name": "热苏斯", "pos": "ST", "tier": "稀有", "rating": 81, "series": "现役", "tag": ""}, {"id": 115, "name": "费兰·托雷斯", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 116, "name": "理查利森", "pos": "ST", "tier": "稀有", "rating": 80, "series": "现役", "tag": ""}, {"id": 117, "name": "希门尼斯", "pos": "ST", "tier": "普通", "rating": 77, "series": "现役", "tag": ""}, {"id": 118, "name": "武磊", "pos": "ST", "tier": "普通", "rating": 76, "series": "现役", "tag": "梗卡·争议评分"}, {"id": 119, "name": "张玉宁", "pos": "ST", "tier": "普通", "rating": 74, "series": "现役", "tag": ""}, {"id": 120, "name": "拜合拉木", "pos": "ST", "tier": "普通", "rating": 71, "series": "现役", "tag": ""},
+// 第二批时期卡/双人卡（2026-11-03，尾部追加 id 200+，既有 id 零移位）：tier 恒传世、身价基数=传世 BASE×3（bmult），rating=原型+3（双人=两人高者+2）；link=原型 pid（双人为数组）；时期卡与原型同场互斥、升星按 link 视为同球员；双人卡 collectionOnly 仅收藏。肖像复用原型。
+{"id": 200, "name": "梅西·2022世界杯冠军", "pos": "WG", "tier": "传世", "rating": 100, "series": "时期", "tag": "时期卡", "link": 73, "bmult": 3},
+{"id": 201, "name": "C罗·欧冠三连冠", "pos": "ST", "tier": "传世", "rating": 98, "series": "时期", "tag": "时期卡", "link": 98, "bmult": 3},
+{"id": 202, "name": "贝利·1970世界杯", "pos": "ST", "tier": "传世", "rating": 100, "series": "时期", "tag": "时期卡", "link": 97, "bmult": 3},
+{"id": 203, "name": "克鲁伊夫·1974飞翔荷兰", "pos": "ST", "tier": "传世", "rating": 97, "series": "时期", "tag": "时期卡", "link": 99, "bmult": 3},
+{"id": 204, "name": "布冯·2006世界杯冠军", "pos": "GK", "tier": "传世", "rating": 95, "series": "时期", "tag": "时期卡", "link": 2, "bmult": 3},
+{"id": 205, "name": "梅罗同框", "pos": "WG", "tier": "传世", "rating": 99, "series": "双人", "tag": "双人卡", "link": [73, 98], "bmult": 3, "collectionOnly": true},
+{"id": 206, "name": "罗齐组合", "pos": "MF", "tier": "传世", "rating": 97, "series": "双人", "tag": "双人卡", "link": [100, 50], "bmult": 3, "collectionOnly": true}];
 if (typeof module!=="undefined") module.exports = PLAYERS;
 
 // ===== portraits.js =====
@@ -520,7 +566,8 @@ const KBEngine = (() => {
   const PACKS = {
     normal: { name: "普通包", price: 400, cur: "coins", size: 5, odds: { "普通": .62, "稀有": .26, "史诗": .12, "传说": 0, "传世": 0 }, minPos: 3 }, // 2026-11-03 主人拍板：金币包不出传说/传世（原 .027/.003 概率并入史诗）
     premium: { name: "高级包", price: 1400, cur: "coins", size: 5, odds: { "普通": .32, "稀有": .38, "史诗": .30, "传说": 0, "传世": 0 }, minPos: 3 }, // 同上：原传说 .081/传世 .009 并入史诗，传说/传世只走钻石包
-    urbox: { name: "传世箱", price: 40, cur: "dia", size: 3, odds: { "普通": 0, "稀有": .24, "史诗": .50, "传说": .22, "传世": .04 }, minPos: 2, epicPlus: true }
+    dia60: { name: "钻石包", price: 60, cur: "dia", size: 3, odds: { "普通": 0, "稀有": 0, "史诗": .55, "传说": .35, "传世": .10 }, minPos: 2, epicPlus: true }, // 第二批（2026-11-03）：钻石包双档替代传世箱（40 钻 urbox 废除）；两档都计入 240 保底并可兑现
+    dia120: { name: "豪华钻石包", price: 120, cur: "dia", size: 5, odds: { "普通": 0, "稀有": 0, "史诗": .30, "传说": .55, "传世": .15 }, minPos: 3, eraSlot: 0.125 } // eraSlot：每包 12.5% 概率把 1 张替换为时期卡/双人卡（时期池等权）
   };
   const STAMPS = [ // name, prob, valueMult, idleBonus
     ["无编", .70, 1.0, 0], ["/99", .18, 1.8, .2], ["/25", .08, 3.2, .5], ["/10", .03, 5.5, 1.0], ["/1", .01, 20.0, 3.0]
@@ -528,18 +575,24 @@ const KBEngine = (() => {
   const VARIANTS = [ // 平行版（全套版 2026-11-01）：name, prob, valueMult — 与限编戳正交叠加
     ["base", .88, 1.0], ["银折", .07, 1.8], ["红折", .035, 3.0], ["签字", .012, 5.0], ["球衣", .003, 10.0]
   ];
-  function rollVariant(rng) {
+  function rollVariant(rng, capped) {
+    // 金币包分层（第二批决策 3 后半）：capped 时版本只出 普卡/银折——银折出率保持 .07 不变，其余质量并入普卡
+    if (capped) { return rng() < 0.07 ? { variant: "银折", vmult: 1.8 } : { variant: "base", vmult: 1.0 }; }
     let x = rng(), c = 0;
     for (const [n, p, m] of VARIANTS) { c += p; if (x < c) return { variant: n, vmult: m }; }
     return { variant: "base", vmult: 1.0 };
   }
+  const isEraPlayer = p => p.series === "时期" || p.series === "双人"; // 时期/双人卡只走 dia120 时期槽，常规抽池一律排除
+  const eraPool = () => PLAYERS.filter(isEraPlayer);
   const PITY_UR = 240;      // §6: 第240张必传世
   const PITY_LEGEND_PACKS = 10; // §6: 高级包连10包无传说+，第10包首张必传说
-  const byTier = t => PLAYERS.filter(p => p.tier === t);
-  const byTierPos = (t, pos) => PLAYERS.filter(p => p.tier === t && p.pos === pos);
+  const byTier = t => PLAYERS.filter(p => p.tier === t && !isEraPlayer(p));
+  const byTierPos = (t, pos) => PLAYERS.filter(p => p.tier === t && p.pos === pos && !isEraPlayer(p));
   const playerById = id => PLAYERS.find(p => p.id === id);
 
-  function rollStamp(rng) {
+  function rollStamp(rng, capped) {
+    // 金币包分层：capped 时限编只出 无编//99——/99 出率保持 .18 不变，其余质量并入无编
+    if (capped) { return rng() < 0.18 ? { stamp: "/99", mult: 1.8, idleBonus: .2 } : { stamp: "无编", mult: 1.0, idleBonus: 0 }; }
     let x = rng(), c = 0;
     for (const [n, p, m, b] of STAMPS) { c += p; if (x < c) return { stamp: n, mult: m, idleBonus: b }; }
     return { stamp: "无编", mult: 1.0, idleBonus: 0 };
@@ -552,13 +605,17 @@ const KBEngine = (() => {
   function cardValue(tier, rating, mult) {
     return Math.round(BASE[tier] * (0.9 + (rating % 10) / 50) * mult);
   }
-  function rollInstance(state, tier, rng) {
-    const pool = byTier(tier);
-    const p = pool[Math.floor(rng() * pool.length)];
-    const s = rollStamp(rng); const v = rollVariant(rng);
+  // 按指定球员构造实例（rollInstance 与时期槽共用）；capped=金币包分层上下文
+  function makeInstance(state, p, rng, capped) {
+    const s = rollStamp(rng, capped); const v = rollVariant(rng, capped);
     // 1/1 全版本唯一（大改版决策 4）：该球员名额已用，roll 出的 /1 当场降为 /10
     if (s.stamp === "/1" && state.flags && state.flags.oneUsed && state.flags.oneUsed[p.id]) { s.stamp = "/10"; s.mult = 5.5; s.idleBonus = 1.0; }
-    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), star: 0, starLuck: 0 };
+    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+  }
+  function rollInstance(state, tier, rng, capped) {
+    const pool = byTier(tier);
+    const p = pool[Math.floor(rng() * pool.length)];
+    return makeInstance(state, p, rng, capped);
   }
   // /1 名额结算：新卡进入卡库前逐张核对——首张 /1 登记名额，后续同球员 /1 降为 /10（覆盖同批多张与内联构造的卡）
   function settleCards(state, cards) {
@@ -585,7 +642,7 @@ const KBEngine = (() => {
     if (state.pity >= PITY_UR - 1 && pack.odds["传世"] > 0) tier = "传世"; // 保底计数跨包累计，但只在能出传世的包（钻石包）兑现——金币包已封顶史诗
     else if (forceTier) tier = forceTier;
     else tier = rollTier(pack, rng);
-    const card = rollInstance(state, tier, rng);
+    const card = rollInstance(state, tier, rng, pack.cur === "coins"); // 金币包透传分层上下文（限编≤/99、版本≤银折）
     state.draws++;
     if (card.tier === "传世") state.pity = 0; else state.pity++;
     return card;
@@ -613,18 +670,26 @@ const KBEngine = (() => {
       cards.forEach(c => counts[c.pos] = (counts[c.pos] || 0) + 1);
       const idx = cards.findIndex((c, i) => counts[c.pos] > 1 && c.tier !== "传世" && !(forceLegendFirst && i === 0));
       if (idx < 0) break;
-      const nc = rollInstance(state, rollTier(pack, rng), rng);
+      const nc = rollInstance(state, rollTier(pack, rng), rng, pack.cur === "coins");
       nc.uid = cards[idx].uid; cards[idx] = nc;
       if (nc.tier === "传世") state.pity = 0;
     }
-    // 传世箱：每箱至少 1 张史诗+（§6）— 在位置分布之后执行，用同位置史诗替换最后一张，保证不破坏位置覆盖
+    // 钻石包保底：每包至少 1 张史诗+（§6，原传世箱规则随 dia60 沿用）— 在位置分布之后执行，用同位置史诗替换最后一张，保证不破坏位置覆盖
     if (pack.epicPlus && !cards.some(c => ["史诗", "传说", "传世"].includes(c.tier))) {
       const idx = cards.length - 1;
       const old = cards[idx];
       const pool = byTierPos("史诗", old.pos);
       const p = pool[Math.floor(rng() * pool.length)];
-      const s = rollStamp(rng); const v = rollVariant(rng);
-      cards[idx] = { uid: old.uid, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), star: 0, starLuck: 0 };
+      const nc = makeInstance(state, p, rng, false);
+      nc.uid = old.uid; cards[idx] = nc;
+    }
+    // 时期卡槽（第二批，dia120 专属）：12.5% 概率把 1 张替换为时期卡/双人卡（时期池等权）；额外惊喜槽——不吃 240 保底计数、也不重置
+    if (pack.eraSlot && rng() < pack.eraSlot) {
+      const pool = eraPool();
+      const p = pool[Math.floor(rng() * pool.length)];
+      const idx = Math.floor(rng() * cards.length);
+      const nc = makeInstance(state, p, rng, false);
+      nc.uid = cards[idx].uid; cards[idx] = nc;
     }
     // 高级包传说保底计数
     if (packKey === "premium") {
@@ -671,7 +736,8 @@ const KBEngine = (() => {
       signTotal: 0, lastSignDay: "", daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
-      adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, adLocked: false, weekKey: "", weekPending: false, furnaceHeat: 0, gambleLuck: 0 };
+      adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, adLocked: false, weekKey: "", weekPending: false, furnaceHeat: 0, gambleLuck: 0,
+      mats: { universal: 0 }, ad: { dia30: 0 } }; // 第二批：万能材料计数 + 钻石广告 30/日独立 bucket 镜像（主计数在 adDay.counts.dia30）
     st.cards = starterFive(st, rng);
     settleCards(st, st.cards);
     return st;
@@ -689,7 +755,7 @@ const KBEngine = (() => {
     state.coins += gain;
     return { ok: true, gain, card: c };
   }
-  return { TIERS, BASE, PACKS, STAMPS, VARIANTS, rollVariant, PITY_UR, PITY_LEGEND_PACKS, rollTier, rollStamp, cardValue, openPack, starterFive, starterEleven, newSave, sellCard, playerById, settleCards, rebuildOneUsed, _rollInstance: rollInstance, _byTier: byTier, _drawOne: drawOne };
+  return { TIERS, BASE, PACKS, STAMPS, VARIANTS, rollVariant, PITY_UR, PITY_LEGEND_PACKS, rollTier, rollStamp, cardValue, openPack, starterFive, starterEleven, newSave, sellCard, playerById, settleCards, rebuildOneUsed, isEraPlayer, eraPool, _rollInstance: rollInstance, _makeInstance: makeInstance, _byTier: byTier, _drawOne: drawOne };
 })();
 if (typeof module !== "undefined") module.exports = KBEngine;
 
@@ -742,6 +808,10 @@ const KBSave = (() => {
     if (st.version !== 3) return null;
     if (typeof KBEngine !== "undefined" && KBEngine.rebuildOneUsed) KBEngine.rebuildOneUsed(st); // 大改版 1.2：按现有卡重建 /1 名额表（存量不追溯）
     if (st.adLocked === undefined) st.adLocked = false;
+    // 第二批加性字段（2026-11-03）：万能材料、钻石广告独立 bucket 镜像、实例评级字段
+    if (!st.mats || typeof st.mats.universal !== "number") st.mats = { universal: (st.mats && st.mats.universal) || 0 };
+    if (!st.ad || typeof st.ad !== "object") st.ad = { dia30: 0 };
+    (st.cards || []).forEach(c => { if (c.grade === undefined) c.grade = null; if (c.gradeTries === undefined) c.gradeTries = 0; if (c.bmult === undefined) c.bmult = 1; });
     if (!st.formation) st.formation = "4-4-2"; // 全场阵型版字段补齐（2026-11-02）：slots=null 由 systems.migrateSlots 首载迁移
     if (st.slots === undefined) st.slots = null;
     return st;
@@ -785,7 +855,7 @@ const KBSave = (() => {
       if (!raw) return null;
       const st = JSON.parse(raw);
       if (!st || !Array.isArray(st.cards)) return null;
-      return { lv: st.shopLv || 1, coins: st.coins || 0, dia: st.dia || 0, dex: new Set(st.cards.map(c => c.pid)).size, pity: st.pity || 0, savedAt: st.savedAt || st.createdAt || 0, giftPending: !!st.giftPending };
+      return { lv: st.shopLv || 1, coins: st.coins || 0, dia: st.dia || 0, dex: new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size, pity: st.pity || 0, savedAt: st.savedAt || st.createdAt || 0, giftPending: !!st.giftPending }; // 图鉴口径=基础 120 人（时期/双人不计）
     } catch (e) { return null; }
   }
   return { KEY: LEGACY_KEY, load, save, wipe, slotInfo, getMeta, setActive, slotKey, storageOK };
@@ -807,7 +877,7 @@ const KBSystems = (() => {
   // ---------- 卡店（§7） ----------
   const SHOP = { 1: { slots: 4, cost: 0 }, 2: { slots: 5, cost: 1000 }, 3: { slots: 6, cost: 2200 }, 4: { slots: 7, cost: 4500 }, 5: { slots: 8, cost: 7500 }, 6: { slots: 9, cost: 12000 }, 7: { slots: 10, cost: 18000 }, 8: { slots: 11, cost: 26000 }, 9: { slots: 12, cost: 38000 }, 10: { slots: 13, cost: 55000 } };
   const IDLE = { "普通": 1, "稀有": 3, "史诗": 8, "传说": 22, "传世": 60 };
-  const UNLOCKS = { 2: "高级包", 3: "合成炉", 4: "传世箱", 5: "行情榜", 7: "名宿系列包" };
+  const UNLOCKS = { 2: "高级包", 3: "合成炉", 4: "钻石包", 5: "行情榜 · 豪华钻石包", 7: "名宿系列包" }; // 第二批：Lv.4 传世箱→钻石包（dia60），Lv.5 加开豪华钻石包（dia120）
   function idleRate(state) {
     let r = 8;
     for (const uid of state.display) { const c = state.cards.find(x => x.uid === uid); if (c) r += IDLE[c.tier] * (1 + (c.idleBonus || stampBonus(c.stamp))); }
@@ -828,7 +898,7 @@ const KBSystems = (() => {
   const factorCache = {};
   function hotPlayers(weekIdx) {
     const rng = rng32(hashStr("hot-" + weekIdx));
-    const pool = PLAYERS.filter(p => p.tier !== "普通");
+    const pool = PLAYERS.filter(p => p.tier !== "普通" && !E.isEraPlayer(p)); // 状态火热只服务基础卡池（时期/双人卡不占名额）
     const out = new Set();
     while (out.size < 3) out.add(pool[Math.floor(rng() * pool.length)].id);
     return out;
@@ -858,14 +928,42 @@ const KBSystems = (() => {
     return { gain, lose };
   }
   // 升星（2026-11-02 双游升星案，与篮坛同规）：每星有效评分 +2、身价 ×1.25
-  function effRating(c) { return c.rating + 2 * (c.star || 0); }
+  function effRating(c) { return c.rating + 2 * (c.star || 0) + (c.grade ? c.grade.ovr : 0); } // 第二批：评级战力加成并入有效评分
   function starMult(c) { return Math.pow(1.25, c.star || 0); }
   const STAR_RATES = { 1: 1, 2: 1, 3: 1, 4: 0.7, 5: 0.5 }; // 2026-11-03 主人令难度上调：4 星 80%→70%、5 星 60%→50%（双游同规）
+  // 评级（第二批，大改版决策 8 定稿）：覆盖式、仅 5 星可评、每卡 ≤3 次、每次 1 支广告（广告链在 main/ads）；出分概率与倍率定稿值
+  const GRADES = [
+    { label: "PSA 9", p: .40, vmult: 1.9, ovr: 2 },
+    { label: "BGS 9.5", p: .25, vmult: 2.6, ovr: 4 },
+    { label: "PSA 10", p: .20, vmult: 3.6, ovr: 6 },
+    { label: "BGS 10", p: .10, vmult: 6.2, ovr: 8 },
+    { label: "黑标", p: .05, vmult: 9.5, ovr: 12 }
+  ];
+  function gradeRoll(rng) {
+    rng = rng || Math.random;
+    let x = rng(), c = 0;
+    for (const g of GRADES) { c += g.p; if (x < c) return { label: g.label, vmult: g.vmult, ovr: g.ovr }; }
+    const g = GRADES[0]; return { label: g.label, vmult: g.vmult, ovr: g.ovr };
+  }
+  function applyGrade(state, uid, rng) { // 广告看完后结算：覆盖旧分、计数 +1
+    const card = state.cards.find(c => c.uid === uid);
+    if (!card) return { ok: false, reason: "卡已不在卡库" };
+    if ((card.star || 0) < 5) return { ok: false, reason: "只有 5 星卡可以评级" };
+    if ((card.gradeTries || 0) >= 3) return { ok: false, reason: "这张卡评级次数已用完（3 次）" };
+    const g = gradeRoll(rng);
+    card.grade = g; card.gradeTries = (card.gradeTries || 0) + 1;
+    return { ok: true, grade: g, card };
+  }
   // 实例当前身价：新卡首日锁定基础价（bornDay==今天 → 系数 1）
   function instanceValue(state, card, dIdx) {
-    const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult * (card.vmult || 1) * starMult(card);
+    // 乘数链（第二批定稿顺序）：基础 × 限编戳 × 平行版 × 星级 × 评级 × 时期基数 bmult
+    const base = E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult * (card.vmult || 1) * starMult(card) * (card.grade ? card.grade.vmult : 1) * (card.bmult || 1);
     if (card.bornDay === dIdx) return Math.round(base); // 新卡首日锁定基础价（§8 防刷）
     return Math.round(base * factorAt(card.pid, dIdx));
+  }
+
+  function staticValue(card) { // 排行榜口径：静态身价＝instanceValue 去掉每日行情 factorAt（与出生锁定价同式），服务端同式复算
+    return Math.round(E.BASE[card.tier] * (0.9 + (card.rating % 10) / 50) * card.mult * (card.vmult || 1) * starMult(card) * (card.grade ? card.grade.vmult : 1) * (card.bmult || 1));
   }
 
   // ---------- 阵容与战力（§9；2026-11-02 全场阵型版，设计案 v1 已批） ----------
@@ -926,10 +1024,15 @@ const KBSystems = (() => {
     const shape = slotShape(state);
     state.slots = state.slots || {};
     const used = new Set();
+    const usedLink = new Set(); // 时期卡与原型同场互斥（第二批）：同一 link 归一键只上一张；双人卡仅收藏不上阵
     for (const pos of POS5) {
-      const best = state.cards.filter(c => c.pos === pos && !used.has(c.uid)).sort((a, b) => effRating(b) - effRating(a));
-      state.slots[pos] = best.slice(0, shape[pos]).map(c => c.uid);
-      state.slots[pos].forEach(u => used.add(u));
+      const best = state.cards.filter(c => c.pos === pos && !used.has(c.uid) && !isCollectionOnly(c.pid)).sort((a, b) => effRating(b) - effRating(a));
+      state.slots[pos] = [];
+      for (const c of best) { // 逐个贪心挑：同位置多槽时互斥也要即时生效（批量 filter 会让同 link 两张一起过筛）
+        if (state.slots[pos].length >= shape[pos]) break;
+        if (usedLink.has(linkKeyOf(c.pid))) continue;
+        state.slots[pos].push(c.uid); used.add(c.uid); usedLink.add(linkKeyOf(c.pid));
+      }
     }
     const arr = POS5.flatMap(pos => (lineupCards(state)[pos] || [])).filter(Boolean);
     if (arr.length) state.captainUid = arr.sort((a, b) => effRating(b) - effRating(a))[0].uid;
@@ -942,9 +1045,10 @@ const KBSystems = (() => {
     const used = new Set();
     for (const pos of POS5) { const uid = old[pos]; if (uid && state.cards.some(c => c.uid === uid)) { state.slots[pos].push(uid); used.add(uid); } }
     const shape = slotShape(state);
+    const usedLink = new Set([...used].map(u => { const cc = state.cards.find(x => x.uid === u); return cc ? linkKeyOf(cc.pid) : null; }).filter(x => x !== null));
     for (const pos of POS5) {
-      const rest = state.cards.filter(c => c.pos === pos && !used.has(c.uid)).sort((a, b) => b.rating - a.rating);
-      while (state.slots[pos].length < shape[pos] && rest.length) { const c = rest.shift(); state.slots[pos].push(c.uid); used.add(c.uid); }
+      const rest = state.cards.filter(c => c.pos === pos && !used.has(c.uid) && !isCollectionOnly(c.pid) && !usedLink.has(linkKeyOf(c.pid))).sort((a, b) => b.rating - a.rating);
+      while (state.slots[pos].length < shape[pos] && rest.length) { const c = rest.shift(); state.slots[pos].push(c.uid); used.add(c.uid); usedLink.add(linkKeyOf(c.pid)); }
     }
   }
 
@@ -960,7 +1064,7 @@ const KBSystems = (() => {
     const f = FORMATIONS[fname];
     const shape = { GK: 1, DF: f.DF, MF: f.MF, WG: f.WG, ST: f.ST };
     const sorted = {};
-    for (const pos of POS5) sorted[pos] = PLAYERS.filter(p => p.pos === pos).sort((a, b) => a.rating - b.rating);
+    for (const pos of POS5) sorted[pos] = PLAYERS.filter(p => p.pos === pos && !E.isEraPlayer(p)).sort((a, b) => a.rating - b.rating); // 对手只用基础 120 人组队（时期/双人卡不进对手池，避免抬高段位天花板）
     // 天花板护栏:该阵型可达上限 = 各位置 Top-N 评分和,目标不得超过上限-5(防大师线凑不出对手,sim 实锤)
     let maxReach = 0;
     for (const pos of POS5) { const pool = sorted[pos]; for (let i = 0; i < shape[pos]; i++) maxReach += pool[pool.length - 1 - i].rating; }
@@ -1097,7 +1201,7 @@ const KBSystems = (() => {
     const p = players[Math.floor(rng() * players.length)];
     const s = (() => { let x = rng(), c = 0; for (const [n, pr, m] of E.STAMPS) { c += pr; if (x < c) return { stamp: n, mult: m }; } return { stamp: "无编", mult: 1 }; })();
     const v = E.rollVariant(rng); // 大改版 1.1：合成产卡补平行版 roll（此前漏接，产出恒为普卡）
-    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult), bornDay: state.dayIndex, star: 0, starLuck: 0 };
+    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
     E.settleCards(state, [card]);
     state.cards.push(card);
     if (card.tier === "传说") { state.flags = state.flags || {}; state.flags.synthLegend = 1; }
@@ -1106,14 +1210,18 @@ const KBSystems = (() => {
 
   // ---------- 升星与冲档（2026-11-02 双游升星案，与篮坛同规同值） ----------
   // 升星材料口径配置（2026-11-03 主人要求留修改空间，上线实测后再定）：
-  // STAR_SAME_ONLY_TIERS 内的档位，其主卡只能用「同球员重复卡」升星（同系列同档也不行）。
-  // 当前未启用（空数组）；日后要让珍稀卡（如传世）必须同卡升星，把档位名加进数组即可，逻辑不用改。
-  const STAR_SAME_ONLY_TIERS = []; // 例：["传世"]
+  // STAR_SAME_ONLY_TIERS 内的档位，其主卡只能用「同球员重复卡」升星（同系列同档也不行），另可吃万能材料（分解传世卡得）。
+  // 第二批开启：传世档同球员 only（lllzyl 框架：给交易所/收集制造真实需求）；时期卡按 link 视为同球员。
+  const STAR_SAME_ONLY_TIERS = ["传世"];
+  // 同球员归一键：时期卡（link=原型 pid）与原型互认同球员；双人卡 link 为数组、不参与升星，归一为自身
+  function linkKeyOf(pid) { const p = E.playerById(pid); if (!p) return pid; return typeof p.link === "number" ? p.link : pid; }
+  function samePlayer(pidA, pidB) { return linkKeyOf(pidA) === linkKeyOf(pidB); }
+  function isCollectionOnly(pid) { const p = E.playerById(pid); return !!(p && p.collectionOnly); }
   function starCandidates(state, main) {
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
-    // 材料口径（2026-11-03 主人定版）：同球员重复卡，或与主卡同系列（名宿/现役）的同档卡
+    // 材料口径（2026-11-03 主人定版）：同球员重复卡，或与主卡同系列（名宿/现役）的同档卡；双人卡仅收藏，不作材料
     const sameOnly = STAR_SAME_ONLY_TIERS.includes(main.tier);
-    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && (c.pid === main.pid || (!sameOnly && c.tier === main.tier && c.series === main.series)))
+    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && !isCollectionOnly(c.pid) && (samePlayer(c.pid, main.pid) || (!sameOnly && c.tier === main.tier && c.series === main.series)))
       .sort((a, b) => a.value - b.value);
   }
   function starUp(state, mainUid, matUids, rng) {
@@ -1121,14 +1229,22 @@ const KBSystems = (() => {
     if ((state.shopLv || 1) < 3) return { ok: false, reason: "卡店 Lv.3 解锁合成炉" };
     const main = state.cards.find(c => c.uid === mainUid);
     if (!main) return { ok: false, reason: "主卡不存在" };
+    if (isCollectionOnly(main.pid)) return { ok: false, reason: "双人卡仅供收藏，不能升星" };
     const star = main.star || 0;
     if (star >= 5) return { ok: false, reason: "已满 5 星" };
     if (!matUids || matUids.length !== 2) return { ok: false, reason: "请选择恰好 2 张材料卡" };
+    // 万能材料：matUids 中的 "UNI" 为虚拟材料项（分解传世卡获得），每个占一个材料位
+    const uniCount = matUids.filter(u => u === "UNI").length;
+    if (uniCount > 0) {
+      if (!STAR_SAME_ONLY_TIERS.includes(main.tier)) return { ok: false, reason: "万能材料只能用于传世卡升星" };
+      if (((state.mats && state.mats.universal) || 0) < uniCount) return { ok: false, reason: "万能材料不足" };
+    }
     const cand = starCandidates(state, main); const byUid = {};
     cand.forEach(c => { byUid[c.uid] = c; });
     const mats = [];
-    for (const u of matUids) { if (!byUid[u]) return { ok: false, reason: "所选材料不可用（需同球员重复卡或同系列同档卡，且不在阵容/展示中）" }; mats.push(byUid[u]); }
-    if (mats[0].uid === mats[1].uid) return { ok: false, reason: "材料不能重复选择" };
+    for (const u of matUids) { if (u === "UNI") continue; if (!byUid[u]) return { ok: false, reason: "所选材料不可用（需同球员重复卡或同系列同档卡，且不在阵容/展示中）" }; mats.push(byUid[u]); }
+    if (mats.length === 2 && mats[0].uid === mats[1].uid) return { ok: false, reason: "材料不能重复选择" };
+    if (uniCount > 0) state.mats.universal -= uniCount;
     const target = star + 1;
     const rate = Math.min(1, STAR_RATES[target] + (main.starLuck || 0) / 100);
     for (const c of mats) state.cards.splice(state.cards.findIndex(x => x.uid === c.uid), 1);
@@ -1149,14 +1265,34 @@ const KBSystems = (() => {
     let used = 0;
     while ((main.star || 0) < 3) {
       const pool = starCandidates(state, main).filter(c => !(c.star || 0) && c.stamp !== "/1");
-      const cand = [...pool.filter(c => c.pid === main.pid), ...pool.filter(c => c.pid !== main.pid)]; // 优先喂同球员重复卡（主人 2026-11-03），组内仍按身价升序
-      if (cand.length < 2) return { ok: used > 0, partial: true, from, to: main.star || 0, used, reason: "材料不足" };
-      const r = starUp(state, mainUid, [cand[0].uid, cand[1].uid], rng);
+      const cand = [...pool.filter(c => samePlayer(c.pid, main.pid)), ...pool.filter(c => !samePlayer(c.pid, main.pid))]; // 优先喂同球员重复卡（主人 2026-11-03，时期卡按 link 归一），组内仍按身价升序
+      let matUids;
+      if (cand.length >= 2) matUids = [cand[0].uid, cand[1].uid];
+      else if (STAR_SAME_ONLY_TIERS.includes(main.tier) && cand.length + ((state.mats && state.mats.universal) || 0) >= 2) {
+        // 传世主卡材料不足 2 时用万能材料补足（第二批：一键升星同步遵守同球员/万能材料口径）
+        matUids = [...cand.map(c => c.uid)];
+        while (matUids.length < 2) matUids.push("UNI");
+      } else return { ok: used > 0, partial: true, from, to: main.star || 0, used, reason: "材料不足" };
+      const realUsed = matUids.filter(u => u !== "UNI").length, uniUsed = matUids.length - realUsed;
+      const r = starUp(state, mainUid, matUids, rng);
       if (!r.ok) return { ok: used > 0, partial: true, from, to: main.star || 0, used, reason: r.reason };
       if (!r.success) break; // 1–3 星必成，理论上不到此分支
-      used += 2;
+      used += 2; void realUsed; void uniUsed;
     }
     return { ok: true, from, to: main.star || 0, used };
+  }
+  // 分解传世卡 → 万能材料 ×1（第二批）：/1 与已评级卡不可分解；阵容/展示中沿用既有保护口径
+  function decomposeCard(state, uid) {
+    const c = state.cards.find(x => x.uid === uid);
+    if (!c) return { ok: false, reason: "卡已不在卡库" };
+    if (c.tier !== "传世") return { ok: false, reason: "只有传世卡可以分解" };
+    if (c.stamp === "/1") return { ok: false, reason: "/1 独一无二，不可分解" };
+    if (c.grade) return { ok: false, reason: "已评级的卡不可分解" };
+    if (lineupUids(state).includes(uid) || (state.display || []).includes(uid)) return { ok: false, reason: "阵容/展示中的卡不可分解" };
+    state.cards.splice(state.cards.findIndex(x => x.uid === uid), 1);
+    state.mats = state.mats || { universal: 0 };
+    state.mats.universal = (state.mats.universal || 0) + 1;
+    return { ok: true, card: c, universal: state.mats.universal };
   }
   const GAMBLE_BASE = 0.35;
   function gamble(state, tier, rng) {
@@ -1231,7 +1367,7 @@ const KBSystems = (() => {
       const p = pool[Math.floor(rng() * pool.length)];
       const s = E.rollStamp(rng);
       const v = E.rollVariant(rng); // 大改版 1.1：名宿包补平行版 roll（此前漏接，产出恒为普卡、红折为 0）
-      const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult), bornDay: state.dayIndex, star: 0, starLuck: 0 };
+      const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
       state.draws++;
       if (tier === "传世") state.pity = 0; else state.pity++;
       cards.push(card);
@@ -1241,7 +1377,7 @@ const KBSystems = (() => {
     return { ok: true, cards };
   }
 
-  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, gamble, quickSellPlan, openLegendPack };
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack };
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
@@ -1385,7 +1521,32 @@ const KBPlatform = (() => {
       }
     } catch (e) {}
   }
-  return { inContainer, mirrorCloudSave, fetchCloud, clearCloud, setCloudErrorHandler: fn => { onCloudError = fn; }, fetchNickname, postPoster, shareCard, desktopAvailable, addToDesktop, applySafeTop };
+  // ===== 排行榜（act-cloudbase，第二批）：仅虎扑容器内可用，Pages/浏览器自动隐藏 =====
+  const ACTIVITY_API_BASE = "https://app-69b45376d9-d6g206r7f4a413fd5-1252166086.ap-shanghai.app.tcloudbase.com/api";
+  const ACTIVITY_ENV_ID = "app-69b45376d9-d6g206r7f4a413fd5";
+  function lbAvailable() { const cb = CB(); return !!(cb && cb.cloud && typeof cb.cloud.request === "function" && typeof cb.cloud.auth === "function"); }
+  let lbAuthed = false;
+  async function lbAuth() { if (lbAuthed) return; const r = await CB().cloud.auth({ envId: ACTIVITY_ENV_ID }); if (!r || (r.code !== 200 && r.code !== 0)) throw new Error((r && r.message) || "请先登录"); lbAuthed = true; }
+  async function lbRequest(path, data) {
+    await lbAuth();
+    const resp = await CB().cloud.request({ url: ACTIVITY_API_BASE + path, method: data ? "POST" : "GET", data, envId: ACTIVITY_ENV_ID, auth: true });
+    if (!resp || resp.statusCode === 401) throw new Error("请先登录");
+    if (resp.statusCode !== 200 || resp.code !== 0) throw new Error((resp && resp.message) || "榜单服务异常");
+    return resp.data;
+  }
+  async function lbProfile() {
+    const cb = CB();
+    if (!cb || !cb.auth || typeof cb.auth.getUserInfo !== "function") return { nickname: "虎扑用户", avatar: null };
+    try {
+      const r = await cb.auth.getUserInfo();
+      if (r && r.code === 200 && r.data) {
+        const av = r.data.avatar || r.data.userHeadUrl;
+        return { nickname: r.data.nickname ? String(r.data.nickname).slice(0, 40) : "虎扑用户", avatar: typeof av === "string" && /^https?:\/\//.test(av) && av.length <= 512 ? av : null };
+      }
+    } catch (e) {}
+    return { nickname: "虎扑用户", avatar: null };
+  }
+  return { inContainer, mirrorCloudSave, fetchCloud, clearCloud, setCloudErrorHandler: fn => { onCloudError = fn; }, lbAvailable, lbRequest, lbProfile, fetchNickname, postPoster, shareCard, desktopAvailable, addToDesktop, applySafeTop };
 })();
 if (typeof module !== "undefined") module.exports = KBPlatform;
 
@@ -1417,7 +1578,8 @@ const KBTrack = (() => {
 //   核对落定（确认完播 / 平台明拒 / 标记超 12h）才清 PENDING，查询失败一律保留、下次启动再核。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { double: 3, dia: 2, league: Infinity, urdraw: 1, heat: 3 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12；heat=熔炉炉温（2026-11-03 主人令加）；free 广告免费包点位已于 2026-11-03 按主人令下线（金币通胀、奖励无意义）
+  const LIMITS = { double: 3, dia: 2, league: Infinity, urdraw: 1, heat: 3, dia30: 30, grade: Infinity }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12；heat=熔炉炉温（2026-11-03 主人令加）；free 广告免费包点位已于 2026-11-03 按主人令下线（金币通胀、奖励无意义）
+  // 第二批（2026-11-03）：dia30=钻石广告独立 bucket 30 次/日×30 钻、grade=评级（每卡 ≤3 次由卡侧封顶）——两者均不占 12/日总闸（见 capCount 豁免）；底层平台只有一个 reward 任务，三者与 dia 小包共用同一 vatask 任务，靠 PENDING.purpose 区分发奖用途
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   const PENDING_TTL = 12 * 3600 * 1000; // 与篮坛 settlePending 同口径：12h 内保留待核，超时才判未完播清掉
@@ -1430,7 +1592,7 @@ const KBAds = (() => {
   }
   function isNative() { return !!vatask(); }
   function todayCount(state) { return Object.values(state.adDay.counts).reduce((s, n) => s + n, 0); }
-  function capCount(state) { return todayCount(state) - (state.adDay.counts.league || 0); } // 总限额计数不含联赛（不限次）
+  function capCount(state) { const c = state.adDay.counts; return todayCount(state) - (c.league || 0) - (c.dia30 || 0) - (c.grade || 0); } // 总限额计数不含联赛（不限次）与第二批 dia30/grade（独立 bucket）
   function canWatch(state, kind) {
     if (state.adLocked) return { ok: false, reason: "今日广告奖励已领完（平台返回）" };
     if ((state.adDay.counts[kind] || 0) >= LIMITS[kind]) return { ok: false, reason: "该广告点位今日已达上限" };
@@ -1473,9 +1635,10 @@ const KBAds = (() => {
       }, 1000);
     });
   }
-  async function nativeWatch(kind, runId) {
+  async function nativeWatch(kind, runId, extra) {
     const base = await getBalance(); // 看前余额基线（查不到为 null，补发时走保留待核）
-    savePending({ kind, runId, ts: Date.now(), base });
+    // purpose=发奖用途（与 kind 同值保留双字段：kind 兼容旧标记，purpose 为第二批分发口径）；uid=评级目标卡（grade 用途才有）
+    savePending({ kind, purpose: kind, uid: extra && extra.uid !== undefined ? extra.uid : null, runId, ts: Date.now(), base });
     let res = null, threw = false;
     try { res = await vatask().completeRewardVideo(); } catch (e) { threw = true; }
     if (!threw && res && res.code === 200 && res.data && res.data.rewarded) { clearPending(); return { ok: true }; }
@@ -1486,16 +1649,16 @@ const KBAds = (() => {
     // 查不到或未增：保留 PENDING，下次启动凭余额差量补发（12h 过期兜底，不会堵死）
     return { ok: false, pendingKept: true, reason: "广告状态待核对，奖励将在确认后补发" };
   }
-  async function watch(state, kind) {
+  async function watch(state, kind, opts) {
     const chk = canWatch(state, kind);
     if (!chk.ok) return chk;
     const runId = kind + "-" + Date.now() + "-" + Math.floor(Math.random() * 1e6);
-    const r = isNative() ? await nativeWatch(kind, runId) : await simulatedWatch();
+    const r = isNative() ? await nativeWatch(kind, runId, opts) : await simulatedWatch();
     if (!r.ok) {
       if (r.unavailable) state.adLocked = true; // 仅平台明拒才锁
       return r;
     }
-    state.adPending = { runId, kind, ts: Date.now() };
+    state.adPending = { runId, kind, purpose: kind, uid: opts && opts.uid !== undefined ? opts.uid : null, ts: Date.now() };
     return { ok: true, runId };
   }
   // 发奖（幂等）：同一 runId 只发一次；计入当日点位计数
@@ -1521,8 +1684,8 @@ const KBAds = (() => {
     if (typeof now === "number" && typeof j.base === "number") {
       if (now > j.base) {
         clearPending();
-        state.adPending = { runId: j.runId, kind: j.kind, ts: j.ts };
-        return { kind: j.kind, runId: j.runId };
+        state.adPending = { runId: j.runId, kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, ts: j.ts };
+        return { kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, runId: j.runId };
       }
       return null; // 余额未增：保留待下次核对（12h 内）
     }
@@ -1534,8 +1697,8 @@ const KBAds = (() => {
           const task = (st.data.tasks || []).find(x => x.taskCode === "reward");
           clearPending();
           if (task && task.status === "completed") {
-            state.adPending = { runId: j.runId, kind: j.kind, ts: j.ts };
-            return { kind: j.kind, runId: j.runId };
+            state.adPending = { runId: j.runId, kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, ts: j.ts };
+            return { kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, runId: j.runId };
           }
         }
       } catch (e) {}
@@ -1619,7 +1782,7 @@ const KBMeta = (() => {
   }
   // ---------- 套卡（§10） ----------
   const SETS = [
-    { id: "kings", name: "球王谱", desc: "任意 5 张不同传世", test: st => new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size >= 5, prog: st => `${Math.min(5, new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size)}/5`, rewardText: "传世箱 ×1" },
+    { id: "kings", name: "球王谱", desc: "任意 5 张不同传世", test: st => new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size >= 5, prog: st => `${Math.min(5, new Set(st.cards.filter(c => c.tier === "传世").map(c => c.pid)).size)}/5`, rewardText: "钻石包 ×1" },
     { id: "boots", name: "金靴四杰", desc: "哈兰德/凯恩/莱万/姆巴佩 任意 3 人", test: st => ["哈兰德", "凯恩", "莱万多夫斯基", "姆巴佩"].filter(n => st.cards.some(c => c.name === n)).length >= 3, prog: st => `${["哈兰德", "凯恩", "莱万多夫斯基", "姆巴佩"].filter(n => st.cards.some(c => c.name === n)).length}/3`, rewardText: "高级包 ×1" },
     { id: "cn", name: "国足锋线", desc: "武磊/张玉宁/王钰栋/拜合拉木 集齐", test: st => ["武磊", "张玉宁", "王钰栋", "拜合拉木"].every(n => st.cards.some(c => c.name === n)), prog: st => `${["武磊", "张玉宁", "王钰栋", "拜合拉木"].filter(n => st.cards.some(c => c.name === n)).length}/4`, rewardText: "高级包 ×2" },
     { id: "gks", name: "门神谱", desc: "任意 3 位传说+ 门将", test: st => new Set(st.cards.filter(c => c.pos === "GK" && ["传说", "传世"].includes(c.tier)).map(c => c.pid)).size >= 3, prog: st => `${Math.min(3, new Set(st.cards.filter(c => c.pos === "GK" && ["传说", "传世"].includes(c.tier)).map(c => c.pid)).size)}/3`, rewardText: "高级包 ×1" }
@@ -1915,7 +2078,7 @@ function persist() {
 function todayStr() { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 const avatarCache = {};
 function avatarURL(p) {
-  if (typeof PORTRAITS !== "undefined" && PORTRAITS[p.id]) return PORTRAITS[p.id];
+  const reused = portraitOf(p); if (reused) return reused;
   if (avatarCache[p.id]) return avatarCache[p.id];
   let seed = p.id * 2654435761 % 4294967296;
   const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
@@ -1956,6 +2119,12 @@ function avatarURL(p) {
   return (avatarCache[p.id] = cv.toDataURL());
 }
 function playerOf(c) { return E.playerById(c.pid); }
+function portraitOf(p) { // 时期/双人卡肖像复用原型（第二批：不新生成图）；双人卡用 link 首人
+  if (typeof PORTRAITS === "undefined" || !p) return null;
+  if (PORTRAITS[p.id]) return PORTRAITS[p.id];
+  const lk = typeof p.link === "number" ? p.link : (Array.isArray(p.link) ? p.link[0] : null);
+  return lk != null ? (PORTRAITS[lk] || null) : null;
+}
 function cardHTML(c, opts) {
   opts = opts || {};
   const col = TIER_COLOR[c.tier];
@@ -1965,15 +2134,17 @@ function cardHTML(c, opts) {
   const val = S.instanceValue(state, c, D);
   const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
   const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
+  const era = c.series === "时期" ? `<span class="erabadge">时期</span>` : c.series === "双人" ? `<span class="erabadge duo">双人</span>` : "";
+  const gr = c.grade ? `<span class="gradebadge">🏅${c.grade.label}</span>` : "";
   const newb = opts.new ? `<span class="newb">NEW</span>` : "";
   const vv = c.variant && c.variant !== "base" ? c.variant : "";
   const sig = vv === "签字" ? `<div class="sig">${c.name}</div>` : "";
   return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
-    <img class="cart${(typeof PORTRAITS !== "undefined" && PORTRAITS[c.pid]) ? " photo" : ""}" loading="lazy" decoding="async" src="${avatarURL(playerOf(c))}" alt="">
-    <div class="cshade"></div>${newb}
+    <img class="cart${portraitOf(playerOf(c)) ? " photo" : ""}" loading="lazy" decoding="async" src="${avatarURL(playerOf(c))}" alt="">
+    <div class="cshade"></div>${newb}${era}${gr}
     <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${S.effRating(c)}</span></div>
     <div class="cfoot"><div class="cname" style="font-size:${c.name.length >= 7 ? 12 : c.name.length === 6 ? 13.5 : 15}px">${c.name}</div>
-    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}</div>
+    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}${c.grade ? ` · <span class="vt">${c.grade.label}</span>` : ""}</div>
     <div class="cval">身价 ${val}</div></div>
     ${stamp}${hot}${sig}</div>`;
 }
@@ -1993,6 +2164,7 @@ function render() {
   else if (curTab === "lineup") renderLineup();
   else if (curTab === "league") renderLeague();
   else if (curTab === "dex") renderDex();
+  else if (curTab === "board") renderBoard();
   renderMeta();
   bindDynamic();
   persist();
@@ -2001,7 +2173,7 @@ function render() {
 function renderShop() {
   const lv = state.shopLv, shop = S.SHOP[lv], next = S.SHOP[lv + 1];
   $("#shopInfo").innerHTML = `卡店 Lv.${lv} · 展示位 ${state.display.length}/${shop.slots} · 时薪 <b>${Math.round(S.idleRate(state))}</b> 金币`;
-  const hero = $("#shopHero"); if (hero) hero.innerHTML = `<div class="hh-name">${SHOP_NAMES[state.shopLv] || "我的卡馆"} · Lv.${state.shopLv}</div><div class="hh-sub">展示柜时薪 ${Math.round(S.idleRate(state))} 金币 · 图鉴 ${new Set(state.cards.map(c => c.pid)).size}/120 · 传世保底 ${state.pity}/240</div>`;
+  const hero = $("#shopHero"); if (hero) hero.innerHTML = `<div class="hh-name">${SHOP_NAMES[state.shopLv] || "我的卡馆"} · Lv.${state.shopLv}</div><div class="hh-sub">展示柜时薪 ${Math.round(S.idleRate(state))} 金币 · 图鉴 ${new Set(state.cards.filter(c => c.pid < 200).map(c => c.pid)).size}/120 · 传世保底 ${state.pity}/240</div>`;
   $("#idlePending").textContent = Math.floor(state.idlePending || 0);
   $("#upgradeBtn").style.display = next ? "" : "none";
   if (next) $("#upgradeBtn").textContent = `升级 Lv.${lv + 1}（${next.cost} 金币${S.UNLOCKS[lv + 1] ? " · 解锁" + S.UNLOCKS[lv + 1] : ""}）`;
@@ -2017,8 +2189,8 @@ function renderShop() {
   if (pickSlot !== null) {
     const used = new Set([...state.display, ...S.lineupUids(state)]);
     const idleOf = c => S.IDLE[c.tier] * (1 + ((E.STAMPS.find(s => s[0] === c.stamp) || [])[3] || 0));
-    const cands = state.cards.filter(c => !used.has(c.uid) || state.display[pickSlot] === c.uid)
-      .sort((a, b) => idleOf(b) - idleOf(a) || b.rating - a.rating);
+    const cands = state.cards.filter(c => !S.isCollectionOnly(c.pid) && (!used.has(c.uid) || state.display[pickSlot] === c.uid))
+      .sort((a, b) => idleOf(b) - idleOf(a) || b.rating - a.rating); // 双人卡仅收藏，不上展示柜
     pick = `<div class="row"><b>为展示位 ${pickSlot + 1} 选卡（按挂机档位排序）：</b><button class="btn ghost" id="pickCancel">取消</button></div><div class="grid">` +
       cands.slice(0, 24).map(c => `<div class="pickable" data-pick="${c.uid}">${cardHTML(c)}</div>`).join("") + "</div>";
   }
@@ -2042,8 +2214,10 @@ function renderPacks() {
   $("#freeBtn").textContent = state.freeDay === todayStr() ? "今日免费包已领" : "领今日免费包";
   document.querySelector('[data-pack="premium"]').disabled = state.shopLv < 2;
   document.querySelector('[data-pack="premium"]').textContent = state.shopLv < 2 ? "卡店 Lv.2 解锁" : "1400 金币";
-  document.querySelector('[data-pack="urbox"]').disabled = state.shopLv < 4;
-  document.querySelector('[data-pack="urbox"]').textContent = state.shopLv < 4 ? "卡店 Lv.4 解锁" : "40 钻石";
+  document.querySelector('[data-pack="dia60"]').disabled = state.shopLv < 4;
+  document.querySelector('[data-pack="dia60"]').textContent = state.shopLv < 4 ? "卡店 Lv.4 解锁" : "60 钻石";
+  document.querySelector('[data-pack="dia120"]').disabled = state.shopLv < 5;
+  document.querySelector('[data-pack="dia120"]').textContent = state.shopLv < 5 ? "卡店 Lv.5 解锁" : "120 钻石";
   $("#legendPackBtn").disabled = state.shopLv < 7;
   $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "30 钻石";
   document.querySelectorAll("[data-packart]").forEach(im => { const k = im.dataset.packart; if (typeof KBPackArt !== "undefined" && KBPackArt[k]) { im.src = KBPackArt[k]; im.style.display = ""; } else im.style.display = "none"; });
@@ -2095,7 +2269,8 @@ function renderLineup() {
     const pos = pickSlotRef.pos, idx = pickSlotRef.idx;
     const cur = mine[pos][idx];
     const inLineup = new Set(S.lineupUids(state));
-    const cands = state.cards.filter(c => c.pos === pos && (!inLineup.has(c.uid) || (cur && c.uid === cur.uid))).sort((a, b) => b.rating - a.rating);
+    const usedLink = new Set(S.lineupUids(state).filter(u => !(cur && u === cur.uid)).map(u => { const cc = state.cards.find(x => x.uid === u); return cc ? S.linkKeyOf(cc.pid) : null; }).filter(x => x !== null)); // 时期卡与原型同场互斥
+    const cands = state.cards.filter(c => c.pos === pos && !S.isCollectionOnly(c.pid) && !usedLink.has(S.linkKeyOf(c.pid)) && (!inLineup.has(c.uid) || (cur && c.uid === cur.uid))).sort((a, b) => b.rating - a.rating);
     phtml = `<div class="row"><b>选择${posNames[pos]}（第 ${idx + 1} 槽）：</b>` +
       (cur ? `<button class="btn ghost" data-cap="${cur.uid}">${cur.uid === state.captainUid ? "已是队长 ⭐" : "设为队长"}</button>` : "") +
       `<button class="btn ghost" id="pickPosCancel">取消</button></div><div class="grid">` +
@@ -2136,21 +2311,28 @@ function showCardDetail(pid) {
   detailPid = pid;
   const p = E.playerById(pid); if (!p) return;
   const list = state.cards.filter(c => c.pid === pid);
-  // 相同实例归组显示 ×N（2026-11-03 核心玩家 lllzyl 建议：一样的归到一起），卖按钮卖其中一张
+  // 相同实例归组显示 ×N（2026-11-03 核心玩家 lllzyl 建议：一样的归到一起），卖按钮卖其中一张；第二批起评级计入归组键（不同评级不归组）
   const groups = new Map();
-  for (const c of list) { const k = [c.stamp, c.variant || "base", c.star || 0, c.adAssist ? 1 : 0].join("|"); if (!groups.has(k)) groups.set(k, { rep: c, n: 0, val: S.instanceValue(state, c, D) }); groups.get(k).n += 1; }
+  for (const c of list) { const k = [c.stamp, c.variant || "base", c.star || 0, c.adAssist ? 1 : 0, c.grade ? c.grade.label : ""].join("|"); if (!groups.has(k)) groups.set(k, { rep: c, n: 0, val: S.instanceValue(state, c, D) }); groups.get(k).n += 1; }
   const rows = [...groups.values()].sort((a, b) => b.val - a.val);
   $("#detailTitle").textContent = `${p.name} · ${p.tier} ${p.rating}（持有 ${list.length} 张）`;
-  $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep; return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button></div>`; }).join("") : "<p class='hint'>已全部卖出。</p>";
+  const inUse = new Set([...S.lineupUids(state), ...(state.display || [])]);
+  $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep;
+    const gradeBtn = (c.star || 0) >= 5 ? ((c.gradeTries || 0) < 3 ? `<button class="btn ghost" data-grade="${c.uid}">🏅 评级（余 ${3 - (c.gradeTries || 0)} 次 · 看广告）</button>` : `<span class="hint">评级次数已用完</span>`) : "";
+    const decBtn = c.tier === "传世" && c.stamp !== "/1" && !c.grade && !inUse.has(c.uid) ? `<button class="btn ghost" data-decomp="${c.uid}">分解→万能材料</button>` : "";
+    return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>${gradeBtn}${decBtn}</span></div>`; }).join("") +
+    ((state.mats && state.mats.universal) ? `<p class="hint">🧩 万能材料 ×${state.mats.universal}（分解传世卡获得，传世升星时可顶替同球员材料）</p>` : "") : "<p class='hint'>已全部卖出。</p>";
   $("#detailModal").classList.add("on");
   bindDynamic();
 }
 function renderDex() {
   const ownedIds = new Set(state.cards.map(c => c.pid));
-  const paraSet = new Set(state.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant));
-  $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480`;
+  const paraSet = new Set(state.cards.filter(c => c.pid < 200 && c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)); // 平行版口径保持基础 120 人（时期卡平行版不计入 480 分母体系）
+  const baseOwned = PLAYERS.filter(p => p.id < 200 && ownedIds.has(p.id)).length;
+  const eraOwned = PLAYERS.filter(p => E.isEraPlayer(p) && ownedIds.has(p.id)).length;
+  $("#dexInfo").textContent = `图鉴点亮 ${baseOwned}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480 · 时期/双人收藏 ${eraOwned}/7`;
   // 合并图鉴/卡库（2026-11-03 主人令对标篮坛）：单网格——点亮=持有，点卡开详情逐张卖；版本/限编筛选按实例匹配（只显示持有匹配实例的球员）
-  const _dexKey = D + "|" + libFilter.tier + "|" + libFilter.variant + "|" + libFilter.stamp + "|" + libFilter.q + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid + ":" + c.stamp + ":" + (c.variant || "base") + ":" + (c.star || 0)).join(",") : "0"; }).join(";");
+  const _dexKey = D + "|" + libFilter.tier + "|" + libFilter.variant + "|" + libFilter.stamp + "|" + libFilter.q + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid + ":" + c.stamp + ":" + (c.variant || "base") + ":" + (c.star || 0) + ":" + (c.grade ? c.grade.label : "")).join(",") : "0"; }).join(";");
   if (_dexKey !== dexGridKey) { dexGridKey = _dexKey;
   swapHTML($("#dexGrid"), PLAYERS.map(p => {
     if ((libFilter.tier && p.tier !== libFilter.tier) || (libFilter.q && !p.name.includes(libFilter.q))) return ""; // 图鉴跟随档位/搜索筛选
@@ -2160,7 +2342,7 @@ function renderDex() {
     if (own) { const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
       return `<div class="dexcell" data-detail="${p.id}" style="cursor:pointer">${cardHTML(mine.sort((a, b) => S.instanceValue(state, b, D) - S.instanceValue(state, a, D))[0])}<div class="pips">${pips}</div><div class="owncount">持有 ×${mine.length} · 点卡卖卡</div></div>`; }
     // 未收集：直接亮出是谁（真卡面灰头像），还缺谁一目了然（2026-11-03 主人令，不再用问号藏）
-    return `<div class="dexcell unowned">${cardHTML({ pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, star: 0, starLuck: 0 })}<div class="owncount">未收集</div></div>`;
+    return `<div class="dexcell unowned">${cardHTML({ pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 })}<div class="owncount">未收集</div></div>`;
   }).join(""));
   const _fc = $("#fltCount"); if (_fc) _fc.textContent = (libFilter.tier || libFilter.variant || libFilter.stamp || libFilter.q) ? `筛出 ${$("#dexGrid").children.length} 人` : "";
   }
@@ -2188,7 +2370,7 @@ function renderDex() {
   renderFurnace();
 }
 // ---------- 合成炉：炉温/升星/冲档（2026-11-02 升星案） ----------
-let starMainUid = null; const starMats = new Set();
+let starMainUid = null; const starMats = new Set(); let starUniSel = 0; // 升星已选万能材料数（第二批，虚拟材料项 "UNI"）
 function boomFX(text) {
   const old = document.getElementById("boomFX"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "boomFX";
@@ -2216,7 +2398,7 @@ function renderFurnace() {
   const main = starMainUid != null ? state.cards.find(c => c.uid === starMainUid) : null;
   if (!main || (main.star || 0) >= 5) {
     if (main) starMainUid = null;
-    const allMain = [...state.cards].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || S.instanceValue(state, b, D) - S.instanceValue(state, a, D));
+    const allMain = [...state.cards].filter(c => !S.isCollectionOnly(c.pid)).sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || S.instanceValue(state, b, D) - S.instanceValue(state, a, D)); // 双人卡仅收藏，不作升星主卡
     const matched = starQuery ? allMain.filter(c => c.name.includes(starQuery)) : allMain;
     const list = matched.slice(0, 60);
     box.innerHTML = `<p class="hint">主卡 + 2 张材料（同球员重复卡或同系列同档卡）→ +1 星。先搜名字，再点一张设为主卡：</p>` +
@@ -2229,12 +2411,16 @@ function renderFurnace() {
   const rate = Math.min(1, S.STAR_RATES[target] + (main.starLuck || 0) / 100);
   const candAll = S.starCandidates(state, main);
   const cand = (starQuery ? candAll.filter(c => c.name.includes(starQuery)) : candAll).slice(0, 120);
+  const sameOnly = S.STAR_SAME_ONLY_TIERS.includes(main.tier);
+  const uniHave = (state.mats && state.mats.universal) || 0;
+  const uniBtn = sameOnly ? `<button class="btn ${starUniSel ? "" : "ghost"}" data-unimat="1" style="margin:0 6px 6px 0" ${uniHave <= 0 ? "disabled" : ""}>🧩 万能材料 ×${uniHave}${starUniSel ? `（已选 ${starUniSel}）` : ""}</button>` : "";
   box.innerHTML = `<p>主卡：<b>${main.name}</b> ${main.pos} ${main.tier} ${main.rating} <span class="starBadge">★${main.star || 0} → ★${target}</span></p>` +
     `<p class="hint">本次成功率 <b style="color:#ffb52e">${Math.round(rate * 100)}%</b>${target >= 4 ? `（失败 = 炸炉：只损材料，幸运 +${target === 4 ? 20 : 40}%、炉温 +1）` : "（低星必成）"} · 幸运条 ${main.starLuck || 0}%</p><div class="luckbar"><i style="width:${Math.min(100, main.starLuck || 0)}%"></i></div>` +
-    `<p class="hint" style="margin-top:8px">选 2 张材料（已选 ${starMats.size}/2，候选 ${candAll.length} 张${starQuery ? `，按「${starQuery}」筛出 ${cand.length} 张` : ""}）：</p>` +
-    cand.map(c => `<button class="btn ${starMats.has(c.uid) ? "" : "ghost"}" data-starmat="${c.uid}" style="margin:0 6px 6px 0">${starMats.has(c.uid) ? "☑ " : ""}${c.name} ${c.tier} ${c.rating}${c.pid === main.pid ? " · 同球员" : ""} · 身价 ${c.value}</button>`).join("") +
-    `<div style="margin-top:8px"><button class="btn" data-starup="1" ${starMats.size !== 2 ? "disabled" : ""}>⭐ 升星</button> ${(main.star || 0) < 3 ? `<button class="btn ghost" data-starauto="1">⚡ 一键升到 3 星</button>` : ""} <button class="btn ghost" data-starcancel="1">换主卡</button></div>
-     ${(main.star || 0) < 3 ? `<p class="hint">⚡ 一键升星：自动喂材料连升到 3 星，优先同球员重复卡、其次同系列同档卡（跳过已升星卡与 /1）；4/5 星有炸炉概率，仍需手动。</p>` : ""}`;
+    (sameOnly ? `<p class="hint" style="margin-top:6px">传世升星只吃<b>同球员</b>重复卡（时期卡按原型算同球员）或<b>万能材料</b>（分解任意传世卡得 1 个，在卡片详情里分解）。</p>` : "") +
+    `<p class="hint" style="margin-top:8px">选 2 张材料（已选 ${starMats.size + starUniSel}/2，候选 ${candAll.length} 张${starQuery ? `，按「${starQuery}」筛出 ${cand.length} 张` : ""}）：</p>` +
+    cand.map(c => `<button class="btn ${starMats.has(c.uid) ? "" : "ghost"}" data-starmat="${c.uid}" style="margin:0 6px 6px 0">${starMats.has(c.uid) ? "☑ " : ""}${c.name} ${c.tier} ${c.rating}${S.samePlayer(c.pid, main.pid) ? " · 同球员" : ""} · 身价 ${c.value}</button>`).join("") + uniBtn +
+    `<div style="margin-top:8px"><button class="btn" data-starup="1" ${starMats.size + starUniSel !== 2 ? "disabled" : ""}>⭐ 升星</button> ${(main.star || 0) < 3 ? `<button class="btn ghost" data-starauto="1">⚡ 一键升到 3 星</button>` : ""} <button class="btn ghost" data-starcancel="1">换主卡</button></div>
+     ${(main.star || 0) < 3 ? `<p class="hint">⚡ 一键升星：自动喂材料连升到 3 星，优先同球员重复卡、其次同系列同档卡（跳过已升星卡与 /1）；传世卡材料不足时自动用万能材料补足；4/5 星有炸炉概率，仍需手动。</p>` : ""}`;
 }
 function bindDynamic() {
   document.querySelectorAll("[data-detail]").forEach(el => el.onclick = () => showCardDetail(+el.dataset.detail));
@@ -2246,6 +2432,21 @@ function bindDynamic() {
     if ((c.tier === "传世" || c.stamp === "/1") && !confirm(`这张是${c.tier}${c.stamp !== "无编" ? " " + c.stamp : ""}，确定要卖掉？`)) return;
     const r = E.sellCard(state, uid, val, sellRate());
     if (r.ok) { renderKeepScroll(); if (detailPid != null) showCardDetail(detailPid); toast(`卖出 ${r.card.name}，+${r.gain} 金币`); }
+  });
+  document.querySelectorAll("[data-grade]").forEach(btn => btn.onclick = () => {
+    const uid = +btn.dataset.grade;
+    const c = state.cards.find(x => x.uid === uid); if (!c) return;
+    if ((c.star || 0) < 5 || (c.gradeTries || 0) >= 3) return;
+    if (c.grade && !confirm(`这张卡已有评级 ${c.grade.label}，重评会覆盖旧分（可能更低），确定看广告重评？`)) return;
+    adWatch("grade", { uid });
+  });
+  document.querySelectorAll("[data-decomp]").forEach(btn => btn.onclick = () => {
+    const uid = +btn.dataset.decomp;
+    const c = state.cards.find(x => x.uid === uid); if (!c) return;
+    if (!confirm(`把传世卡 ${c.name} 分解为 1 个万能材料？分解后卡消失，万能材料可给任意传世卡升星顶替同球员材料。`)) return;
+    const r = S.decomposeCard(state, uid);
+    if (r.ok) { renderKeepScroll(); if (detailPid != null) showCardDetail(detailPid); toast(`已分解 ${r.card.name}，万能材料 ×${r.universal}`); }
+    else toast(r.reason);
   });
   const dc = $("#detailClose"); if (dc) dc.onclick = () => { $("#detailModal").classList.remove("on"); detailPid = null; };
   document.querySelectorAll("[data-slot]").forEach(el => el.onclick = () => { pickSlot = +el.dataset.slot; render(); });
@@ -2312,19 +2513,25 @@ function bindDynamic() {
   document.querySelectorAll("[data-starq]").forEach(b => b.onclick = () => { const q = $("#starQ"); starQuery = q ? q.value.trim() : ""; renderDex(); bindDynamic(); const nq = $("#starQ"); if (nq) nq.focus(); });
   document.querySelectorAll("[data-starqclear]").forEach(b => b.onclick = () => { starQuery = ""; renderDex(); bindDynamic(); });
   const sqEl = $("#starQ"); if (sqEl) sqEl.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); starQuery = sqEl.value.trim(); renderDex(); bindDynamic(); const nq = $("#starQ"); if (nq) nq.focus(); } };
-  document.querySelectorAll("[data-starmain]").forEach(b => b.onclick = () => { starMainUid = +b.dataset.starmain; starMats.clear(); renderDex(); bindDynamic(); });
+  document.querySelectorAll("[data-starmain]").forEach(b => b.onclick = () => { starMainUid = +b.dataset.starmain; starMats.clear(); starUniSel = 0; renderDex(); bindDynamic(); });
   document.querySelectorAll("[data-starmat]").forEach(b => b.onclick = () => {
     const uid = +b.dataset.starmat;
     if (starMats.has(uid)) starMats.delete(uid);
-    else { if (starMats.size >= 2) { toast("材料只要 2 张"); return; } starMats.add(uid); }
+    else { if (starMats.size + starUniSel >= 2) { toast("材料只要 2 张"); return; } starMats.add(uid); }
     renderDex(); bindDynamic();
   });
-  document.querySelectorAll("[data-starcancel]").forEach(b => b.onclick = () => { starMainUid = null; starMats.clear(); renderDex(); bindDynamic(); });
+  document.querySelectorAll("[data-unimat]").forEach(b => b.onclick = () => {
+    const have = (state.mats && state.mats.universal) || 0;
+    starUniSel = starUniSel >= Math.min(2, have) ? 0 : Math.min(starUniSel + 1, have, 2 - starMats.size);
+    if (starUniSel < 0) starUniSel = 0;
+    renderDex(); bindDynamic();
+  });
+  document.querySelectorAll("[data-starcancel]").forEach(b => b.onclick = () => { starMainUid = null; starMats.clear(); starUniSel = 0; renderDex(); bindDynamic(); });
   document.querySelectorAll("[data-starauto]").forEach(b => b.onclick = () => {
     const main = state.cards.find(c => c.uid === starMainUid); if (!main) return;
     const r = S.starUpAuto(state, starMainUid);
     if (!r.used) { toast(r.reason); return; }
-    starMats.clear(); persist(); render();
+    starMats.clear(); starUniSel = 0; persist(); render();
     const now = state.cards.find(c => c.uid === starMainUid);
     if (r.to >= 3) toast(`⚡ 一键升星完成：${main.name} 升到 ★3（共喂 ${r.used} 张材料），4/5 星请手动冲`);
     else toast(`材料不足：${main.name} 只升到 ★${r.to}（共喂 ${r.used} 张），先攒同球员/同系列材料吧`);
@@ -2332,9 +2539,9 @@ function bindDynamic() {
   });
   document.querySelectorAll("[data-starup]").forEach(b => b.onclick = () => {
     const main = state.cards.find(c => c.uid === starMainUid); if (!main) return;
-    const r = S.starUp(state, starMainUid, [...starMats]);
+    const r = S.starUp(state, starMainUid, [...starMats, ...Array(starUniSel).fill("UNI")]);
     if (!r.ok) { toast(r.reason); return; }
-    starMats.clear(); persist(); render();
+    starMats.clear(); starUniSel = 0; persist(); render();
     if (r.success) toast(`⭐ 升星成功！${main.name} 升到 ★${r.star}（评分 +2 · 身价 ×1.25）`);
     else boomFX(`炸炉！${main.name} 冲 ★${(main.star || 0) + 1} 失败——主卡无损，幸运已攒到 ${main.starLuck || 0}%`);
   });
@@ -2351,7 +2558,7 @@ function playReveal(best, done) {
   ov.querySelector(".rv-tier").textContent = best.tier + "！";
   ov.querySelector(".rv-name").textContent = best.name + (best.stamp !== "无编" ? " " + best.stamp : "") + (best.variant && best.variant !== "base" ? " · " + best.variant : "");
   const img = ov.querySelector(".rv-img");
-  img.src = (typeof PORTRAITS !== "undefined" && PORTRAITS[best.pid]) ? PORTRAITS[best.pid] : avatarURL(playerOf(best));
+  img.src = portraitOf(playerOf(best)) || avatarURL(playerOf(best));
   try { KBAudio.revealRise(tierIdx); } catch (e) {}
   let finished = false; const timers = [];
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
@@ -2435,7 +2642,7 @@ $("#upgradeBtn").onclick = () => {
 };
 $("#autoDispBtn").onclick = () => {
   const slots = S.SHOP[state.shopLv].slots;
-  state.display = state.cards.slice()
+  state.display = state.cards.filter(c => !S.isCollectionOnly(c.pid))
     .sort((a, b) => (S.IDLE[b.tier] * (1 + (E.STAMPS.find(s => s[0] === b.stamp) || [])[3] || 0)) - (S.IDLE[a.tier] * (1 + (E.STAMPS.find(s => s[0] === a.stamp) || [])[3] || 0)))
     .slice(0, slots).map(c => c.uid);
   render(); toast("已自动摆上时薪最高的卡");
@@ -2557,6 +2764,7 @@ $("#resetBtn").onclick = () => { if (confirm("确定删档重开？当前卡馆�
 $("#homeBtn").onclick = () => { persist(); renderSlots(); $("#startOv").classList.add("show"); };
 // ================= M3：签到/任务/成就/套卡/纪录/广告/晒单卡/存档码 =================
 function renderMeta() {
+  const lbTabBtn = document.querySelector('[data-tab="board"]'); if (lbTabBtn) lbTabBtn.style.display = KBPlatform.lbAvailable() ? "" : "none"; // 排行榜仅虎扑容器内显示
   // 签到与任务（卡店页）
   const d = state.daily;
   $("#signBtn").textContent = state.lastSignDay === todayStr() ? `已签到（累计 ${state.signTotal} 天）` : "每日签到 +300 金";
@@ -2575,10 +2783,12 @@ function renderMeta() {
   $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/3）`;
   $("#adDiaBtn").disabled = cnt("dia") >= 2;
   $("#adDiaBtn").textContent = `📺 钻石小包 +10 钻（${cnt("dia")}/2）`;
+  const d30 = $("#adDia30Btn"); if (d30) { d30.disabled = cnt("dia30") >= 30; d30.textContent = `📺 看广告 +30 钻（今日 ${cnt("dia30")}/30）`; }
+  if (state.ad) state.ad.dia30 = cnt("dia30"); // 钻石广告独立 bucket 镜像字段同步
   $("#adLeagueBtn").disabled = state.matchesLeft > 0;
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
   const hb = $("#adHeatBtn"); if (hb) hb.disabled = cnt("heat") >= 3 || (state.furnaceHeat || 0) >= 3;
-  $("#adTotal").textContent = `今日广告 ${KBAds.capCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）· 联赛广告不限次`;
+  $("#adTotal").textContent = `今日广告 ${KBAds.capCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）· 联赛广告不限次 · 钻石广告独立计次不占此额`;
   // 成就（卡店页，签到与任务下方；2026-11-02 从图鉴页最下面移来，对标篮坛）
   // 性能:成就/套卡网格只在达成态/已领态/进度签名变化时重建,避免每次 render 全量重建(内容一致)
   const achSig = KBMeta.ACHS.map(a => (a.test(state) ? "1" : "0") + (state.achClaimed[a.id] ? "c" : "")).join("");
@@ -2608,7 +2818,7 @@ function claimSet(id) {
   state.setsClaimed[id] = 1;
   let got = [];
   const openFree = (key, n) => { for (let i = 0; i < n; i++) { const res = E.openPack(state, key, Math.random, { free: true }); if (res.ok) got.push(...res.cards); } };
-  if (id === "kings") openFree("urbox", 1);
+  if (id === "kings") openFree("dia60", 1);
   if (id === "boots" || id === "gks") openFree("premium", 1);
   if (id === "cn") openFree("premium", 2);
   for (const c of got) if (c.bornDay === undefined) c.bornDay = D;
@@ -2623,29 +2833,100 @@ function switchTab(name) { setBg(name); curTab = name;
   document.querySelectorAll(".page").forEach(x => x.classList.toggle("on", x.id === "page-" + name));
   render();
 }
+// ----- 排行榜（第二批，act-cloudbase；仅虎扑容器内可用） -----
+let lbBoard = "power", lbBusy = false, lbCache = null;
+function lbPayload(board) {
+  if (board === "power") {
+    const byPos = S.lineupCards(state); // {GK:[..],DF:[..],...} 含 null 占位
+    const cards = ["GK", "DF", "MF", "WG", "ST"].flatMap(pos => (byPos[pos] || []).filter(Boolean));
+    if (cards.length < 11) return null;
+    return { score: cards.reduce((sum, c) => sum + S.effRating(c), 0), dims: { cards: cards.map(c => ({ pid: c.pid, star: c.star || 0, grade: c.grade ? c.grade.label : null })) } };
+  }
+  let best = null, bestV = 0;
+  for (const c of state.cards) { const v = S.staticValue(c); if (v > bestV) { bestV = v; best = c; } }
+  if (!best) return null;
+  return { score: bestV, dims: { pid: best.pid, mult: best.mult, vmult: best.vmult || 1, star: best.star || 0, grade: best.grade ? best.grade.label : null, name: best.name } };
+}
+async function lbSubmitIfBest(board) {
+  const p = lbPayload(board); if (!p) return;
+  const key = "zk_lb_" + board;
+  if (+(localStorage.getItem(key) || 0) >= p.score) return;
+  const prof = await KBPlatform.lbProfile();
+  await KBPlatform.lbRequest("/leaderboard/submit", { board, score: p.score, dims: p.dims, displayName: prof.nickname, avatar: prof.avatar });
+  localStorage.setItem(key, String(p.score));
+}
+function lbRenderList() {
+  const list = $("#lbList"), me = $("#lbMe");
+  $("#lbTabPower").className = "btn" + (lbBoard === "power" ? "" : " ghost");
+  $("#lbTabValue").className = "btn" + (lbBoard === "cardvalue" ? "" : " ghost");
+  if (!lbCache) { list.innerHTML = '<p class="hint">加载中…</p>'; return; }
+  const { entries, total } = lbCache.data, mine = lbCache.mine;
+  me.textContent = mine ? `我的排名：第 ${mine.rank} 名 · ${lbBoard === "power" ? "战力" : "身价"} ${mine.score.toLocaleString()}` : "暂无成绩：先组满首发阵容、开几包卡再来上榜";
+  let html = total < 30 ? `<p class="hint">榜单积累中（${total}/30 人），满 30 人正式开榜</p>` : "";
+  if (!entries.length) html += '<p class="hint">还没有人上榜，来做第一个。</p>';
+  for (const e of entries) {
+    const av = e.avatar ? `<img class="lb-av" src="${e.avatar}" alt="">` : `<span class="lb-avf">${(e.displayName || "?").slice(0, 1)}</span>`;
+    const sub = lbBoard === "cardvalue" && e.dims && e.dims.name ? `<div class="lb-sub">${e.dims.name}${e.dims.grade ? " · " + e.dims.grade : ""}</div>` : "";
+    html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${e.displayName}${e.isCurrent ? "（我）" : ""}${sub}</span><span class="lb-score">${e.score.toLocaleString()}</span></div>`;
+  }
+  list.innerHTML = html;
+}
+async function renderBoard(force) {
+  $("#lbTabPower").onclick = () => { if (lbBoard !== "power") { lbBoard = "power"; lbCache = null; renderBoard(true); } };
+  $("#lbTabValue").onclick = () => { if (lbBoard !== "cardvalue") { lbBoard = "cardvalue"; lbCache = null; renderBoard(true); } };
+  $("#lbRefresh").onclick = () => renderBoard(true);
+  if (!KBPlatform.lbAvailable()) { $("#lbList").innerHTML = '<p class="hint">排行榜仅在虎扑 App 内可用。</p>'; $("#lbMe").textContent = ""; return; }
+  lbRenderList();
+  if (lbBusy) return;
+  if (!force && lbCache && Date.now() - lbCache.at < 15000) return;
+  lbBusy = true;
+  try {
+    await lbSubmitIfBest("power"); await lbSubmitIfBest("cardvalue");
+    const data = await KBPlatform.lbRequest("/leaderboard?board=" + lbBoard);
+    const mine = await KBPlatform.lbRequest("/leaderboard/me?board=" + lbBoard);
+    lbCache = { at: Date.now(), data, mine };
+    lbRenderList();
+  } catch (e) { $("#lbList").innerHTML = `<p class="hint">榜单加载失败：${(e && e.message) || e}</p>`; }
+  lbBusy = false;
+}
+
 // ----- 广告点位 -----
-function applyAdReward(kind) {
-  if (kind === "free") return; // 点位已下线（2026-11-03）：存量 PENDING 补发到此静默作废，不发包
+let gradeTargetUid = null; // 评级广告的目标卡（发起时记下，grant 结算时用；补发路径用 PENDING 里的 uid）
+let lastGradeResult = null;
+function settleGrade(uid) {
+  const r = S.applyGrade(state, uid, Math.random);
+  if (r.ok) { lastGradeResult = r; return `评级完成：${r.card.name} 评上 ${r.grade.label}（身价 ×${r.grade.vmult} · 战力 +${r.grade.ovr}）`; }
+  return "评级未生效：" + r.reason;
+}
+function applyAdReward(kind, uid) {
+  if (kind === "free") return null; // 点位已下线（2026-11-03）：存量 PENDING 补发到此静默作废，不发包
   if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
   else if (kind === "dia") { state.dia += 10; }
+  else if (kind === "dia30") { state.dia += 30; } // 第二批：钻石广告独立 bucket，每次 +30 钻
   else if (kind === "league") { state.matchesLeft += 10; }
-  else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
+  else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.dia60, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); } // 第二批：体验抽改钻石包（60 档）口径单张
   else if (kind === "heat") { state.furnaceHeat = Math.min(3, (state.furnaceHeat || 0) + 1); }
+  else if (kind === "grade") { return settleGrade(uid !== null && uid !== undefined ? uid : gradeTargetUid); }
+  return null;
 }
-const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）", heat: "炉温 +1（满 3 下次合成免费）" };
-async function adWatch(kind) {
-  const res = await KBAds.watch(state, kind);
+const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", dia30: "钻石广告 +30 钻", league: "联赛场次 +10", urdraw: "钻石包体验抽已出卡（助力卡，图鉴照常点亮）", heat: "炉温 +1（满 3 下次合成免费）", grade: "评级完成" };
+async function adWatch(kind, opts) {
+  if (kind === "grade") gradeTargetUid = opts && opts.uid !== undefined ? opts.uid : null;
+  const res = await KBAds.watch(state, kind, opts);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
-  const granted = KBAds.grant(state, res.runId, kind, () => applyAdReward(kind));
+  let dynMsg = null;
+  const granted = KBAds.grant(state, res.runId, kind, () => { dynMsg = applyAdReward(kind, opts && opts.uid); });
   render();
-  toast(granted ? AD_OK_MSG[kind] : "奖励已发放过（幂等拦截）");
-  if (granted && kind === "urdraw" && lastDraw.length) showPackResult(lastDraw, "传世箱体验抽");
+  toast(granted ? (dynMsg || AD_OK_MSG[kind]) : "奖励已发放过（幂等拦截）");
+  if (granted && kind === "urdraw" && lastDraw.length) showPackResult(lastDraw, "钻石包体验抽");
+  if (granted && kind === "grade" && detailPid != null) showCardDetail(detailPid);
 }
 $("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +300 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +400 金 +3 钻"); } else toast(r.reason); };
 $("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +30 钻"); } else toast(r.reason); };
 $("#adDoubleBtn").onclick = () => adWatch("double");
 $("#adDiaBtn").onclick = () => adWatch("dia");
+{ const b = $("#adDia30Btn"); if (b) b.onclick = () => adWatch("dia30"); }
 $("#adLeagueBtn").onclick = () => adWatch("league");
 $("#adUrBtn").onclick = () => adWatch("urdraw");
 $("#adHeatBtn").onclick = () => adWatch("heat");
@@ -2655,10 +2936,13 @@ $("#probBtn").onclick = () => $("#probModal").classList.add("on");
 $("#probClose").onclick = () => $("#probModal").classList.remove("on");
 $("#probModal").addEventListener("click", e => { if (e.target.id === "probModal") $("#probModal").classList.remove("on"); });
 // 开机：广告 PENDING 凭服务端余额差量补发（仅容器内，v5.18 口径；核对不上保留标记下次再核）
+// 第二批：按 PENDING.purpose 分发用途（dia 小包/dia30/grade 三者共用同一平台任务；grade 带 uid 补评目标卡）
 KBAds.recoverPending(state).then(rec => {
   if (!rec) return;
-  const granted = KBAds.grant(state, rec.runId, rec.kind, () => applyAdReward(rec.kind));
-  if (granted) { render(); toast("上次广告奖励已补发"); }
+  const purpose = rec.purpose || rec.kind;
+  let dynMsg = null;
+  const granted = KBAds.grant(state, rec.runId, purpose, () => { dynMsg = applyAdReward(purpose, rec.uid); });
+  if (granted) { render(); toast(purpose === "grade" && dynMsg ? dynMsg : "上次广告奖励已补发"); }
 });
 // 开机：云存档同步（2026-11-02 大修复）+ 昵称 + 安全距 + 桌面按钮
 // 采用规则：本地开机时无档 → 云端有档即采用；本地有档 → 仅云端 savedAt 更新且本局还没动过进度时采用。
@@ -2706,7 +2990,7 @@ function showPoster(card) {
   g.fillText(card.tier === "传世" ? "传 世 降 临" : "限 编 /1", 375, 110);
   const img = new Image();
   img.onload = () => {
-    const hasPhoto = typeof PORTRAITS !== "undefined" && PORTRAITS[card.pid];
+    const hasPhoto = !!portraitOf(playerOf(card));
     if (hasPhoto) {
       g.imageSmoothingEnabled = true;
       const s = Math.min(img.width, img.height);
@@ -2785,7 +3069,7 @@ if (goSellBtnEl) goSellBtnEl.onclick = () => { switchTab("dex"); setTimeout(() =
 const goLibBtnEl = $("#goLibBtn");
 if (goLibBtnEl && goSellBtnEl) goLibBtnEl.onclick = () => goSellBtnEl.onclick();
 const goUrBtnEl = $("#goUrBtn");
-if (goUrBtnEl) goUrBtnEl.onclick = () => { switchTab("packs"); setTimeout(() => { const b = document.querySelector('[data-pack="urbox"]'); const el = b ? b.closest(".pack") : null; if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("packflash"); setTimeout(() => el.classList.remove("packflash"), 1300); } }, 60); };
+if (goUrBtnEl) goUrBtnEl.onclick = () => { switchTab("packs"); setTimeout(() => { const b = document.querySelector('[data-pack="dia60"]'); const el = b ? b.closest(".pack") : null; if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("packflash"); setTimeout(() => el.classList.remove("packflash"), 1300); } }, 60); };
 const diaPillEl = $("#diaPill");
 if (diaPillEl && goUrBtnEl) diaPillEl.onclick = () => goUrBtnEl.onclick();
 const bulkSell2El = $("#bulkSellBtn2");
@@ -2794,6 +3078,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
+  { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出"] },
   { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
