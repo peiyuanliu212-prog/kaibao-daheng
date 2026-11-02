@@ -56,8 +56,8 @@ select { background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-
 .pickable { cursor: pointer; } .pickable:hover { outline: 2px solid #ffb02e; border-radius: 12px; }
 .cols { display: flex; gap: 16px; flex-wrap: wrap; } .cols > div { flex: 1; min-width: 150px; }
 h2 { font-size: 16px; margin: 14px 0 6px; } h2:first-child { margin-top: 0; }
-#toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: #ffb02e; color: #221a08; font-weight: 700; padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: all .3s; max-width: 90vw; text-align: center; z-index: 9; }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.92); background: #ffb02e; color: #221a08; font-weight: 700; font-size: 15px; padding: 12px 20px; border-radius: 999px; opacity: 0; pointer-events: none; transition: all .25s; max-width: 86vw; text-align: center; z-index: 90; }
+#toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
 /* ===== 美术 v1：深夜卡店·霓虹金箔 ===== */
 h1 { background: linear-gradient(92deg, #ffe9a8, #f5b942 55%, #c47f17); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -2153,7 +2153,7 @@ function renderDex() {
     if (own) { const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
       return `<div class="dexcell" data-detail="${p.id}" style="cursor:pointer">${cardHTML(mine.sort((a, b) => S.instanceValue(state, b, D) - S.instanceValue(state, a, D))[0])}<div class="pips">${pips}</div><div class="owncount">持有 ×${mine.length} · 点卡卖卡</div></div>`; }
     // 未收集：直接亮出是谁（真卡面灰头像），还缺谁一目了然（2026-11-03 主人令，不再用问号藏）
-    return `<div class="dexcell unowned">${cardHTML({ pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", variant: "base", star: 0, starLuck: 0 })}<div class="owncount">未收集</div></div>`;
+    return `<div class="dexcell unowned">${cardHTML({ pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, star: 0, starLuck: 0 })}<div class="owncount">未收集</div></div>`;
   }).join(""));
   const _fc = $("#fltCount"); if (_fc) _fc.textContent = (libFilter.tier || libFilter.variant || libFilter.stamp || libFilter.q) ? `筛出 ${$("#dexGrid").children.length} 人` : "";
   }
