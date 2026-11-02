@@ -386,7 +386,6 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   </div>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
-    <button class="btn ghost" id="adFreeBtn">📺 广告再领一包（0/1）</button>
     <button class="btn ghost" id="adUrBtn">📺 传世箱体验抽（助力）</button>
     <button class="btn ghost" id="probBtn">📊 概率与保底细则</button>
   </div>
@@ -1418,7 +1417,7 @@ const KBTrack = (() => {
 //   核对落定（确认完播 / 平台明拒 / 标记超 12h）才清 PENDING，查询失败一律保留、下次启动再核。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { free: 1, double: 3, dia: 2, league: Infinity, urdraw: 1, heat: 3 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12；heat=熔炉炉温（2026-11-03 主人令加）
+  const LIMITS = { double: 3, dia: 2, league: Infinity, urdraw: 1, heat: 3 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12；heat=熔炉炉温（2026-11-03 主人令加）；free 广告免费包点位已于 2026-11-03 按主人令下线（金币通胀、奖励无意义）
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   const PENDING_TTL = 12 * 3600 * 1000; // 与篮坛 settlePending 同口径：12h 内保留待核，超时才判未完播清掉
@@ -2572,7 +2571,6 @@ function renderMeta() {
   $("#weeklyClaim").textContent = state.weekly.claimed ? "本周任务奖励已领（30 钻）" : "领取每周任务奖励 30 钻";
   // 广告点位状态
   const cnt = k => state.adDay.counts[k] || 0;
-  $("#adFreeBtn").disabled = !(state.freeDay === todayStr() && cnt("free") < 1);
   $("#adDoubleBtn").disabled = cnt("double") >= 3 || Math.floor(state.idlePending || 0) <= 0;
   $("#adDoubleBtn").textContent = `📺 广告双倍领取（${cnt("double")}/3）`;
   $("#adDiaBtn").disabled = cnt("dia") >= 2;
@@ -2627,26 +2625,25 @@ function switchTab(name) { setBg(name); curTab = name;
 }
 // ----- 广告点位 -----
 function applyAdReward(kind) {
-  if (kind === "free") { const res = E.openPack(state, "normal", Math.random, { free: true }); if (res.ok) { for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D; state.daily.packs++; lastDraw = res.cards; checkPoster(res.cards); } }
-  else if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
+  if (kind === "free") return; // 点位已下线（2026-11-03）：存量 PENDING 补发到此静默作废，不发包
+  if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
   else if (kind === "dia") { state.dia += 10; }
   else if (kind === "league") { state.matchesLeft += 10; }
   else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
   else if (kind === "heat") { state.furnaceHeat = Math.min(3, (state.furnaceHeat || 0) + 1); }
 }
-const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）", heat: "炉温 +1（满 3 下次合成免费）" };
+const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）", heat: "炉温 +1（满 3 下次合成免费）" };
 async function adWatch(kind) {
   const res = await KBAds.watch(state, kind);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
   const granted = KBAds.grant(state, res.runId, kind, () => applyAdReward(kind));
   render();
   toast(granted ? AD_OK_MSG[kind] : "奖励已发放过（幂等拦截）");
-  if (granted && (kind === "free" || kind === "urdraw") && lastDraw.length) showPackResult(lastDraw, kind === "free" ? "广告免费包" : "传世箱体验抽");
+  if (granted && kind === "urdraw" && lastDraw.length) showPackResult(lastDraw, "传世箱体验抽");
 }
 $("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +300 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +400 金 +3 钻"); } else toast(r.reason); };
 $("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +30 钻"); } else toast(r.reason); };
-$("#adFreeBtn").onclick = () => adWatch("free");
 $("#adDoubleBtn").onclick = () => adWatch("double");
 $("#adDiaBtn").onclick = () => adWatch("dia");
 $("#adLeagueBtn").onclick = () => adWatch("league");
