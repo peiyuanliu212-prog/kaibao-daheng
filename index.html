@@ -290,6 +290,11 @@ footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8
 .reportline { color: #ffd257; font-size: 14px; margin-bottom: 6px; }
 textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-radius: 8px; padding: 8px; font-size: 12px; }
 #posterModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 50; }
+#detailModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 55; padding: 18px; }
+#detailModal.on { display: flex; }
+#detailModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
+#detailModal .drow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 13.5px; }
+.dexcell .owncount { text-align: center; font-size: 11px; color: var(--dim); margin-top: 2px; }
 #posterModal.show { display: flex; }
 .posterbox { text-align: center; max-width: 92vw; }
 .posterbox img { width: min(340px, 86vw); border-radius: 12px; }
@@ -330,7 +335,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 
 <section class="page on" id="page-shop">
   <div id="shopHero"></div>
-  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页卡库里：开业首日 85%、平时 50% 回收</span></div>
+  <div class="row"><button class="btn" id="goSellBtn">💰 去卖卡</button><button class="btn ghost" id="goUrBtn">💎 钻石开传世箱</button><span class="hint">卖卡在图鉴页：点开卡片逐张卖，开业首日 85%、平时 50% 回收</span></div>
   <h2>我的卡店</h2>
   <p id="shopInfo"></p>
   <div class="row">
@@ -342,7 +347,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页「我的卡库」，每张卡下方有卖出按钮（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：只用来开「传世箱」（史诗 50% · 传说 22% · 传世 4%），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
@@ -379,7 +384,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   </div>
   <div id="drawSummary"></div>
   <div class="grid" id="drawGrid"></div>
-  <div class="row"><button class="btn ghost" id="bulkSellBtn2">一键卖重复（普通/稀有）</button><button class="btn ghost" id="goLibBtn">去卡库卖卡</button></div>
+  <div class="row"><button class="btn ghost" id="bulkSellBtn2">一键卖重复（普通/稀有）</button><button class="btn ghost" id="goLibBtn">去图鉴卖卡</button></div>
 </section>
 
 <section class="page" id="page-lineup">
@@ -411,19 +416,8 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </section>
 
 <section class="page" id="page-dex">
-  <h2>图鉴</h2>
+  <h2>图鉴 · 卡库（<span id="libCount">0</span> 张）</h2>
   <p id="dexInfo"></p>
-  <div class="grid" id="dexGrid"></div>
-  <h2>我的卡库 · 卖卡（<span id="libCount">0</span> 张）</h2>
-  <div class="row">
-    <label>排序 <select id="sortSel"><option value="tier">稀有度</option><option value="rating">评分</option><option value="value">身价（行情）</option></select></label>
-    <button class="btn ghost" id="deskBtn" style="display:none">添加到桌面</button>
-  <button class="btn ghost" id="bulkSellBtn">一键卖重复（普通/稀有）</button>
-  <button class="btn" id="quickSellBtn">⚡ 快捷出售</button>
-  <button class="btn ghost" id="resetBtn">删档重开</button>
-  </div>
-  <div id="qsPanel"></div>
-  <p class="hint">点每张卡下方的金色按钮卖出：开业首日 85% 高价回收，平时 50%。首日卖重复卡最划算，别留到明天。</p>
   <div class="row">
     <label>档位 <select id="fltTier"><option value="">全部</option><option>普通</option><option>稀有</option><option>史诗</option><option>传说</option><option>传世</option></select></label>
     <label>版本 <select id="fltVar"><option value="">全部</option><option value="base">普卡</option><option>银折</option><option>红折</option><option>签字</option><option>球衣</option></select></label>
@@ -431,9 +425,19 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <input id="fltQ" type="search" placeholder="搜球员名" style="flex:1;min-width:90px">
     <span class="hint" id="fltCount"></span>
   </div>
-  <div class="grid" id="libGrid"></div>
+  <div class="row">
+    <button class="btn ghost" id="deskBtn" style="display:none">添加到桌面</button>
+  <button class="btn ghost" id="bulkSellBtn">一键卖重复（普通/稀有）</button>
+  <button class="btn" id="quickSellBtn">⚡ 快捷出售</button>
+  <button class="btn ghost" id="resetBtn">删档重开</button>
+  <span class="hint">💎 身价倍率：限编 /99 ×1.8 · /25 ×3.2 · /10 ×5.5 · /1 ×20；折射 银折 ×1.8 · 红折 ×3 · 签字 ×5 · 球衣 ×10（限编与折射叠乘）</span>
+  </div>
+  <div id="qsPanel"></div>
+  <p class="hint">点已收集的卡打开详情逐张卖出：开业首日 85% 高价回收，平时 50%。首日卖重复卡最划算，别留到明天。</p>
+  <div class="grid" id="dexGrid"></div>
   <h2>合成炉</h2>
   <div id="furnaceMeta" style="font-size:13px;margin:4px 0"></div>
+  <div class="row"><button class="btn ghost" id="adHeatBtn">📺 看广告 · 炉温 +1</button><span class="hint">炉温满 3，下一次合成免手续费（每日 3 次）</span></div>
   <div class="ftabs">
     <button class="ftab on" data-ftab="craft">⚖️ 合成（必成）</button>
     <button class="ftab" data-ftab="star">⭐ 升星</button>
@@ -461,6 +465,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </footer>
 <div id="flash"></div>
 <div id="toast"></div>
+<div id="detailModal"><div class="detailbox"><h3 id="detailTitle"></h3><div id="detailBody"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="detailClose">关闭</button></div></div></div>
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
     <button class="btn" id="posterShare">分享给好友</button><button class="btn" id="posterClose">关闭</button></div></div></div>
 <div id="revealOv"><div class="rv-pos"></div><div class="rv-rating"></div><div class="rv-tier"></div><img class="rv-img" alt=""><div class="rv-name"></div><div class="rv-skip">点击任意处跳过</div></div>
@@ -1403,7 +1408,7 @@ const KBTrack = (() => {
 //   核对落定（确认完播 / 平台明拒 / 标记超 12h）才清 PENDING，查询失败一律保留、下次启动再核。
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
-  const LIMITS = { free: 1, double: 3, dia: 2, league: Infinity, urdraw: 1 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12
+  const LIMITS = { free: 1, double: 3, dia: 2, league: Infinity, urdraw: 1, heat: 3 }; // 游戏侧点位日限；联赛广告不限次（2026-11-01 主人拍板），其余点位合计封顶 12；heat=熔炉炉温（2026-11-03 主人令加）
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   const PENDING_TTL = 12 * 3600 * 1000; // 与篮坛 settlePending 同口径：12h 内保留待核，超时才判未完播清掉
@@ -2117,34 +2122,39 @@ function swapHTML(el, html) { // 防跳:大网格换内容前先用 min-height �
   el.innerHTML = html;
   requestAnimationFrame(() => requestAnimationFrame(() => { el.style.minHeight = ""; }));
 }
+let detailPid = null;
+function showCardDetail(pid) {
+  detailPid = pid;
+  const p = E.playerById(pid); if (!p) return;
+  const list = state.cards.filter(c => c.pid === pid);
+  // 相同实例归组显示 ×N（2026-11-03 核心玩家 lllzyl 建议：一样的归到一起），卖按钮卖其中一张
+  const groups = new Map();
+  for (const c of list) { const k = [c.stamp, c.variant || "base", c.star || 0, c.adAssist ? 1 : 0].join("|"); if (!groups.has(k)) groups.set(k, { rep: c, n: 0, val: S.instanceValue(state, c, D) }); groups.get(k).n += 1; }
+  const rows = [...groups.values()].sort((a, b) => b.val - a.val);
+  $("#detailTitle").textContent = `${p.name} · ${p.tier} ${p.rating}（持有 ${list.length} 张）`;
+  $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep; return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button></div>`; }).join("") : "<p class='hint'>已全部卖出。</p>";
+  $("#detailModal").classList.add("on");
+  bindDynamic();
+}
 function renderDex() {
   const ownedIds = new Set(state.cards.map(c => c.pid));
   const paraSet = new Set(state.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant));
   $("#dexInfo").textContent = `图鉴点亮 ${ownedIds.size}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480`;
-  const _dexKey = D + "|" + libFilter.tier + "|" + libFilter.q + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid).join(",") : "0"; }).join(";");
+  // 合并图鉴/卡库（2026-11-03 主人令对标篮坛）：单网格——点亮=持有，点卡开详情逐张卖；版本/限编筛选按实例匹配（只显示持有匹配实例的球员）
+  const _dexKey = D + "|" + libFilter.tier + "|" + libFilter.variant + "|" + libFilter.stamp + "|" + libFilter.q + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid + ":" + c.stamp + ":" + (c.variant || "base") + ":" + (c.star || 0)).join(",") : "0"; }).join(";");
   if (_dexKey !== dexGridKey) { dexGridKey = _dexKey;
   swapHTML($("#dexGrid"), PLAYERS.map(p => {
     if ((libFilter.tier && p.tier !== libFilter.tier) || (libFilter.q && !p.name.includes(libFilter.q))) return ""; // 图鉴跟随档位/搜索筛选
-    const own = ownedIds.has(p.id);
-    if (own) { const mine = state.cards.filter(c => c.pid === p.id); const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
-      return `<div class="dexcell">${cardHTML(mine.sort((a, b) => b.value - a.value)[0])}<div class="pips">${pips}</div></div>`; }
-    return own ? ""
-      : `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
+    const mine = state.cards.filter(c => c.pid === p.id);
+    if ((libFilter.variant || libFilter.stamp) && !mine.some(c => (!libFilter.variant || (c.variant || "base") === libFilter.variant) && (!libFilter.stamp || c.stamp === libFilter.stamp))) return ""; // 版本/限编按实例筛
+    const own = mine.length > 0;
+    if (own) { const pips = ["银折", "红折", "签字", "球衣"].map(vn => `<span class="pip ${mine.some(c => c.variant === vn) ? "on p-" + vn : ""}">${vn[0]}</span>`).join("");
+      return `<div class="dexcell" data-detail="${p.id}" style="cursor:pointer">${cardHTML(mine.sort((a, b) => S.instanceValue(state, b, D) - S.instanceValue(state, a, D))[0])}<div class="pips">${pips}</div><div class="owncount">持有 ×${mine.length} · 点卡卖卡</div></div>`; }
+    return `<div class="card ghost"><div class="chead"><span class="pos">${p.pos}</span><span class="rating">?</span></div><div class="avatar ghostav"></div><div class="cname">？？？</div><div class="ctier">${p.tier}</div><div class="cval">未收集</div></div>`;
   }).join(""));
+  const _fc = $("#fltCount"); if (_fc) _fc.textContent = (libFilter.tier || libFilter.variant || libFilter.stamp || libFilter.q) ? `筛出 ${$("#dexGrid").children.length} 人` : "";
   }
-  const sorted = [...state.cards].sort((a, b) => {
-    if (sortMode === "tier") return E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.rating - a.rating;
-    if (sortMode === "value") return S.instanceValue(state, b, D) - S.instanceValue(state, a, D);
-    return b.rating - a.rating;
-  });
   $("#libCount").textContent = state.cards.length;
-  const libFiltered = sorted.filter(c => (!libFilter.tier || c.tier === libFilter.tier) && (!libFilter.variant || (c.variant || "base") === libFilter.variant) && (!libFilter.stamp || c.stamp === libFilter.stamp) && (!libFilter.q || c.name.includes(libFilter.q)));
-  const _fc = $("#fltCount"); if (_fc) _fc.textContent = (libFilter.tier || libFilter.variant || libFilter.stamp || libFilter.q) ? `筛出 ${libFiltered.length} 张` : "";
-  const LIB_CAP = 120;
-  const libShown = libExpanded ? libFiltered : libFiltered.slice(0, LIB_CAP);
-  swapHTML($("#libGrid"), libShown.map(c => `<div class="libcell">${cardHTML(c)}<button class="sellbtn" data-sell="${c.uid}">卖 ${sellPrice(c)} 金</button></div>`).join("")
-    + (!libExpanded && libFiltered.length > LIB_CAP ? `<button class="btn ghost" id="libMoreBtn" style="grid-column:1/-1">显示全部（共 ${libFiltered.length} 张）</button>` : ""));
-  const _mb = $("#libMoreBtn"); if (_mb) _mb.onclick = () => { libExpanded = true; render(); };
   // 行情
   if (state.shopLv >= 5) {
     const board = S.marketBoard(D);
@@ -2217,15 +2227,17 @@ function renderFurnace() {
      ${(main.star || 0) < 3 ? `<p class="hint">⚡ 一键升星：自动喂材料连升到 3 星，优先同球员重复卡、其次同系列同档卡（跳过已升星卡与 /1）；4/5 星有炸炉概率，仍需手动。</p>` : ""}`;
 }
 function bindDynamic() {
-  document.querySelectorAll("[data-sell]").forEach(btn => btn.onclick = () => {
-    const uid = +btn.dataset.sell;
-    const c = state.cards.find(x => x.uid === uid);
+  document.querySelectorAll("[data-detail]").forEach(el => el.onclick = () => showCardDetail(+el.dataset.detail));
+  document.querySelectorAll("[data-dsell]").forEach(btn => btn.onclick = () => {
+    const uid = +btn.dataset.dsell;
+    const c = state.cards.find(x => x.uid === uid); if (!c) return;
     const val = S.instanceValue(state, c, D);
     if ((c.star || 0) > 0 && !confirm(`这是 ★${c.star} 星级卡，出售后星级投入就没了，确认出售？`)) return;
     if ((c.tier === "传世" || c.stamp === "/1") && !confirm(`这张是${c.tier}${c.stamp !== "无编" ? " " + c.stamp : ""}，确定要卖掉？`)) return;
     const r = E.sellCard(state, uid, val, sellRate());
-    if (r.ok) { renderKeepScroll(); toast(`卖出 ${r.card.name}，+${r.gain} 金币`); }
+    if (r.ok) { renderKeepScroll(); if (detailPid != null) showCardDetail(detailPid); toast(`卖出 ${r.card.name}，+${r.gain} 金币`); }
   });
+  const dc = $("#detailClose"); if (dc) dc.onclick = () => { $("#detailModal").classList.remove("on"); detailPid = null; };
   document.querySelectorAll("[data-slot]").forEach(el => el.onclick = () => { pickSlot = +el.dataset.slot; render(); });
   const pc = $("#pickCancel"); if (pc) pc.onclick = () => { pickSlot = null; render(); };
   document.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
@@ -2434,7 +2446,7 @@ $("#weekBtn").onclick = () => {
   state.weekPending = false; lastDraw = got;
   render(); toast(`周结算：${packs} 个高级包 + ${300 * (state.division + 1)} 金币（见开包页）`);
 };
-$("#sortSel").onchange = e => { sortMode = e.target.value; render(); };
+// （排序选择已随图鉴/卡库合并移除：网格按球员排列，详情内按现价排序）
 { const ft = $("#fltTier"), fv = $("#fltVar"), fs = $("#fltStamp"), fq = $("#fltQ");
   if (ft) ft.onchange = e => { libFilter.tier = e.target.value; libExpanded = false; render(); };
   if (fv) fv.onchange = e => { libFilter.variant = e.target.value; libExpanded = false; render(); };
@@ -2535,6 +2547,7 @@ function renderMeta() {
   $("#adDiaBtn").textContent = `📺 钻石小包 +10 钻（${cnt("dia")}/2）`;
   $("#adLeagueBtn").disabled = state.matchesLeft > 0;
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
+  const hb = $("#adHeatBtn"); if (hb) hb.disabled = cnt("heat") >= 3 || (state.furnaceHeat || 0) >= 3;
   $("#adTotal").textContent = `今日广告 ${KBAds.capCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）· 联赛广告不限次`;
   // 成就（卡店页，签到与任务下方；2026-11-02 从图鉴页最下面移来，对标篮坛）
   // 性能:成就/套卡网格只在达成态/已领态/进度签名变化时重建,避免每次 render 全量重建(内容一致)
@@ -2587,8 +2600,9 @@ function applyAdReward(kind) {
   else if (kind === "dia") { state.dia += 10; }
   else if (kind === "league") { state.matchesLeft += 10; }
   else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.urbox, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); }
+  else if (kind === "heat") { state.furnaceHeat = Math.min(3, (state.furnaceHeat || 0) + 1); }
 }
-const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）" };
+const AD_OK_MSG = { free: "广告免费包已到账（见开包结果）", double: "挂机收益双倍领取成功", dia: "钻石小包 +10 钻", league: "联赛场次 +10", urdraw: "传世箱体验抽已出卡（助力卡，图鉴照常点亮）", heat: "炉温 +1（满 3 下次合成免费）" };
 async function adWatch(kind) {
   const res = await KBAds.watch(state, kind);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
@@ -2604,6 +2618,7 @@ $("#adDoubleBtn").onclick = () => adWatch("double");
 $("#adDiaBtn").onclick = () => adWatch("dia");
 $("#adLeagueBtn").onclick = () => adWatch("league");
 $("#adUrBtn").onclick = () => adWatch("urdraw");
+$("#adHeatBtn").onclick = () => adWatch("heat");
 // 开机：广告 PENDING 凭服务端余额差量补发（仅容器内，v5.18 口径；核对不上保留标记下次再核）
 KBAds.recoverPending(state).then(rec => {
   if (!rec) return;
@@ -2731,7 +2746,7 @@ document.addEventListener("pointerdown", () => { try { KBAudio.start(); } catch 
 document.addEventListener("click", e => { if (e.target.closest("button") && !e.target.closest("#muteBtn")) { try { KBAudio.click(); } catch (err) {} } });
 const muteBtnEl = document.querySelector("#muteBtn");
 const goSellBtnEl = $("#goSellBtn");
-if (goSellBtnEl) goSellBtnEl.onclick = () => { switchTab("dex"); setTimeout(() => { const el = $("#libGrid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
+if (goSellBtnEl) goSellBtnEl.onclick = () => { switchTab("dex"); setTimeout(() => { const el = $("#dexGrid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
 const goLibBtnEl = $("#goLibBtn");
 if (goLibBtnEl && goSellBtnEl) goLibBtnEl.onclick = () => goSellBtnEl.onclick();
 const goUrBtnEl = $("#goUrBtn");
@@ -2744,7 +2759,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包（普通/高级）最高出史诗，概率并入史诗；传说/传世去传世箱和名宿系列包开，名宿包改 30 钻——传说升星从此有门槛", "🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
+  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包（普通/高级）最高出史诗，概率并入史诗；传说/传世去传世箱和名宿系列包开，名宿包改 30 钻——传说升星从此有门槛", "📖 图鉴与卡库合并（对标篮坛）：一个网格看全，点开卡片逐张卖卡；工具栏新增身价倍率表（/1 ×20、红折 ×3 等一目了然）", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "🧹 卡库/图鉴新增筛选和搜索：按档位、版本、限编、球员名找卡，几百张也不乱", "⚡ 快捷出售上线：勾好档位和版本先预览再卖，每个球员自动保留身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：新增一键升到 3 星（优先喂同球员重复卡）；材料改为同球员或同系列同档卡；4 星/5 星成功率下调为 70%/50%，高星更稀有", "🔍 升星选卡可搜索：想升哪张直接搜名字，不用再从高价卡里翻", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张 1/1，重复抽到自动变 /10", "✨ 名宿包和合成炉也能出折射版了：红折、签字、球衣都有机会"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
   { v: "全场 11 人大改版", items: ["阵容升级全场 11 人：6 种阵型自由切换（4-4-2 / 4-3-3 / 4-2-3-1 / 5-3-2 / 3-5-2 / 4-5-1），每个阵型有专属加成", "联赛全面重做：11 条对位线按分钟播报，半场比分 + 终场比分，进球只由边锋/中锋线打进", "段位线随 11 人战力重标定：青铜 920 起、大师 1060，慢慢爬才有味", "新手礼包升级首发十一人组：领完直接摆满 4-4-2 开赛", "旧存档自动迁移：原来的 5 名首发直接进新阵容，其余位置按评分补齐，卡一张不少", "新 BGM：钢琴 + 弦乐的主题曲，和篮坛卡王同一首"] },
