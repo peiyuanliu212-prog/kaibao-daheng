@@ -290,6 +290,9 @@ footer { padding: 0 16px 24px; color: #69707c; font-size: 12px; line-height: 1.8
 .reportline { color: #ffd257; font-size: 14px; margin-bottom: 6px; }
 textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #3a4150; border-radius: 8px; padding: 8px; font-size: 12px; }
 #posterModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 50; }
+#packModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 45; padding: 14px; }
+#packModal.on { display: flex; }
+#packModal .packbox { width: 100%; max-width: 460px; max-height: 92vh; overflow: auto; text-align: center; }
 #detailModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 55; padding: 18px; }
 #detailModal.on { display: flex; }
 #detailModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
@@ -467,6 +470,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </footer>
 <div id="flash"></div>
 <div id="toast"></div>
+<div id="packModal"><div class="packbox"><h3 id="packTitle">开包结果</h3><p class="hint" id="packSummary"></p><div class="grid" id="packGrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn gold" id="packClose">收下</button></div></div></div>
 <div id="detailModal"><div class="detailbox"><h3 id="detailTitle"></h3><div id="detailBody"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="detailClose">关闭</button></div></div></div>
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
     <button class="btn" id="posterShare">分享给好友</button><button class="btn" id="posterClose">关闭</button></div></div></div>
@@ -2356,12 +2360,33 @@ function playReveal(best, done) {
   function finish() { if (finished) return; finished = true; timers.forEach(clearTimeout); ov.className = ""; ov.onclick = null; done(); }
   ov.onclick = finish;
 }
-function afterDraw(cards, urToast) {
+// 开包结果弹窗：整包一次展示（2026-11-03 主人反馈：页面里要下滑才能看全一包；篮坛 resultModal 同款做法）
+function showPackResult(cards, title) {
+  if (!cards || !cards.length) return;
+  const wall = [...cards].sort((a, b) => E.TIERS.indexOf(a.tier) - E.TIERS.indexOf(b.tier) || a.value - b.value); // 压轴编排同开包墙
+  $("#packTitle").textContent = title || "开包结果";
+  $("#packSummary").textContent = lastSummary;
+  $("#packGrid").innerHTML = wall.map((c, i) => cardHTML(c, { pop: i, new: !!c._isNew })).join("");
+  const tiles = document.querySelectorAll("#packGrid .card");
+  if (wall.length && E.TIERS.indexOf(wall[wall.length - 1].tier) >= 2 && tiles.length) tiles[tiles.length - 1].classList.add("bestInPack");
+  tiles.forEach((el, i) => { el.style.animationDelay = (i * 0.12) + "s"; el.classList.add("flip"); });
+  $("#packModal").classList.add("on");
+  wall.forEach((c, i) => { // 史诗以上身价跳字（同开包墙）
+    if (E.TIERS.indexOf(c.tier) < 2) return;
+    const tile = tiles[i]; if (!tile) return;
+    const cv = tile.querySelector(".cval"); if (!cv) return;
+    const target = S.instanceValue(state, c, D); let t0 = null;
+    const step = ts => { if (!t0) t0 = ts + i * 90 + 250; const p = Math.min(1, Math.max(0, (ts - t0) / 650)); cv.textContent = "身价 " + Math.round(target * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
+    cv.textContent = "身价 0"; requestAnimationFrame(step);
+  });
+}
+function afterDraw(cards, urToast, title) {
   try { KBAudio.tear(); } catch (e) {}
   const bestCard = [...cards].sort((a, b) => E.TIERS.indexOf(b.tier) - E.TIERS.indexOf(a.tier) || b.value - a.value)[0];
   const bestIdx = E.TIERS.indexOf(bestCard.tier);
-  if (bestIdx >= 2) { playReveal(bestCard, () => { if (urToast) urToast(); checkPoster(cards); }); }
-  else { try { KBAudio.fanfare(bestIdx); } catch (e) {} if (urToast) urToast(); checkPoster(cards); }
+  const finish = () => { showPackResult(cards, title); if (urToast) urToast(); checkPoster(cards); };
+  if (bestIdx >= 2) { playReveal(bestCard, finish); }
+  else { try { KBAudio.fanfare(bestIdx); } catch (e) {} finish(); }
 }
 
 // ---------- 静态绑定 ----------
@@ -2383,7 +2408,7 @@ function doOpen(key, free) {
   markNewAndSummary(res.cards, ownedBefore);
   lastDraw = res.cards; render();
   const ur = res.cards.find(c => c.tier === "传世");
-  afterDraw(res.cards, ur ? () => toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`) : null);
+  afterDraw(res.cards, ur ? () => toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`) : null, E.PACKS[key].name);
   document.querySelectorAll("#drawGrid .card").forEach((el, i) => { el.style.animationDelay = (i * 0.12) + "s"; el.classList.add("flip"); });
 }
 document.querySelectorAll("[data-pack]").forEach(b => b.onclick = () => doOpen(b.dataset.pack, false));
@@ -2394,7 +2419,7 @@ $("#legendPackBtn").onclick = () => {
   for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
   state.daily.packs++;
   markNewAndSummary(res.cards, ownedBefore);
-  lastDraw = res.cards; render(); toast("名宿系列包已开"); afterDraw(res.cards, null);
+  lastDraw = res.cards; render(); toast("名宿系列包已开"); afterDraw(res.cards, null, "名宿系列包");
 };
 $("#freeBtn").onclick = () => doOpen("normal", true);
 $("#claimBtn").onclick = () => { const g = S.claimIdle(state); if (g > 0) { state.daily.idle = 1; try { KBAudio.coin(); } catch (e) {} } render(); toast(g > 0 ? `领取挂机收益 +${g} 金币` : "暂无可领取收益"); };
@@ -2612,6 +2637,7 @@ async function adWatch(kind) {
   const granted = KBAds.grant(state, res.runId, kind, () => applyAdReward(kind));
   render();
   toast(granted ? AD_OK_MSG[kind] : "奖励已发放过（幂等拦截）");
+  if (granted && (kind === "free" || kind === "urdraw") && lastDraw.length) showPackResult(lastDraw, kind === "free" ? "广告免费包" : "传世箱体验抽");
 }
 $("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +300 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +400 金 +3 钻"); } else toast(r.reason); };
@@ -2622,6 +2648,8 @@ $("#adDiaBtn").onclick = () => adWatch("dia");
 $("#adLeagueBtn").onclick = () => adWatch("league");
 $("#adUrBtn").onclick = () => adWatch("urdraw");
 $("#adHeatBtn").onclick = () => adWatch("heat");
+$("#packClose").onclick = () => $("#packModal").classList.remove("on");
+$("#packModal").addEventListener("click", e => { if (e.target.id === "packModal") $("#packModal").classList.remove("on"); });
 // 开机：广告 PENDING 凭服务端余额差量补发（仅容器内，v5.18 口径；核对不上保留标记下次再核）
 KBAds.recoverPending(state).then(rec => {
   if (!rec) return;
@@ -2762,7 +2790,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "卡库大扫除 · 1/1 真唯一", items: ["💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
+  { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
   { v: "全场 11 人大改版", items: ["阵容升级全场 11 人：6 种阵型自由切换（4-4-2 / 4-3-3 / 4-2-3-1 / 5-3-2 / 3-5-2 / 4-5-1），每个阵型有专属加成", "联赛全面重做：11 条对位线按分钟播报，半场比分 + 终场比分，进球只由边锋/中锋线打进", "段位线随 11 人战力重标定：青铜 920 起、大师 1060，慢慢爬才有味", "新手礼包升级首发十一人组：领完直接摆满 4-4-2 开赛", "旧存档自动迁移：原来的 5 名首发直接进新阵容，其余位置按评分补齐，卡一张不少", "新 BGM：钢琴 + 弦乐的主题曲，和篮坛卡王同一首"] },
