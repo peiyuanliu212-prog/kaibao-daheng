@@ -399,7 +399,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
     <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>高级包</h3><p>5 张<br>普通 32% · 稀有 38% · 史诗 30%</p><button data-pack="premium">1400 金币</button></div>
     <div class="pack"><img class="packart" data-packart="premium" alt=""><h3>钻石包</h3><p>3 张 · 保底 1 张史诗+<br>史诗 55% · 传说 35% · 传世 10%</p><button data-pack="dia60">60 钻石</button></div>
     <div class="pack"><img class="packart" data-packart="urbox" alt=""><h3>豪华钻石包</h3><p>5 张 · 含时期卡惊喜槽<br>史诗 30% · 传说 55% · 传世 15%</p><button data-pack="dia120">120 钻石</button></div>
-    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说/传世必为名宿<br>稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><button id="legendPackBtn">30 钻石</button></div>
+    <div class="pack"><img class="packart" data-packart="legend" alt=""><h3>名宿系列包</h3><p>5 张 · 传说/传世必为名宿<br>稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><button id="legendPackBtn">60 钻石</button></div>
   </div>
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
@@ -1347,13 +1347,13 @@ const KBSystems = (() => {
     return { sell, gain, prot };
   }
 
-  // 名宿系列包（§7 Lv.7 解锁）：2026-11-03 改钻石包——30 钻 5 张，专属概率；抽到传说/传世时必为名宿
+  // 名宿系列包（§7 Lv.7 解锁）：2026-11-03 改钻石包，5 张专属概率；抽到传说/传世时必为名宿；价格 30→60 钻（2026-11-03 三包定价对齐：每钻效率与 dia120 拉平，概率不动）
   // （原 1800 金借高级包概率；金币包封顶史诗后传说/传世只走钻石，本包随之改钻价并自带概率表）
   const LEGEND_ODDS = { "普通": 0, "稀有": .30, "史诗": .38, "传说": .24, "传世": .08 };
   function openLegendPack(state, rng) {
     rng = rng || Math.random;
-    if (state.dia < 30) return { ok: false, reason: "钻石不足" };
-    state.dia -= 30;
+    if (state.dia < 60) return { ok: false, reason: "钻石不足" };
+    state.dia -= 60;
     const pack = { odds: LEGEND_ODDS };
     const cards = [];
     for (let i = 0; i < 5; i++) {
@@ -2219,7 +2219,7 @@ function renderPacks() {
   document.querySelector('[data-pack="dia120"]').disabled = state.shopLv < 5;
   document.querySelector('[data-pack="dia120"]').textContent = state.shopLv < 5 ? "卡店 Lv.5 解锁" : "120 钻石";
   $("#legendPackBtn").disabled = state.shopLv < 7;
-  $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "30 钻石";
+  $("#legendPackBtn").textContent = state.shopLv < 7 ? "卡店 Lv.7 解锁" : "60 钻石";
   document.querySelectorAll("[data-packart]").forEach(im => { const k = im.dataset.packart; if (typeof KBPackArt !== "undefined" && KBPackArt[k]) { im.src = KBPackArt[k]; im.style.display = ""; } else im.style.display = "none"; });
   const pp = $("#probPity"); if (pp) pp.textContent = `${state.pity}/240`; // 保底进度收进概率细则弹窗（旧 pityLine 散文案与已停用的高级包传说保底计数已删）
   const wall = [...lastDraw].sort((a, b) => E.TIERS.indexOf(a.tier) - E.TIERS.indexOf(b.tier) || a.value - b.value); // 压轴编排：按档位升序，最好的最后揭
@@ -3078,7 +3078,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出"] },
+  { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出", "💰 名宿系列包调价 30→60 钻：与钻石包、豪华包的性价比对齐，概率不变"] },
   { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
