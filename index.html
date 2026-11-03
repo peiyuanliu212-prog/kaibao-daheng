@@ -928,11 +928,13 @@ const KBSave = (() => {
     if (!raw) return null;
     try { const st = JSON.parse(raw); return (st && Array.isArray(st.cards)) ? st : null; } catch (e) { return null; }
   }
+  let _activeMem = 0; // 审计修复 F-1：meta 写盘被配额吞掉时，内存档位才是本会话真值，防 save() 默认打到旧档位造成跨档污染
   function getMeta() {
+    if (_activeMem >= 1 && _activeMem <= 3) return { active: _activeMem };
     try { const m = JSON.parse(localStorage.getItem(META_KEY)); if (m && m.active >= 1 && m.active <= 3) return m; } catch (e) {}
     return { active: 1 };
   }
-  function setActive(n) { try { localStorage.setItem(META_KEY, JSON.stringify({ active: n })); } catch (e) {} }
+  function setActive(n) { _activeMem = n; try { localStorage.setItem(META_KEY, JSON.stringify({ active: n })); } catch (e) {} }
   function migrateLegacy() {
     try {
       if (!localStorage.getItem(slotKey(1)) && localStorage.getItem(LEGACY_KEY)) {
@@ -942,6 +944,11 @@ const KBSave = (() => {
   }
   function normalize(st) {
     if (!st || !Array.isArray(st.cards)) return null;
+    // 审计修复 F-7：货币字段语义校验——缺失补 0；存在但非有限数＝语义损坏，判坏档走备份回退（旧版直接放行，coins 变字符串后被反复重存毒化）
+    for (const k of ["coins", "dia"]) {
+      if (st[k] === undefined || st[k] === null) st[k] = 0;
+      else if (typeof st[k] !== "number" || !Number.isFinite(st[k])) return null;
+    }
     if (st.version === 1) { // M1 → M2 迁移：补 M2 字段
       st.version = 2;
       st.display = []; st.lineup = { GK: null, DF: null, MF: null, WG: null, ST: null };
@@ -953,7 +960,7 @@ const KBSave = (() => {
       st.version = 3;
       st.signTotal = 0; st.lastSignDay = "";
       st.daily = { day: "", packs: 0, matches: 0, idle: 0, claimed: false };
-      st.weekly = { key: "", synth: 0, wins: 0, dexBase: new Set(st.cards.map(c => c.pid)).size, claimed: false };
+      st.weekly = { key: "", synth: 0, wins: 0, dexBase: new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size, claimed: false }; // 图鉴口径=基础 120 人（与 dex UI/周任务同口径，时期/双人不计）
       st.achClaimed = {}; st.setsClaimed = {};
       st.records = { total: 0, single: 0, cabinet: 0, curTotal: 0 }; st.flags = {};
       st.adDay = { day: "", counts: {} }; st.adGrants = {}; st.adPending = null;
@@ -984,6 +991,7 @@ const KBSave = (() => {
     if (!st.arena.entered || typeof st.arena.entered !== "object") st.arena.entered = {};
     if (!Array.isArray(st.arena.lootUids)) st.arena.lootUids = [];
     if (!st.arena.claimedLogs || typeof st.arena.claimedLogs !== "object") st.arena.claimedLogs = {};
+    if (!Array.isArray(st.arena.pendingAcks)) st.arena.pendingAcks = []; // 审计修复 F-5：已本地处理待服务端 ack 的战报 id（与 claimedLogs 分离，ack 失败下次拉取重试，不再永久跳过）
     // 广告改版加性字段（2026-11-03）：保分评级会话（S5）/补签月计数（S1）/任务链万能材料月限（S2）/当日观看计数与里程碑（S2，随 adDay 每日重置）
     if (st.pendingProtected === undefined) st.pendingProtected = null;
     if (!st.makeupMonth || typeof st.makeupMonth !== "object") st.makeupMonth = { key: "", count: 0 };
@@ -1016,14 +1024,28 @@ const KBSave = (() => {
     return _storageOK;
   }
   function save(st, slot) {
+    // 审计修复 F-2（对齐篮坛已验口径）：备份写失败不得连坐主档——旧实现 bak 与主档同 try，
+    // 配额只够一份时备份先把额度吃满、主档永远写不进且磁盘冻结在第一代。现：bak 独立 try；
+    // 主档写后回读逐字比对，不一致则删 bak 腾位重试一次；返回值如实反映落盘结果。
     const n = slot || getMeta().active;
+    st.savedAt = Date.now();
+    let json;
+    try { json = JSON.stringify(st); } catch (e) { return false; }
     try {
       const oldRaw = localStorage.getItem(slotKey(n));
-      if (parseValid(oldRaw)) localStorage.setItem(bakKey(n), oldRaw); // 覆盖前先备份上一个完好档
-      st.savedAt = Date.now(); localStorage.setItem(slotKey(n), JSON.stringify(st)); return true;
-    } catch (e) { return false; /* 存储满/隐私模式：本局内存继续 */ }
+      if (parseValid(oldRaw)) { try { localStorage.setItem(bakKey(n), oldRaw); } catch (e) {} } // 覆盖前先备份上一个完好档（失败不连坐）
+    } catch (e) {}
+    const writeMain = () => { localStorage.setItem(slotKey(n), json); return localStorage.getItem(slotKey(n)) === json; };
+    try { if (writeMain()) return true; } catch (e) {}
+    try { localStorage.removeItem(bakKey(n)); } catch (e) {}
+    try { return writeMain(); } catch (e) { return false; }
   }
-  function wipe(slot) { const n = slot || getMeta().active; try { localStorage.removeItem(slotKey(n)); localStorage.removeItem(bakKey(n)); } catch (e) {} }
+  function wipe(slot) {
+    const n = slot || getMeta().active;
+    try { localStorage.removeItem(slotKey(n)); } catch (e) {}
+    try { localStorage.removeItem(bakKey(n)); } catch (e) {}
+    if (n === 1) { try { localStorage.removeItem(LEGACY_KEY); } catch (e) {} } // 审计修复 F-4：旧单档键不清会被 migrateLegacy 在下次 load 时复活进 1 号档
+  }
   function slotInfo(n) { // 开始页档位卡片摘要（不走完整迁移，只读关键字段）
     migrateLegacy();
     try {
@@ -1035,7 +1057,7 @@ const KBSave = (() => {
       return { lv: st.shopLv || 1, coins: st.coins || 0, dia: st.dia || 0, dex: new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size, pity: st.pity || 0, savedAt: st.savedAt || st.createdAt || 0, giftPending: !!st.giftPending }; // 图鉴口径=基础 120 人（时期/双人不计）
     } catch (e) { return null; }
   }
-  return { KEY: LEGACY_KEY, load, save, wipe, slotInfo, getMeta, setActive, slotKey, storageOK };
+  return { KEY: LEGACY_KEY, load, save, wipe, slotInfo, getMeta, setActive, slotKey, storageOK, normalize };
 })();
 if (typeof module !== "undefined") module.exports = KBSave;
 
@@ -1128,6 +1150,7 @@ const KBSystems = (() => {
   function applyGrade(state, uid, rng) { // 广告看完后结算：覆盖旧分、计数 +1
     const card = state.cards.find(c => c.uid === uid);
     if (!card) return { ok: false, reason: "卡已不在卡库" };
+    if (card.listed) return { ok: false, reason: "挂牌中的卡不能评级（成交快照会与本地不一致）" }; // 审计修复：旧版仅 UI 层拦，广告补发路径绕 UI 直调可改挂牌卡
     if ((card.star || 0) < 5) return { ok: false, reason: "只有 5 星卡可以评级" };
     if ((card.gradeTries || 0) >= 3) return { ok: false, reason: "这张卡评级次数已用完（3 次）" };
     const g = gradeRoll(rng);
@@ -1137,6 +1160,7 @@ const KBSystems = (() => {
   function applyGradeProtected(state, uid, rng) { // S5 保分评级（2026-11-03 主人拍板）：已有评级且只剩最后 1 次机会时可选；照常 roll 一次（概率表一字不改）、机会照常消耗，只升不降——新档高于现档才覆盖，低于或等于保留现档
     const card = state.cards.find(c => c.uid === uid);
     if (!card) return { ok: false, reason: "卡已不在卡库" };
+    if (card.listed) return { ok: false, reason: "挂牌中的卡不能评级（成交快照会与本地不一致）" }; // 审计修复：同 applyGrade
     if ((card.star || 0) < 5) return { ok: false, reason: "只有 5 星卡可以评级" };
     if ((card.gradeTries || 0) >= 3) return { ok: false, reason: "这张卡评级次数已用完（3 次）" };
     if (!card.grade) return { ok: false, reason: "这张卡还没有评级，没有可保的分" };
@@ -1510,6 +1534,7 @@ const KBSystems = (() => {
     if ((state.shopLv || 1) < 3) return { ok: false, reason: "卡店 Lv.3 解锁合成炉" };
     const main = state.cards.find(c => c.uid === mainUid);
     if (!main) return { ok: false, reason: "主卡不存在" };
+    if (main.listed) return { ok: false, reason: "挂牌中的卡不能升星（先取消挂牌）" }; // 审计修复：旧版只拦材料不拦主卡，成交快照与本地星级分叉、买家拿到旧快照卖家改进被吞
     if (isCollectionOnly(main.pid)) return { ok: false, reason: "双人卡仅供收藏，不能升星" };
     const star = main.star || 0;
     if (star >= 5) return { ok: false, reason: "已满 5 星" };
@@ -1746,15 +1771,22 @@ const KBSystems = (() => {
     return { ok: true };
   }
   function cardSnap(c) { // 挂单/托管快照：cardvalue 复算字段（pid/mult/vmult/star/grade）＋展示字段＋uid（C 池删卡定位用）
-    const snap = { uid: c.uid, pid: c.pid, name: c.name, pos: c.pos, tier: c.tier, rating: c.rating, series: c.series, stamp: c.stamp, mult: c.mult, variant: c.variant || "base", vmult: c.vmult || 1, star: c.star || 0, grade: c.grade ? c.grade.label : null, bmult: c.bmult || 1 };
+    const snap = { uid: c.uid, pid: c.pid, name: c.name, pos: c.pos, tier: c.tier, rating: c.rating, series: c.series, stamp: c.stamp, mult: c.mult, variant: c.variant || "base", vmult: c.vmult || 1, star: c.star || 0, grade: c.grade ? c.grade.label : null, bmult: c.bmult || 1, gradeTries: c.gradeTries || 0, starLuck: c.starLuck || 0 };
     if (c.src === "market" && (c.resell || 0) >= 1) snap.resale = true; // 转卖单标记（客户端断言、服务端存字段不复核来源）：买家据此落 resell=0，claim 按 10% 销毁分档
+    if (c.src === "market") snap.wasMarket = 1; // 审计修复：来源标记随快照转移——防 C 池夺卡后 src 变 loot 把「买入卡绑定」洗掉（见 snapToInstance）
     return snap;
   }
   function snapToInstance(state, snap, src) { // 按快照重建本地实例（买入/夺卡入仓）：身价走静态链（与 staticValue 同式），bornDay 由调用方落今日
     const p = E.playerById(snap.pid);
     if (!p) return null;
     const g = snap.grade ? GRADES.find(x => x.label === snap.grade) : null;
-    const inst = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: snap.stamp, mult: snap.mult, variant: snap.variant || "base", vmult: snap.vmult || 1, star: snap.star || 0, starLuck: 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: 0, bmult: p.bmult || 1, src: src || "market" };
+    const okStamp = E.STAMPS.some(s => s[0] === snap.stamp) ? snap.stamp : "无编"; // 入仓枚举校验（XSS 净化）：服务端 snap 的 stamp/variant 若被伪造为任意字符串，回落默认，绝不原样落进本地实例再被卡面渲染
+    const okVariant = E.VARIANTS.some(v => v[0] === snap.variant) ? snap.variant : "base";
+    const okStar = Number.isFinite(snap.star) ? Math.max(0, Math.min(5, Math.floor(snap.star))) : 0; // 审计修复 F3：star 夹紧 0–5（伪造 snap 的 star=99 落实例会带满星加成入仓）
+    const inst = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: okStamp, mult: snap.mult, variant: okVariant, vmult: snap.vmult || 1, star: okStar, starLuck: snap.starLuck || 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: snap.gradeTries || 0, bmult: p.bmult || 1, src: src || "market" };
+    // 审计修复（同族 E）：快照转移不得重置评级次数/升星幸运（旧版买入评级卡 gradeTries 归 0 可再评 3 次）；
+    // 买入卡经 C 池被夺时绑定不得蒸发——夺方得到的仍是买入卡：落 src='market' 且 resell=0（与转卖单买入同口径，永久绑定）
+    if (src === "loot" && snap.wasMarket) { inst.src = "market"; inst.resell = 0; inst.buyDay = typeof state.dayIndex === "number" ? state.dayIndex : 0; }
     inst.value = staticValue(inst);
     return inst;
   }
@@ -1882,14 +1914,14 @@ const KBPlatform = (() => {
     if (cloudErrShown) return; cloudErrShown = true;
     if (typeof onCloudError === "function") { try { onCloudError(msg || ""); } catch (e) {} }
   }
-  const mir = {}; // key -> {last, timer, json, state}
+  const mir = {}; // key -> {last, timer, json, state, failed}
   function mirrorCloudSave(state, slot) {
     const cb = CB();
     if (!cb || !cb.cloudSave || typeof cb.cloudSave.setValue !== "function" || !state) return;
     const key = cloudKey(slot || 1);
     const json = JSON.stringify(state);
-    const m = mir[key] || (mir[key] = { last: 0, timer: 0, json: "", state: null });
-    if (json === m.json) return;
+    const m = mir[key] || (mir[key] = { last: 0, timer: 0, json: "", state: null, failed: 0 });
+    if (json === m.json && !m.failed) return; // 审计修复 R3：上次写失败的同内容不得被去重吞掉，须重试
     m.json = json; m.state = state;
     if (m.timer) return; // 已排尾随写，届时取最新
     const wait = Math.max(0, 3200 - (Date.now() - m.last));
@@ -1899,42 +1931,52 @@ const KBPlatform = (() => {
     const m = mir[key]; if (!m || !m.state) return;
     const cb = CB(); if (!cb || !cb.cloudSave) { m.state = null; return; }
     const st = m.state, json = JSON.stringify(st); m.state = null; m.last = Date.now();
+    const onFail = () => { // 审计修复 R3：写失败恢复待写态并排队重试（旧版失败后 m.json 已记账、同内容永远去重、云端永久停在旧档）
+      reportCloudError();
+      if (mir[key] === m && !m.state && m.failed < 5) { m.state = st; m.failed++; if (!m.timer) m.timer = setTimeout(() => { m.timer = 0; flushMirror(key); }, 5000); }
+    };
     try {
       const p = cb.cloudSave.setValue({ key, value: json });
       if (p && p.then) p.then(res => {
-        if (res && res.code !== 200) reportCloudError(res.message);
-        else cloudCache[key] = st;
-      }).catch(() => reportCloudError());
-    } catch (e) { reportCloudError(); }
+        if (res && res.code !== 200) onFail();
+        else { m.failed = 0; cloudCache[key] = st; }
+      }).catch(onFail);
+      else m.failed = 0;
+    } catch (e) { onFail(); }
   }
+  // 审计修复 F-8/F-6：读取结果三态——对象=读到存档、null=确认无档（200 且 data 为空）、undefined=读取失败
+  // （抛错/非 200/数据损坏）。旧版把失败也写进 cloudCache=null 且整会话不再重试，启动流程据此误判「云端无档」。
+  const cloudFail = {}; // key -> true：最近一次读取失败（失败不进 cloudCache，下次调用真重试）
   async function fetchCloud(slot, timeoutMs) {
     const cb = CB();
     if (!cb || !cb.cloudSave || typeof cb.cloudSave.getValue !== "function") return null;
     const key = cloudKey(slot);
     if (key in cloudCache) return cloudCache[key];
     const get = async k => {
-      try {
-        const res = await cb.cloudSave.getValue({ key: k });
-        if (res && res.code === 200 && res.data) {
-          const o = JSON.parse(res.data);
-          if (o && Array.isArray(o.cards)) return o;
-        }
-      } catch (e) {}
-      return null;
+      let res;
+      try { res = await cb.cloudSave.getValue({ key: k }); } catch (e) { return undefined; } // 抛错＝读取失败
+      if (!res) return undefined;
+      if (res.code !== 200) return null; // 已解析的非 200 响应按旧口径当无档返回（键不存在的返回码未证实，防误判失败堵死新玩家镜像闸）
+      if (!res.data) return null; // 确认空档（含墓碑空串）
+      try { const o = JSON.parse(res.data); return (o && Array.isArray(o.cards)) ? o : undefined; } catch (e) { return undefined; } // 数据损坏＝读取失败
     };
     let p = get(key);
-    if (timeoutMs) { const t = await Promise.race([p.then(v => ({ v })), new Promise(r => setTimeout(() => r({ timeout: true }), timeoutMs))]); if (t.timeout) return null; p = Promise.resolve(t.v); }
+    if (timeoutMs) { const t = await Promise.race([p.then(v => ({ v })), new Promise(r => setTimeout(() => r({ timeout: true }), timeoutMs))]); if (t.timeout) { cloudFail[key] = true; return null; } p = Promise.resolve(t.v); }
     let obj = await p;
-    if (!obj && slot === 1) obj = await get(LEGACY_CLOUD_KEY); // 老版本单键镜像只可能属于 1 号档
+    if (obj === undefined && slot === 1) { const leg = await get(LEGACY_CLOUD_KEY); if (leg) obj = leg; } // 主键失败时也探旧键，有旧档优先于报错
+    if (obj === undefined) { cloudFail[key] = true; return null; } // 对外保持旧契约（null），失败标记供启动流程决定是否开闸
+    delete cloudFail[key];
     cloudCache[key] = obj || null;
     return cloudCache[key];
   }
+  function cloudFetchFailed(slot) { return !!cloudFail[cloudKey(slot)]; }
   function clearCloud(slot) { // 删档墓碑：清空该档云端值，避免下次开机被旧云档“复活”
     const cb = CB();
     if (!cb || !cb.cloudSave || typeof cb.cloudSave.setValue !== "function") return;
     const key = cloudKey(slot);
     cloudCache[key] = null;
-    const m = mir[key]; if (m) { if (m.timer) clearTimeout(m.timer); m.timer = 0; m.state = null; m.json = "__cleared__"; }
+    delete cloudFail[key];
+    const m = mir[key]; if (m) { if (m.timer) clearTimeout(m.timer); m.timer = 0; m.state = null; m.json = "__cleared__"; m.failed = 0; }
     const wipeKey = k => { try { const p = cb.cloudSave.setValue({ key: k, value: "" }); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
     wipeKey(key);
     if (slot === 1) wipeKey(LEGACY_CLOUD_KEY);
@@ -2013,7 +2055,16 @@ const KBPlatform = (() => {
     await lbAuth();
     const resp = await CB().cloud.request({ url: ACTIVITY_API_BASE + path, method: data ? "POST" : "GET", data, envId: ACTIVITY_ENV_ID, auth: true });
     if (!resp || resp.statusCode === 401) throw new Error("请先登录");
-    if (resp.statusCode !== 200 || resp.code !== 0) throw new Error((resp && resp.message) || "榜单服务异常");
+    if (resp.statusCode !== 200 || resp.code !== 0) {
+      // 审计修复 F3：错误对象保留服务端诊断字段（httpStatus/respCode/errTag），调用方须能区分
+      // 「业务拒绝（如唯一登记 409 taken）」与「网络/服务故障」——旧版只抛 message，两者在 /unique/claim 处被混为一谈误降级
+      const err = new Error((resp && resp.message) || "榜单服务异常");
+      err.httpStatus = resp ? resp.statusCode : 0;
+      err.respCode = resp ? resp.code : undefined;
+      err.errTag = resp && resp.data && typeof resp.data === "object" ? (resp.data.err || resp.data.error || null) : null;
+      if (resp && resp.err) err.errTag = resp.err;
+      throw err;
+    }
     return resp.data;
   }
   async function lbProfile() {
@@ -2040,7 +2091,7 @@ const KBPlatform = (() => {
     catch (e) { return false; }
   }
   function requestWipe() { wipePendingSet(true); flushWipePending(); }
-  return { inContainer, mirrorCloudSave, fetchCloud, clearCloud, setCloudErrorHandler: fn => { onCloudError = fn; }, lbAvailable, lbRequest, lbProfile, requestWipe, flushWipePending, wipePendingGet, fetchNickname, postPoster, shareCard, desktopAvailable, addToDesktop, applySafeTop };
+  return { inContainer, mirrorCloudSave, fetchCloud, cloudFetchFailed, clearCloud, setCloudErrorHandler: fn => { onCloudError = fn; }, lbAvailable, lbRequest, lbProfile, requestWipe, flushWipePending, wipePendingGet, fetchNickname, postPoster, shareCard, desktopAvailable, addToDesktop, applySafeTop };
 })();
 if (typeof module !== "undefined") module.exports = KBPlatform;
 
@@ -2114,9 +2165,22 @@ const KBAds = (() => {
     } catch (e) {}
     return null;
   }
-  function savePending(j) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(j)); } catch (e) {} }
-  function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
-  function readPending() { try { const r = localStorage.getItem(PENDING_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+  // 审计修复 F-3：PENDING 落盘失败不得静默——旧 savePending 吞异常后 UI 仍报「奖励将在确认后补发」，
+  // 实际标记不存在、重载必丢奖。现落盘失败留内存镜像，本会话内回前台/再核对仍可恢复（存储整体坏死的跨重启恢复属云存档域）。
+  let memPending = null;
+  function savePending(j) { memPending = j; try { localStorage.setItem(PENDING_KEY, JSON.stringify(j)); return true; } catch (e) { return false; } }
+  function clearPending(runId) {
+    // 状态机审计修复：带 runId 时只清属于该次观看的标记——旧版无条件清除，A 路结算会误删 B 路未落定的 PENDING（B 回来报 pendingKept 但标记已没、永久丢奖）
+    if (runId) { const cur = readPending(); if (cur && cur.runId && cur.runId !== runId) return; }
+    if (memPending && (!runId || memPending.runId === runId)) memPending = null;
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+  }
+  function readPending() {
+    let stored = null;
+    try { const r = localStorage.getItem(PENDING_KEY); stored = r ? JSON.parse(r) : null; } catch (e) { stored = null; }
+    if (stored && memPending) return (memPending.ts || 0) > (stored.ts || 0) ? memPending : stored;
+    return stored || memPending;
+  }
   function simulatedWatch() {
     return new Promise(resolve => {
       const div = document.createElement("div");
@@ -2134,15 +2198,18 @@ const KBAds = (() => {
   }
   async function nativeWatch(kind, runId, extra) {
     const base = await getBalance(); // 看前余额基线（查不到为 null，补发时走保留待核）
+    // 状态机审计修复：已有未落定 PENDING 时拒绝再拉起——PENDING 是单槽，后来者覆写 runId 会把先行者的待核奖励吞掉（看 2 支只发 1 次）
+    const existing = readPending();
+    if (existing && existing.runId && existing.runId !== runId) return { ok: false, pendingKept: true, reason: "上一支广告的奖励还在核对中，确认后会自动补发，请稍后再看" };
     // purpose=发奖用途（与 kind 同值保留双字段：kind 兼容旧标记，purpose 为第二批分发口径）；uid=评级目标卡（grade 用途才有）；prot=保分评级标记（S5，两支广告同走 grade 点位，靠它在结算时走只升不降）
     savePending({ kind, purpose: kind, uid: extra && extra.uid !== undefined ? extra.uid : null, prot: extra && extra.prot ? 1 : 0, runId, ts: Date.now(), base });
     let res = null, threw = false;
     try { res = await vatask().completeRewardVideo(); } catch (e) { threw = true; }
-    if (!threw && res && res.code === 200 && res.data && res.data.rewarded) { clearPending(); return { ok: true }; }
-    if (!threw && /UNAVAILABLE/i.test(JSON.stringify(res || {}))) { clearPending(); return { ok: false, unavailable: true, reason: "今日广告奖励已领完" }; }
+    if (!threw && res && res.code === 200 && res.data && res.data.rewarded) { clearPending(runId); return { ok: true }; }
+    if (!threw && /UNAVAILABLE/i.test(JSON.stringify(res || {}))) { clearPending(runId); return { ok: false, unavailable: true, reason: "今日广告奖励已领完" }; }
     // 回调缺失/未完播/异常：不凭单次回调定罪，复查服务端余额——完播余额必 +1
     const now = await getBalance();
-    if (typeof now === "number" && typeof base === "number" && now > base) { clearPending(); return { ok: true }; }
+    if (typeof now === "number" && typeof base === "number" && now > base) { clearPending(runId); return { ok: true }; }
     // 查不到或未增：保留 PENDING，下次启动凭余额差量补发（12h 过期兜底，不会堵死）
     return { ok: false, pendingKept: true, reason: "广告状态待核对，奖励将在确认后补发" };
   }
@@ -2176,24 +2243,30 @@ const KBAds = (() => {
     if (state.adPending && !isNative()) state.adPending = null;
     const j = readPending();
     if (!j || !j.kind) return null;
-    if (Date.now() - (j.ts || 0) > PENDING_TTL) { clearPending(); return null; }
+    if (Date.now() - (j.ts || 0) > PENDING_TTL) { clearPending(j.runId); return null; }
     if (!isNative()) return null; // 非容器保留标记，不猜
     const now = await getBalance();
     if (typeof now === "number" && typeof j.base === "number") {
       if (now > j.base) {
-        clearPending();
+        clearPending(j.runId);
         state.adPending = { runId: j.runId, kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, prot: j.prot ? 1 : 0, ts: j.ts };
         return { kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, prot: j.prot ? 1 : 0, runId: j.runId };
       }
       return null; // 余额未增：保留待下次核对（12h 内）
     }
-    if (typeof now === "number" && (j.base === null || j.base === undefined)) {
-      // 旧版 PENDING 无 base（升级前遗留）：退回任务状态口径一次性判定，查到结论即落定清标记
+    if (j.base === null) {
+      // 无基线（看前余额查询失败，现行版本自身就会写入这种标记）：无法做差量核对，12h 内一律保留待核——
+      // 不得走下方 legacy 的 status 口径（已证伪：status 是周期口径、非单次完播凭证，会清掉真完播的奖或误发未完播的奖）。
+      // 超 12h 由上方 TTL 先行过期清除，不会堵死（与篮坛 settlePending base=null 分支同口径，2026-11-03 双生子同步）。
+      return null;
+    }
+    if (typeof now === "number" && j.base === undefined) {
+      // 旧版 PENDING 无 base 字段（升级前遗留、字段缺失）：退回任务状态口径一次性判定，查到结论即落定清标记
       try {
         const st = await vatask().getActivityTaskState();
         if (st && st.code === 200 && st.data) {
           const task = (st.data.tasks || []).find(x => x.taskCode === "reward");
-          clearPending();
+          clearPending(j.runId);
           if (task && task.status === "completed") {
             state.adPending = { runId: j.runId, kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, prot: j.prot ? 1 : 0, ts: j.ts };
             return { kind: j.kind, purpose: j.purpose || j.kind, uid: j.uid !== undefined ? j.uid : null, prot: j.prot ? 1 : 0, runId: j.runId };
@@ -2298,7 +2371,7 @@ const KBMeta = (() => {
   }
   // ---------- 每周任务（§10）：合成1次/赢5场/图鉴+5 → 30 钻 ----------
   function weeklyProgress(state) {
-    const dexNow = new Set(state.cards.map(c => c.pid)).size;
+    const dexNow = new Set(state.cards.filter(c => c.pid < 200).map(c => c.pid)).size; // 图鉴口径=基础 120 人（与 dex UI 同口径，时期/双人不计入周任务增量）
     return { synth: state.weekly.synth, wins: state.weekly.wins, dexGain: Math.max(0, dexNow - state.weekly.dexBase) };
   }
   function weeklyDone(state) { const p = weeklyProgress(state); return p.synth >= 1 && p.wins >= 5 && p.dexGain >= 5; }
@@ -2315,10 +2388,10 @@ const KBMeta = (() => {
     { id: "firstPara", name: "首张平行版", dia: 2, coins: 300, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
     { id: "para10", name: "平行收藏 10", dia: 5, coins: 600, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
     { id: "jersey1", name: "球衣卡到手", dia: 8, coins: 800, test: st => st.cards.some(c => c.variant === "球衣") },
-    { id: "dex30", name: "图鉴 30", dia: 3, coins: 500, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
-    { id: "dex60", name: "图鉴 60", dia: 5, coins: 800, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
-    { id: "dex90", name: "图鉴 90", dia: 8, coins: 1200, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
-    { id: "dex120", name: "图鉴全集 120", dia: 40, coins: 2000, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
+    { id: "dex30", name: "图鉴 30", dia: 3, coins: 500, test: st => new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size >= 30 },
+    { id: "dex60", name: "图鉴 60", dia: 5, coins: 800, test: st => new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size >= 60 },
+    { id: "dex90", name: "图鉴 90", dia: 8, coins: 1200, test: st => new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size >= 90 },
+    { id: "dex120", name: "图鉴全集 120", dia: 40, coins: 2000, test: st => new Set(st.cards.filter(c => c.pid < 200).map(c => c.pid)).size >= 120 }, // 审计修复 F7：旧版把时期/双人 7 人也计入，113 基础+7 时期即可点亮「全集 120」，与 dex UI 的 /120 口径打架
     { id: "shop5", name: "卡店 Lv.5", dia: 3, coins: 800, test: st => st.shopLv >= 5 },
     { id: "shop10", name: "卡店 Lv.10", dia: 15, coins: 1500, test: st => st.shopLv >= 10 },
     { id: "rich100k", name: "全仓身价破 20 万", dia: 5, coins: 1000, test: st => st.records.total >= 200000 },
@@ -2434,7 +2507,9 @@ const KBMeta = (() => {
   // 位打包：pid 9 位 | stampIdx 3 | variantIdx 3 | star 5 | gradeIdx 3 | srcIdx 4 | bornDay 码 10（0=无字段、1=null、≥2=dayIndex-bornDay+2，超龄走 extras）。
   // 静态字段（name/pos/tier/rating/series/tag/mult/vmult/bmult/value 基值）导入时按卡池与公式展开；
   // extras 兜底承载一切非常规字段（cert/listed/adAssist/starter/resell/buyDay/starLuck/gradeTries/与公式不符的 value 等），往返无损。未知 pid 整卡兜底：'!'+b64(整卡 JSON)。
-  const KB3_SRCS = [null, "normal", "adv", "dia60", "dia120", "legend", "synth", "gamble", "gift", "urdraw", "market", "arena", "loot", "redraw"];
+  // 审计修复 F5：原表混入篮坛的 "adv"、漏了足坛自有的 starter/premium/frag（靠 extras 兜底才没丢数据，是错表地雷）。
+  // 索引 2 的旧值 "adv" 足坛从不产出（无此 src 的卡，导出恒走 sri=0+extras），就地改为 "starter"；新值追加尾部不移位。
+  const KB3_SRCS = [null, "normal", "starter", "dia60", "dia120", "legend", "synth", "gamble", "gift", "urdraw", "market", "arena", "loot", "redraw", "premium", "frag"];
   const KB3_HANDLED = ["uid", "pid", "name", "pos", "tier", "rating", "series", "tag", "stamp", "mult", "variant", "vmult", "value", "star", "starLuck", "grade", "gradeTries", "bmult", "src", "bornDay"];
   const KB3_VOLATILE = { flags: 1, createdAt: 1, savedAt: 1, uid: 1, lastTs: 1 };
   let _kb3Def = null;
@@ -2526,7 +2601,7 @@ const KBMeta = (() => {
       st.cards = kb3UnpackCards(cardsStr, typeof o.d === "number" ? o.d : 0);
       st.version = 3;
       if (E.rebuildOneUsed) E.rebuildOneUsed(st);
-      if (typeof st.coins !== "number") return { ok: false, reason: "存档内容不完整" };
+      if (typeof st.coins !== "number" || !Number.isFinite(st.coins) || st.coins < 0 || typeof st.dia !== "number" || !Number.isFinite(st.dia) || st.dia < 0) return { ok: false, reason: "存档内容不完整" }; // 审计修复 F-5：旧版只查 coins 类型，负钻/NaN 可混入
       return { ok: true, state: st };
     } catch (e) { return { ok: false, reason: "存档码解析失败" }; }
   }
@@ -2545,7 +2620,8 @@ const KBMeta = (() => {
       const payload = decodeURIComponent(escape(atob(parts[2])));
       if (checksum(payload) !== parts[1]) return { ok: false, reason: "校验和不符，存档码已损坏" };
       const st = JSON.parse(payload);
-      if (!st || !Array.isArray(st.cards) || typeof st.coins !== "number") return { ok: false, reason: "存档内容不完整" };
+      if (!st || !Array.isArray(st.cards) || typeof st.coins !== "number" || !Number.isFinite(st.coins) || st.coins < 0 || typeof st.dia !== "number" || !Number.isFinite(st.dia) || st.dia < 0) return { ok: false, reason: "存档内容不完整" }; // 审计修复 F-5：同 KB3 口径
+      st.cards = st.cards.filter(c => c && typeof c === "object" && typeof c.pid === "number" && Number.isFinite(c.pid)); // 审计修复 F-5：旧版整表原样收下，垃圾条目（数字/字符串/坏 pid）会留在活档里
       if (st.version !== 3 && st.version !== 2) return { ok: false, reason: "存档版本不匹配（需 v2/v3）" };
       return { ok: true, state: st };
     } catch (e) { return { ok: false, reason: "存档码解析失败" }; }
@@ -2780,10 +2856,23 @@ let saveTimer = 0, saveDirty = false;
 function flushSave() { // 立即落盘：把待写的最新状态同步存下（云镜像在平台层另有 3.2 秒节流＋去重，语义不变）
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
   if (!saveDirty) return;
-  saveDirty = false;
-  KBSave.save(state);
+  // 审计修复 F-2：落盘失败不得假装完成——旧版先清 dirty 再 save 且不看返回值，失败版本被 persist 去重永久跳过、磁盘冻结。
+  const okSave = KBSave.save(state);
+  if (!okSave) { saveDirty = true; if (!saveTimer) saveTimer = setTimeout(flushSave, 5000); }
+  else saveDirty = false;
   if (cloudGateOpen) KBPlatform.mirrorCloudSave(state, KBSave.getMeta().active);
   else mirrorWanted = true;
+}
+// 审计修复 F-6：采用云档的统一入口——本地回读结果不比云端新（或写回失败/云档是 v2）时，
+// 用「深拷贝云档对象经存档层规范化」的结果，绝不静默退回旧本地档、也不把未规范化的云端裸对象直接当 state。
+function adoptLoaded(slot, cloudObj) {
+  const local = KBSave.load(slot);
+  const cloudAt = (cloudObj && cloudObj.savedAt) || 0;
+  if (local && (local.savedAt || 0) >= cloudAt) return local;
+  if (cloudObj) {
+    try { const norm = KBSave.normalize(JSON.parse(JSON.stringify(cloudObj))); if (norm) return norm; } catch (e) {}
+  }
+  return local;
 }
 function persist() {
   const j = stateJSON();
@@ -2850,25 +2939,28 @@ function cardHTML(c, opts) {
   const popStyle = opts.pop !== undefined ? ` style="--tc:${col};--d:${opts.pop * 90}ms"` : ` style="--tc:${col}"`;
   const s1 = c.stamp === "/1" ? " s1" : "";
   const val = S.instanceValue(state, c, D);
-  const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
+  const stamp = c.stamp !== "无编" ? `<span class="stamp">${esc(c.stamp)}</span>` : "";
   const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
   const era = c.series === "时期" ? `<span class="erabadge">时期</span>` : c.series === "双人" ? `<span class="erabadge duo">双人</span>` : "";
   const cert = c.cert ? `<span class="certbadge">全服唯一</span>` : ""; // 第三批：全服唯一 1/1 证书徽章
-  const gr = c.grade ? `<span class="gradebadge">🏅${c.grade.label}</span>` : "";
+  const gr = c.grade ? `<span class="gradebadge">🏅${esc(c.grade.label)}</span>` : "";
   const newb = opts.new ? `<span class="newb">NEW</span>` : "";
   const vv = c.variant && c.variant !== "base" ? c.variant : "";
+  const vvTxt = vv ? esc(vv) : ""; // variant 同时进 class 与文本：转义后实体解码不改变合法枚举的显示与类名，伪造值无法逃逸属性
   const sig = vv === "签字" ? sigHTML(c.pid) : ""; // 签字卡面：本名手写签名 SVG（signatures.js），替代旧楷体排字
   const subNm = S.SUB_NAMES[S.subOfCard(c)]; // 阶段 C：卡面双层位置（广位 · 细分位）
   const posTxt = (POS_CN[c.pos] || c.pos) + (subNm ? " · " + subNm : "");
-  return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
+  return `<div class="card t-${c.tier}${vv ? " v-" + vvTxt : ""}${s1}${popCls}"${popStyle}>
     <img class="cart${portraitOf(playerOf(c)) ? " photo" : ""}" loading="lazy" decoding="async" src="${avatarURL(playerOf(c))}" alt="">
     <div class="cshade"></div>${newb}${era}${gr}${cert}
     <div class="chead"><span class="pos">${posTxt}</span><span class="rating">${S.effRating(c)}</span></div>
     <div class="cfoot"><div class="cname" style="font-size:${c.name.length >= 7 ? 12 : c.name.length === 6 ? 13.5 : 15}px">${c.name}</div>
-    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}${c.grade ? ` · <span class="vt">${c.grade.label}</span>` : ""}${c.cert ? ` · <span class="vt vt-签字">全服唯一</span>` : ""}${c.listed ? ` · <span class="vt">挂牌中</span>` : ""}</div>
+    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vvTxt}">${vvTxt}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}${c.grade ? ` · <span class="vt">${esc(c.grade.label)}</span>` : ""}${c.cert ? ` · <span class="vt vt-签字">全服唯一</span>` : ""}${c.listed ? ` · <span class="vt">挂牌中</span>` : ""}</div>
     <div class="cval">身价 ${val}</div></div>
     ${stamp}${hot}${sig}</div>`;
 }
+function esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); } // 净化（提审 XSS 建议）：与篮坛同口径，含单引号转义，属性与文本两种上下文都安全；服务端返回字符串进 HTML 前一律过此函数
+function avImg(url, name) { return typeof url === "string" && /^https?:\/\//i.test(url) ? `<img class="lb-av" src="${esc(url)}" alt="">` : `<span class="lb-avf">${esc((name || "?").slice(0, 1))}</span>`; } // 头像渲染：非 http(s) URL 一律不渲染图，回落首字母占位，防伪造 URL/属性逃逸
 let toastTimer = null;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400); }
 
@@ -2964,7 +3056,7 @@ async function renderUniqueStatus() {
     const p = E.playerById(pid); if (!p) return "";
     const c = byKey[S.linkKeyOf(pid)];
     return c
-      ? `<div class="urow"><span>${p.name} · /1</span><span class="uhad">👑 已被认领 · 证书 ${c.cert}${c.ts ? " · " + fmtClaimDay(c.ts) : ""}</span></div>`
+      ? `<div class="urow"><span>${p.name} · /1</span><span class="uhad">👑 已被认领 · 证书 ${esc(c.cert)}${c.ts ? " · " + fmtClaimDay(c.ts) : ""}</span></div>`
       : `<div class="urow"><span>${p.name} · /1</span><span class="ufree">全服唯一 · 尚未被抽走</span></div>`;
   }).join("");
   el.innerHTML = `<div class="upanel"><div class="utitle">🕰 时期卡全服唯一 1/1（豪华钻石包时期槽限定 · 全服仅一张）</div>${rows}</div>`;
@@ -3138,7 +3230,7 @@ function showCardDetail(pid) {
   const inUse = new Set([...S.lineupUids(state), ...(state.display || [])]);
   const hiTierNote = list.some(c => ["史诗", "传说", "传世"].includes(c.tier) && !c.listed) ? `<p class="hint">史诗及以上卡已关闭系统回收（交易所开启同步调整）：传世/传说/史诗与时期卡可挂牌去交易所卖给玩家，史诗也可分解换碎片或合成/升星。市场买入的卡附 1 次转卖额度：持满 3 天可挂牌转卖（成交销毁 10%），额度用完永久绑定。</p>` : "";
   $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep;
-    const certTxt = c.cert ? `<div class="hint" style="flex-basis:100%">👑 全服唯一 · 证书 ${c.cert}</div>` : "";
+    const certTxt = c.cert ? `<div class="hint" style="flex-basis:100%">👑 全服唯一 · 证书 ${esc(c.cert)}</div>` : "";
     // 转卖状态行（转卖新规矩）：组内市场购入卡按 额度/冷却 聚合展示，避免玩家买完才发现卖不掉
     const mktMembers = r.members.filter(x => x.src === "market");
     let resaleTxt = "";
@@ -3151,7 +3243,7 @@ function showCardDetail(pid) {
       if (bound) bits.push(`${bound} 张额度已用完 · 永久绑定`);
       resaleTxt = `<div class="hint" style="flex-basis:100%">🔁 市场购入 ${mktMembers.length} 张：${bits.join(" · ")}</div>`;
     }
-    if (c.listed) { const li = (state.myListings || {})[c.listed]; return `<div class="drow" style="flex-wrap:wrap"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span class="hint">🏛 挂牌中${li ? " · " + li.price + " 钻" : ""}（在交易所「我的挂单」里取消）</span>${certTxt}</div>`; }
+    if (c.listed) { const li = (state.myListings || {})[c.listed]; return `<div class="drow" style="flex-wrap:wrap"><span>${esc(c.stamp)}${c.variant && c.variant !== "base" ? " · " + esc(c.variant) : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + esc(c.grade.label) : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span class="hint">🏛 挂牌中${li ? " · " + li.price + " 钻" : ""}（在交易所「我的挂单」里取消）</span>${certTxt}</div>`; }
     const gradeBtn = (c.star || 0) >= 5 ? ((c.gradeTries || 0) < 3 ? `<button class="btn ghost" data-grade="${c.uid}">🏅 评级（余 ${3 - (c.gradeTries || 0)} 次 · 看广告）</button>` : `<span class="hint">评级次数已用完</span>`) : "";
     // S5 保分评级入口：已有评级且只剩最后 1 次机会才出现；进行中显示进度（pendingProtected 落盘，杀进程回来能续）
     const ppNow = state.pendingProtected;
@@ -3177,7 +3269,7 @@ function showCardDetail(pid) {
     const sellBtn = ["史诗", "传说", "传世"].includes(c.tier) ? `<button class="btn gold" disabled title="高档卡请走交易所或分解">回收已关闭</button>` : `<button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>`; // 第三批：史诗+ 单张出售关闭
     const listC = r.members.find(x => S.marketEligible(state, x).ok); // 挂牌资格按实例来源判定，取组内首个合格副本
     const listBtn = listC ? `<button class="btn" data-list="${listC.uid}">🏛 挂牌</button>` : "";
-    return `<div class="drow" style="flex-wrap:wrap"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span>${sellBtn}${listBtn}${gradeBtn}${protBtn}${decBtn}${fragBtn}</span>${certTxt}${resaleTxt}</div>`; }).join("") + hiTierNote +
+    return `<div class="drow" style="flex-wrap:wrap"><span>${esc(c.stamp)}${c.variant && c.variant !== "base" ? " · " + esc(c.variant) : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + esc(c.grade.label) : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span>${sellBtn}${listBtn}${gradeBtn}${protBtn}${decBtn}${fragBtn}</span>${certTxt}${resaleTxt}</div>`; }).join("") + hiTierNote +
     ((state.mats && state.mats.universal) ? `<p class="hint">🧩 万能材料 ×${state.mats.universal}（分解传世卡获得，传世升星时可顶替同球员材料）</p>` : "") +
     ((state.frag || 0) > 0 ? `<p class="hint">🧩 碎片 ×${state.frag}（图鉴页可指定兑换未点亮的稀有/史诗球员）</p>` : "") : "<p class='hint'>已全部卖出。</p>";
   $("#detailModal").classList.add("on");
@@ -3315,7 +3407,7 @@ function renderFurnace() {
     const matched = starQuery ? allMain.filter(c => c.name.includes(starQuery)) : allMain;
     const list = matched.slice(0, 60);
     box.innerHTML = `<p class="hint">主卡 + 2 张材料（同球员重复卡或同系列同档卡）→ +1 星。先搜名字，再点一张设为主卡：</p>` +
-      `<p><input id="starQ" type="search" placeholder="搜球员名（如 梅西）" value="${starQuery}" style="min-width:150px"> <button class="btn ghost" data-starq="1">搜索</button>${starQuery ? ` <button class="btn ghost" data-starqclear="1">清除</button>` : ""} <span class="hint">候选共 ${allMain.length} 张${starQuery ? `，匹配 ${matched.length} 张` : ""}（按档位/身价排）</span></p>` +
+      `<p><input id="starQ" type="search" placeholder="搜球员名（如 梅西）" value="${esc(starQuery)}" style="min-width:150px"> <button class="btn ghost" data-starq="1">搜索</button>${starQuery ? ` <button class="btn ghost" data-starqclear="1">清除</button>` : ""} <span class="hint">候选共 ${allMain.length} 张${starQuery ? `，匹配 ${matched.length} 张` : ""}（按档位/身价排）</span></p>` +
       (list.length ? list.map(c =>
       `<button class="btn ghost" data-starmain="${c.uid}" style="margin:0 6px 6px 0">${c.name} ${c.pos} ${c.tier} ${c.rating}${(c.star || 0) > 0 ? " ★" + c.star : ""} · 身价 ${valOf(c)}</button>`).join("") : "<p class='hint'>没有匹配的卡</p>");
     return;
@@ -3395,6 +3487,8 @@ function bindDynamic() {
   const cy = $("#commYes"); if (cy) cy.onclick = () => {
     const cm = state.commission; const c = state.cards.find(x => x.uid === cm.uid);
     if (!c) return;
+    if (cm.done) { toast("这单委托已经处理过了"); return; }
+    if (c.listed) { toast("这张卡正在交易所挂牌，先取消挂牌再卖委托（防一卡两卖）"); return; } // 审计修复（货币 C）：旧版成交不查挂牌，卡卖给委托后挂单仍可被买走再领钻
     if (S.lineupUids(state).includes(c.uid) && !confirm("该卡在阵容中，成交后将自动卸下，确定卖出？")) return;
     state.cards.splice(state.cards.findIndex(x => x.uid === cm.uid), 1);
     state.display = state.display.filter(u => u !== cm.uid);
@@ -3557,20 +3651,31 @@ function markNewAndSummary(cards, ownedBefore) {
 async function resolveUniqueClaims(cards) {
   const hits = cards.filter(c => c.pid >= 200 && c.pid <= 204 && c.stamp === "/1" && !c.cert);
   for (const c of hits) {
-    let cert = null;
+    let cert = null, taken = false;
     if (KBPlatform.lbAvailable()) {
       try { const r = await KBPlatform.lbRequest("/unique/claim", { scope: "era1of1", key: S.linkKeyOf(c.pid) }); if (r && r.cert) cert = r.cert; }
-      catch (e) { cert = null; } // 409 被占或请求失败：走降级，不阻塞开包
+      catch (e) {
+        // 审计修复 F3：只有服务端明确回「已被登记」才降级——旧版把网络故障/限频也当被占，
+        // /1 被误降 /10 且改戳后永不重试，玩家凭空失去全服唯一。故障时保留 /1 未认证态，下次开包/开榜自动重试。
+        taken = !!(e && (e.httpStatus === 409 || e.respCode === 409 || e.errTag === "taken" || /已被登记/.test(e.message || "")));
+      }
     }
     if (cert) { c.cert = cert; uniqueStatusCache = null; setTimeout(() => toast(`👑 全服唯一注册成功：${c.name} /1 · 证书 ${cert}`), 60); }
-    else {
+    else if (taken) {
       const comp = S.uniqueDowngrade(c); // 降级 /10＋补偿 30 钻（本地入账）
       state.dia += comp;
       setTimeout(() => toast(`这张 ${c.name} 的全服唯一 /1 已被抢先注册：已降为 /10，并补偿 ${comp} 钻`), 60);
+    } else if (KBPlatform.lbAvailable()) {
+      setTimeout(() => toast(`👑 ${c.name} /1 的全服唯一登记暂时没连上服务器：先保留 /1，联网后开包或打开排行榜会自动重试登记`), 60);
     }
   }
 }
+let openBusy = false; // 状态机审计修复：开包重入闸——dia120 扣款后有 await 登记窗口，期间连点可误购第二包
 async function doOpen(key, free) {
+  if (openBusy) { toast("正在开包中，请稍候"); return; }
+  if (free && state.freeDay === todayStr()) { toast("今日免费包已领过啦"); return; } // 审计修复：旧版本体不查 freeDay、只靠按钮 disabled，函数级重入可连领
+  openBusy = true;
+  try {
   if (!free && openDiaShortfall(key)) return; // 钻石定价包且钻石不足 → 差额面板（够钻/未解锁时返回 false、走原购买流程，行为零变化）
   const ownedBefore = new Set(state.cards.map(c => c.pid));
   const res = E.openPack(state, key, Math.random, free ? { free: true } : undefined);
@@ -3585,6 +3690,7 @@ async function doOpen(key, free) {
   const ur = res.cards.find(c => c.tier === "传世");
   afterDraw(res.cards, ur ? () => toast(`传世！${ur.name}${ur.stamp !== "无编" ? " " + ur.stamp : ""} 来了！`) : null, E.PACKS[key].name);
   document.querySelectorAll("#drawGrid .card").forEach((el, i) => { el.style.animationDelay = (i * 0.12) + "s"; el.classList.add("flip"); });
+  } finally { openBusy = false; }
 }
 document.querySelectorAll("[data-pack]").forEach(b => b.onclick = () => doOpen(b.dataset.pack, false));
 $("#legendPackBtn").onclick = () => {
@@ -3608,7 +3714,7 @@ $("#upgradeBtn").onclick = () => {
 };
 $("#autoDispBtn").onclick = () => {
   const slots = S.SHOP[state.shopLv].slots;
-  state.display = state.cards.filter(c => !S.isCollectionOnly(c.pid))
+  state.display = state.cards.filter(c => !S.isCollectionOnly(c.pid) && !c.listed) // 审计修复：挂牌卡不得进展示柜（旧版漏检，listed 卡照常产挂机收益、与冻结口径冲突）
     .sort((a, b) => (S.IDLE[b.tier] * (1 + (E.STAMPS.find(s => s[0] === b.stamp) || [])[3] || 0)) - (S.IDLE[a.tier] * (1 + (E.STAMPS.find(s => s[0] === a.stamp) || [])[3] || 0)))
     .slice(0, slots).map(c => c.uid);
   render(); toast("已自动摆上时薪最高的卡");
@@ -3642,7 +3748,8 @@ $("#play5Btn").onclick = () => {
   toast(`快速 ${played} 场：${wins} 胜 ${played - wins} 负 · +${coins} 金币${promos ? " · 升段×" + promos : ""}${bonusPacks ? " · 连胜奖包×" + bonusPacks + "（见开包页）" : ""}`);
 };
 $("#weekBtn").onclick = () => {
-  const packs = 1 + state.division;
+  if (!state.weekPending) { toast("本周结算已经领过啦"); return; } // 审计修复：旧版本体无入场校验、只靠按钮隐藏，函数级重入必双发
+  const packs = Math.min(1 + state.division, 5); // 规格 v0.2 口径：高级包青铜 1 个起、大师封顶 5 个（旧版 1+段位最高发 6 个超规格）
   let got = [];
   for (let i = 0; i < packs; i++) { const res = E.openPack(state, "premium", Math.random, { free: true }); if (res.ok) got.push(...res.cards); }
   for (const c of got) if (c.bornDay === undefined) c.bornDay = D;
@@ -3927,10 +4034,10 @@ function lbRenderList() {
     let html = "";
     if (!entries.length) html += '<p class="hint">还没有人入榜，来做第一个。</p>';
     for (const e of entries) {
-      const av = e.avatar ? `<img class="lb-av" src="${e.avatar}" alt="">` : `<span class="lb-avf">${(e.displayName || "?").slice(0, 1)}</span>`;
+      const av = avImg(e.avatar, e.displayName);
       const g = e.growth !== undefined ? e.growth : (e.pct !== undefined ? e.pct : e.rate) || 0;
       const gain = e.gain !== undefined ? e.gain : (e.delta || 0);
-      html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${e.displayName}${e.isCurrent ? "（我）" : ""}<div class="lb-sub">身价增量 +${Number(gain).toLocaleString()}</div></span><span class="lb-score" style="color:${g >= 0 ? "#ff6b6b" : "#4ade80"}">${g >= 0 ? "+" : ""}${(g * 100).toFixed(1)}%</span></div>`;
+      html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${esc(e.displayName || "")}${e.isCurrent ? "（我）" : ""}<div class="lb-sub">身价增量 +${Number(gain).toLocaleString()}</div></span><span class="lb-score" style="color:${g >= 0 ? "#ff6b6b" : "#4ade80"}">${g >= 0 ? "+" : ""}${(g * 100).toFixed(1)}%</span></div>`;
     }
     list.innerHTML = html;
     return;
@@ -3940,9 +4047,9 @@ function lbRenderList() {
   let html = total < 30 ? `<p class="hint">榜单积累中（${total}/30 人），满 30 人正式开榜</p>` : "";
   if (!entries.length) html += '<p class="hint">还没有人上榜，来做第一个。</p>';
   for (const e of entries) {
-    const av = e.avatar ? `<img class="lb-av" src="${e.avatar}" alt="">` : `<span class="lb-avf">${(e.displayName || "?").slice(0, 1)}</span>`;
-    const sub = lbBoard === "cardvalue" && e.dims && e.dims.name ? `<div class="lb-sub">${e.dims.name}${e.dims.grade ? " · " + e.dims.grade : ""}</div>` : "";
-    html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${e.displayName}${e.isCurrent ? "（我）" : ""}${sub}</span><span class="lb-score">${e.score.toLocaleString()}</span></div>`;
+    const av = avImg(e.avatar, e.displayName);
+    const sub = lbBoard === "cardvalue" && e.dims && e.dims.name ? `<div class="lb-sub">${esc(e.dims.name)}${e.dims.grade ? " · " + esc(e.dims.grade) : ""}</div>` : "";
+    html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${esc(e.displayName || "")}${e.isCurrent ? "（我）" : ""}${sub}</span><span class="lb-score">${e.score.toLocaleString()}</span></div>`;
   }
   list.innerHTML = html;
 }
@@ -3961,7 +4068,11 @@ async function renderBoard(force) {
   $("#lbTabValue").onclick = () => { if (lbBoard !== "cardvalue") { lbBoard = "cardvalue"; lbCache = null; renderBoard(true); } };
   const gt = $("#lbTabGrowth"); if (gt) gt.onclick = () => { if (lbBoard !== "growth") { lbBoard = "growth"; lbCache = null; renderBoard(true); } };
   $("#lbRefresh").onclick = () => renderBoard(true);
-  if (!KBPlatform.lbAvailable()) { $("#lbList").innerHTML = '<p class="hint">排行榜仅在虎扑 App 内可用。</p>'; $("#lbMe").textContent = ""; return; }
+  if (!KBPlatform.lbAvailable()) { // UI 全扫修复：早退前先同步页签高亮（旧版点页签连高亮都不切，像死按钮）
+    $("#lbTabPower").className = "btn" + (lbBoard === "power" ? "" : " ghost");
+    $("#lbTabValue").className = "btn" + (lbBoard === "cardvalue" ? "" : " ghost");
+    const gt2 = $("#lbTabGrowth"); if (gt2) gt2.className = "btn" + (lbBoard === "growth" ? "" : " ghost");
+    $("#lbList").innerHTML = '<p class="hint">排行榜仅在虎扑 App 内可用。</p>'; $("#lbMe").textContent = ""; return; }
   lbRenderList();
   if (lbBusy) return;
   if (!force && lbCache && Date.now() - lbCache.at < 15000) return;
@@ -4017,8 +4128,11 @@ function normOfficial(raw) {
 function snapViewHTML(snap, price, sellerName) {
   const p = E.playerById(snap.pid); if (!p) return "";
   const g = snap.grade ? S.GRADES.find(x => x.label === snap.grade) : null;
-  const inst = { uid: -1, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: snap.stamp, mult: snap.mult, variant: snap.variant || "base", vmult: snap.vmult || 1, star: snap.star || 0, starLuck: 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: 0, bmult: p.bmult || 1 };
-  const meta = `${p.name} · ${p.tier} ${p.rating}${snap.stamp && snap.stamp !== "无编" ? " · 限编" + snap.stamp : ""}${snap.variant && snap.variant !== "base" ? " · " + snap.variant : ""}${(snap.star || 0) > 0 ? " · ★" + snap.star : ""}${snap.grade ? " · 🏅" + snap.grade : ""}<br>静态身价 ${S.staticValue(inst)}${sellerName ? ` · 卖家 ${sellerName}` : ""}`;
+  const okStamp = E.STAMPS.some(s => s[0] === snap.stamp) ? snap.stamp : "无编"; // 服务端 snap 字符串字段一律枚举校验，枚举外回落默认（防伪造快照把任意字符串带进卡面渲染）
+  const okVariant = E.VARIANTS.some(v => v[0] === snap.variant) ? snap.variant : "base";
+  const okStar = Number.isFinite(snap.star) ? Math.max(0, Math.min(5, Math.floor(snap.star))) : 0; // 审计修复 F3：star 夹紧 0–5（伪造 snap 的 star=99 会把展示静态身价按 1.25^99 撑爆）
+  const inst = { uid: -1, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: okStamp, mult: snap.mult, variant: okVariant, vmult: snap.vmult || 1, star: okStar, starLuck: 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: 0, bmult: p.bmult || 1 };
+  const meta = `${p.name} · ${p.tier} ${p.rating}${okStamp !== "无编" ? " · 限编" + okStamp : ""}${okVariant !== "base" ? " · " + okVariant : ""}${(snap.star || 0) > 0 ? " · ★" + snap.star : ""}${g ? " · 🏅" + g.label : ""}<br>静态身价 ${S.staticValue(inst)}${sellerName ? ` · 卖家 ${esc(sellerName)}` : ""}`;
   return `<div class="mktitem">${cardHTML(inst)}<div class="minf">${meta}</div><div class="mprice">💎 ${price}</div></div>`;
 }
 async function renderExchange(force) {
@@ -4049,7 +4163,7 @@ async function renderExchange(force) {
       mktCache = { at: Date.now(), tab: "mine" };
     }
     drawMktBody();
-  } catch (e) { body.innerHTML = `<p class="hint">交易所加载失败：${errMsg(e)}</p><div class="row" style="justify-content:center"><button class="btn" id="mktRetry">加载失败，点此重试</button></div>`; }
+  } catch (e) { body.innerHTML = `<p class="hint">交易所加载失败：${esc(errMsg(e))}</p><div class="row" style="justify-content:center"><button class="btn" id="mktRetry">加载失败，点此重试</button></div>`; }
   mktBusy = false;
   const mktRt = $("#mktRetry"); if (mktRt) mktRt.onclick = () => renderExchange(true);
 }
@@ -4087,35 +4201,44 @@ function drawMktBody() {
   body.querySelectorAll("[data-mktcancel]").forEach(b => b.onclick = () => { const it = mktItems.find(x => String(x.id) === b.dataset.mktcancel); if (it) mktCancel(it); });
   body.querySelectorAll("[data-mktclaim]").forEach(b => b.onclick = () => { const it = mktItems.find(x => String(x.id) === b.dataset.mktclaim); if (it) mktClaim(it); });
 }
+let mktBuyBusy = false; // 审计修复（货币 D）：买入并发闸——旧版入场查余额、await 后才扣款，两个不同挂单并发买入可把钻石扣成负数
 async function mktBuy(it) {
+  if (mktBuyBusy) { toast("上一笔买入还在处理中，请稍候"); return; }
   const nm = it.snap.name || (E.playerById(it.snap.pid) || {}).name || "这张卡";
   if (state.dia < it.price) { toast(`钻石不足：这张要 ${it.price} 钻，你有 ${state.dia} 钻`); return; }
   if (!confirm(`花 ${it.price} 钻买下「${nm}」？买入附 1 次转卖额度，持满 3 天可挂牌转卖，转卖成交销毁 10%。买入后直接入你的卡库。`)) return;
+  mktBuyBusy = true;
   try {
     const r = await KBPlatform.lbRequest("/market/buy", { listingId: it.id });
-    const snap = (r && r.snap) || it.snap;
-    const pay = r && typeof r.payDia === "number" ? r.payDia : it.price;
+    if (!r || !r.snap || typeof r.payDia !== "number") throw new Error("服务端返回异常，已取消扣款，请重试"); // 审计修复 F4：形状不全绝不本地兜底扣款/发卡
+    const snap = r.snap;
+    const pay = r.payDia;
     state.dia -= pay;
     const inst = S.snapToInstance(state, snap, "market");
     if (inst) { inst.bornDay = D; inst.resell = snap && snap.resale ? 0 : 1; inst.buyDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); } // 转卖单买入→额度归 0 永久绑定；普通单买入→附 1 次额度
     mktCache = null; persist(); render();
     toast(`买入成功：${nm} 已入卡库（-${pay} 钻）`);
   } catch (e) { toast("买入失败：" + errMsg(e)); mktCache = null; renderExchange(true); }
+  finally { mktBuyBusy = false; }
 }
 async function mktBuyOfficial(it) {
+  if (mktBuyBusy) { toast("上一笔买入还在处理中，请稍候"); return; }
   const nm = it.snap.name || (E.playerById(it.snap.pid) || {}).name || "这张卡";
   if (state.dia < it.price) { toast(`钻石不足：这张要 ${it.price} 钻，你有 ${state.dia} 钻`); return; }
   if (!confirm(`花 ${it.price} 钻买下「${nm}」？这是官方补货，钻石由系统回收（不进入任何玩家账户）。买入附 1 次转卖额度，持满 3 天可挂牌转卖，转卖成交销毁 10%。买入后直接入你的卡库。`)) return;
+  mktBuyBusy = true;
   try {
     const r = await KBPlatform.lbRequest("/market/buy-official", { idx: it.idx });
-    const snap = (r && r.snap) || it.snap;
-    const pay = r && typeof r.payDia === "number" ? r.payDia : it.price;
+    if (!r || !r.snap || typeof r.payDia !== "number") throw new Error("服务端返回异常，已取消扣款，请重试"); // 审计修复 F4：同 mktBuy
+    const snap = r.snap;
+    const pay = r.payDia;
     state.dia -= pay;
     const inst = S.snapToInstance(state, snap, "market"); // src=market：与玩家买入同规，附 1 次转卖额度
     if (inst) { inst.bornDay = D; inst.resell = 1; inst.buyDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); }
     mktCache = null; persist(); render();
     toast(`买入成功：${nm} 已入卡库（-${pay} 钻，官方补货）`);
   } catch (e) { toast("买入失败：" + errMsg(e)); mktCache = null; renderExchange(true); }
+  finally { mktBuyBusy = false; }
 }
 async function mktCancel(it) {
   if (!confirm("取消这张挂牌？卡会解冻回到你的卡库可用状态。")) return;
@@ -4133,7 +4256,8 @@ async function mktClaim(it) {
   try {
     const r = await KBPlatform.lbRequest("/market/claim", { listingId: it.id });
     const isResale = !!(it.snap && it.snap.resale);
-    const dia = r && typeof r.dia === "number" ? r.dia : Math.floor(it.price * (isResale ? 0.90 : 0.95));
+    if (!r || typeof r.dia !== "number") throw new Error("服务端返回异常，未发钻，请重试"); // 审计修复 F4：旧版响应缺 dia 时本地按价自算发钻，形状漂移即成错账
+    const dia = r.dia;
     if (!(state.claimedSales || {})[it.id]) { state.dia += dia; state.claimedSales[it.id] = 1; }
     const mine = (state.myListings || {})[it.id];
     if (mine) { purgeCard(mine.uid); delete state.myListings[it.id]; } // 售出的卡正式离仓
@@ -4153,12 +4277,15 @@ function openListModal(uid) {
 }
 $("#listCancel").onclick = () => { $("#listModal").classList.remove("on"); listTargetUid = null; };
 $("#listModal").addEventListener("click", e => { if (e.target.id === "listModal") { $("#listModal").classList.remove("on"); listTargetUid = null; } });
+let listBusy = false; // 状态机审计修复：挂牌重入闸——c.listed 在 await 成功后才落账，并发双调可同卡双挂单（一张成孤儿单仍可成交领钻）
 $("#listConfirm").onclick = async () => {
+  if (listBusy) { toast("正在挂牌中，请稍候"); return; }
   const c = state.cards.find(x => x.uid === listTargetUid); if (!c) { $("#listModal").classList.remove("on"); return; }
   const price = Math.floor(Number($("#listPrice").value));
   if (!Number.isFinite(price) || price < 10 || price > 100000) { toast("定价要在 10–100000 钻之间"); return; }
   const chk = S.marketEligible(state, c); if (!chk.ok) { toast(chk.reason); return; }
   $("#listModal").classList.remove("on");
+  listBusy = true;
   try {
     const r = await KBPlatform.lbRequest("/market/list", { snap: S.cardSnap(c), price });
     const lid = r && (r.listingId !== undefined ? r.listingId : r.id);
@@ -4172,6 +4299,7 @@ $("#listConfirm").onclick = async () => {
     if (detailPid != null) showCardDetail(detailPid);
     toast("挂牌成功！去交易所「我的挂单」可以管理");
   } catch (e) { toast("挂牌失败：" + errMsg(e)); }
+  finally { listBusy = false; }
 };
 $("#mktTabMarket").onclick = () => { if (mktTab !== "market") { mktTab = "market"; mktCache = null; renderExchange(true); } };
 $("#mktTabMine").onclick = () => { if (mktTab !== "mine") { mktTab = "mine"; mktCache = null; renderExchange(true); } };
@@ -4198,7 +4326,7 @@ async function arenaEnter(pool) {
   try {
     const r = await KBPlatform.lbRequest("/arena/enter", body);
     arenaSt().entered[pool] = Date.now() + 24 * 3600 * 1000;
-    if (r && typeof r.points === "number") arenaSt().points = r.points;
+    // 审计修复 F2：服务端 /arena/enter 不返回 points（生产形状 {ok,pool,power,expires}），旧版读 r.points 是死读，已删除防误改
     persist(); render();
     toast(`${pool} 池参战成功：当前阵容已托管 24 小时`);
   } catch (e) { toast("参战失败：" + errMsg(e)); }
@@ -4219,12 +4347,15 @@ function oppFromTarget(t) {
   }
   return { name: t.name || "挑战者", picks, power: t.power || 0, formation: (t.snap && t.snap.formation) || "4-4-2", tactic: (t.snap && t.snap.tactic) || "全力进攻" };
 }
+let arenaFightBusy = false; // 状态机审计修复：开战重入闸——目标在上报成功后才清，上报窗口内重绑按钮可再点、同一目标 report 两次双扣入场费双落账
 async function arenaFight(pool) {
+  if (arenaFightBusy) { toast("上一场还在上报中，请稍候"); return; }
   const t = arenaTargets[pool]; if (!t) return;
   if (!arenaEntered(pool)) { toast("先参战再挑战（参战后阵容才会被托管）"); return; }
   if (pool === "B" && state.coins < S.ARENA.ENTRY_B) { toast(`金币不足：B 池入场需 ${S.ARENA.ENTRY_B} 金`); return; }
   const r = S.playArenaMatch(state, oppFromTarget(t));
   if (!r.ok) { toast(r.reason); return; }
+  arenaFightBusy = true;
   lastArenaMatch = Object.assign({}, r, { pool });
   render(); // 先把赛果亮出来，再走上报
   try {
@@ -4240,12 +4371,13 @@ async function arenaFight(pool) {
     persist(); render();
     toast("上报失败（入场费已退回）：" + errMsg(e));
   }
+  finally { arenaFightBusy = false; }
 }
 async function arenaSpend() {
   if (arenaSt().points < S.ARENA.PACK_COST) { toast(`积分不足：专属包要 ${S.ARENA.PACK_COST} 分，你有 ${arenaSt().points} 分`); return; }
   try {
     const r = await KBPlatform.lbRequest("/arena/spend", { points: S.ARENA.PACK_COST, item: "arena_pack" });
-    if (r && typeof r.points === "number") arenaSt().points = r.points; else arenaSt().points -= S.ARENA.PACK_COST;
+    if (r && typeof r.balance === "number") arenaSt().points = r.balance; else arenaSt().points = Math.max(0, arenaSt().points - S.ARENA.PACK_COST); // 审计修复 F1：服务端回的是 balance（契约断言锁死回参无 points 键，见 test_audit_loot/test_audit_fixes），旧版读 points 恒走自减支路、与服务端余额分叉；回落自减夹紧不为负
     const ownedBefore = new Set(state.cards.map(c => c.pid));
     const res = S.openArenaPack(state);
     for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
@@ -4260,6 +4392,22 @@ async function arenaPullInbox(force) {
   if (!force && inboxCache && Date.now() - inboxCache.at < 15000) return;
   inboxBusy = true;
   try {
+    // 审计修复 F5：先补发上次没送达的 ack——旧版处理时先落本地 claimedLogs 再发即忘 ack，失败永不重试，
+    // 服务端行长期占未读窗口（limit 50）挤掉待领奖励。现「本地已处理」与「服务端已确认」分离，pendingAcks 每次拉取先 flush。
+    const aSt = arenaSt();
+    if (Array.isArray(aSt.pendingAcks) && aSt.pendingAcks.length) {
+      const still = [];
+      for (const pid of aSt.pendingAcks) {
+        try { await KBPlatform.lbRequest("/arena/claim", { logId: pid }); } catch (e) { still.push(pid); }
+      }
+      aSt.pendingAcks = still;
+    }
+    const ackLog = id => { // 本地已处理后 ack 服务端；失败入 pendingAcks 下次重试（本地 claimedLogs 已置位，重试不会重复写信/删卡）
+      KBPlatform.lbRequest("/arena/claim", { logId: id }).catch(() => {
+        const a2 = arenaSt(); a2.pendingAcks = Array.isArray(a2.pendingAcks) ? a2.pendingAcks : [];
+        if (!a2.pendingAcks.includes(id)) { a2.pendingAcks.push(id); persist(); }
+      });
+    };
     const data = await KBPlatform.lbRequest("/arena/inbox");
     // 服务端生产形状：data = { entries: [...] }（旧 logs/items 读法恒为空，曾致战报/奖励全链路静默失效）；保留 logs/items 兜底
     const logs = (data && (data.entries || data.logs || data.items)) || [];
@@ -4272,7 +4420,7 @@ async function arenaPullInbox(force) {
       const p = log.payload || {};
       if (log.kind === "points") { // 积分在 report 时已服务端落账：取最新一条的 balance 同步本地显示，并 claim 清出未读窗口，防挤掉待领奖励
         if (!pointsSynced && typeof p.balance === "number") { arenaSt().points = p.balance; pointsSynced = true; }
-        if (!arenaSt().claimedLogs[id]) { arenaSt().claimedLogs[id] = 1; changed = true; KBPlatform.lbRequest("/arena/claim", { logId: id }).catch(() => {}); }
+        if (!arenaSt().claimedLogs[id]) { arenaSt().claimedLogs[id] = 1; changed = true; ackLog(id); }
         continue;
       }
       if (log.kind !== "report") continue;
@@ -4282,8 +4430,12 @@ async function arenaPullInbox(force) {
         if (p.loot && p.loot.uid !== undefined && p.loot.uid !== null) {
           const c = state.cards.find(x => x.uid === p.loot.uid);
           const nm = p.loot.name || (c ? c.name : "一张卡");
-          if (c) purgeCard(c.uid);
-          mailPush("⚔️ 挑战战报：可夺卡被夺走", `你 C 池的托管阵容被 ${who} 击败，可夺池中的「${nm}」已被夺走。换套更强的阵容、调整可夺池再战——被夺的都是你预先亮出的重复卡，核心卡一张没动。`);
+          if (c && c.listed) { // 审计修复：卡已挂牌成交快照在服务端——不删本地卡（防「卡被夺走+挂单还活着」一卡三方），只写信说明
+            mailPush("⚔️ 挑战战报：可夺卡被夺走（挂牌中）", `你 C 池的托管阵容被 ${who} 击败，对方本可夺走「${nm}」，但这张卡正在交易所挂牌，已按挂牌优先保留在你的卡库。`);
+          } else {
+            if (c) purgeCard(c.uid);
+            mailPush("⚔️ 挑战战报：可夺卡被夺走", `你 C 池的托管阵容被 ${who} 击败，可夺池中的「${nm}」已被夺走。换套更强的阵容、调整可夺池再战——被夺的都是你预先亮出的重复卡，核心卡一张没动。`);
+          }
         } else {
           const winDef = !!p.win;
           const pd = typeof p.pointsDelta === "number" ? p.pointsDelta : (winDef ? 6 : -4);
@@ -4292,7 +4444,7 @@ async function arenaPullInbox(force) {
       }
       // role=atk 是自己进攻的回执：赛果已当场展示，不写信，只 claim ack 清出窗口
       arenaSt().claimedLogs[id] = 1; changed = true;
-      KBPlatform.lbRequest("/arena/claim", { logId: id }).catch(() => {});
+      ackLog(id);
     }
     if (changed) { updateMailBadge(); persist(); }
   } catch (e) { /* inbox 拉取失败静默，下次进页再试 */ }
@@ -4332,8 +4484,8 @@ function renderArena() {
     if (pool === "C") html += `<button class="btn ghost" id="lootPickBtn">🎯 可夺池（已选 ${a.lootUids.length} 张）</button>`;
     html += `<button class="btn ghost" data-arena-find="${pool}" ${arenaEntered(pool) ? "" : "disabled"}>找对手</button></div>`;
     if (t) {
-      const av = t.avatar ? `<img class="lb-av" src="${t.avatar}" alt="">` : `<span class="lb-avf">${(t.name || "?").slice(0, 1)}</span>`;
-      html += `<div class="arena-vs">${av}<div style="flex:1"><b>${t.name || "挑战者"}</b> · 托管战力 <b>${t.power || "?"}</b><div class="hint">${(t.snap && t.snap.formation) || "4-4-2"} · ${(t.snap && t.snap.tactic) || "全力进攻"}</div></div><button class="btn" data-arena-fight="${pool}">⚔️ 开战${pool === "B" ? `（${S.ARENA.ENTRY_B} 金）` : ""}</button><button class="btn ghost" data-arena-find="${pool}">换一个</button></div>`;
+      const av = avImg(t.avatar, t.name);
+      html += `<div class="arena-vs">${av}<div style="flex:1"><b>${esc(t.name || "挑战者")}</b> · 托管战力 <b>${t.power || "?"}</b><div class="hint">${esc((t.snap && t.snap.formation) || "4-4-2")} · ${esc((t.snap && t.snap.tactic) || "全力进攻")}</div></div><button class="btn" data-arena-fight="${pool}">⚔️ 开战${pool === "B" ? `（${S.ARENA.ENTRY_B} 金）` : ""}</button><button class="btn ghost" data-arena-find="${pool}">换一个</button></div>`;
     }
     return html;
   };
@@ -4342,7 +4494,7 @@ function renderArena() {
   if (claimable.length) {
     inboxHtml = `<h2>🎁 待领奖励</h2>` + claimable.map(l => {
       const p = l.payload || {};
-      const label = l.kind === "win_gold" ? `胜场金 +${typeof p.gold === "number" ? p.gold : (typeof p.coins === "number" ? p.coins : S.ARENA.WIN_GOLD)} 金币` : `战利品：${(p.snap && p.snap.name) || (p.card && p.card.name) || "一张卡"}`;
+      const label = l.kind === "win_gold" ? `胜场金 +${typeof p.gold === "number" ? p.gold : (typeof p.coins === "number" ? p.coins : S.ARENA.WIN_GOLD)} 金币` : `战利品：${esc((p.snap && p.snap.name) || (p.card && p.card.name) || "一张卡")}`;
       return `<div class="lb-row"><span style="flex:1">${label}</span><button class="btn" data-arena-claim="${l.id !== undefined ? l.id : l.logId}">领取</button></div>`;
     }).join("");
   }
@@ -4360,7 +4512,7 @@ function renderArena() {
   const resEl = $("#arenaResult");
   if (lastArenaMatch) {
     const m = lastArenaMatch;
-    resEl.innerHTML = `<h2>${m.pool} 池战报</h2><p><b>${m.won ? "🏆 胜利" : "惜败"} ${m.myWins}:${m.opWins}</b>（半场 ${m.htMy}:${m.htOp}）vs ${m.oppName}（对手战力 ${m.oppPower} · ${m.oppFormation} · 战术 ${m.oppTactic}${m.adj > 0 ? " · 我方克制 +" + m.adj : m.adj < 0 ? " · 被克制 " + m.adj : ""}）· 我的战力 ${m.myPower}</p>` +
+    resEl.innerHTML = `<h2>${m.pool} 池战报</h2><p><b>${m.won ? "🏆 胜利" : "惜败"} ${m.myWins}:${m.opWins}</b>（半场 ${m.htMy}:${m.htOp}）vs ${esc(m.oppName || "")}（对手战力 ${m.oppPower} · ${esc(m.oppFormation || "")} · 战术 ${esc(m.oppTactic || "")}${m.adj > 0 ? " · 我方克制 +" + m.adj : m.adj < 0 ? " · 被克制 " + m.adj : ""}）· 我的战力 ${m.myPower}</p>` +
       m.lines.map(l => `<p class="hint">${l.minute}' ${l.pos}：${l.myName} ${l.myRating}${l.captain ? "⭐" : ""} ${l.win ? "＞" : "＜"} ${l.opName} ${l.opRating} ${l.goalMark ? "⚽ 进球！" : l.goalMarkOpp ? "⚽ 被进球" : l.win ? "✅" : "❌"}</p>`).join("");
   } else resEl.innerHTML = "";
 }
@@ -4454,9 +4606,32 @@ function applyAdReward(kind, uid, prot) {
   return null;
 }
 const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia30: "钻石广告 +30 钻", league: "联赛场次 +10", urdraw: "钻石包体验抽已出卡（助力卡，图鉴照常点亮）", redraw: "开包续抽已出卡", makeup: "补签成功", heat: "炉温 +1（满 3 下次合成免费）", grade: "评级完成" };
+// 会话内复核（双生子同步，2026-11-03）：旧版 recoverPending 只在开机调一次，被保留的 PENDING
+// 在会话内无法自愈——服务端余额稍后到账也得等冷启动才补发，且期间每次看广告都被 pendingKept 拦。
+// 现把开机补发逻辑提成共用结算链：开机与每次拉起广告前都先跑一遍，口径与开机完全一致
+// （余额差量判定、核对落定才清标记、grant 按 runId 幂等，绝不重复发奖）。
+// 在途守卫：开机补发与手动看广告可能并发进此链，同一笔核对只跑一份，后来者等同一 promise。
+let adSettleInFlight = null;
+function settleOldPending() {
+  if (adSettleInFlight) return adSettleInFlight;
+  adSettleInFlight = (async () => {
+    try {
+      const rec = await KBAds.recoverPending(state);
+      if (!rec) return false;
+      const purpose = rec.purpose || rec.kind;
+      let dynMsg = null;
+      const granted = KBAds.grant(state, rec.runId, purpose, () => { dynMsg = applyAdReward(purpose, rec.uid, rec.prot); });
+      if (granted) { render(); toast(purpose === "grade" && dynMsg ? dynMsg : "上次广告奖励已补发"); }
+      if (granted && purpose === "dia30") maybeDiaReturn(); // 补发到账同样回跳目标包（回跳上下文随存档落盘，杀进程/重载不丢）
+      return granted;
+    } finally { adSettleInFlight = null; }
+  })();
+  return adSettleInFlight;
+}
 async function adWatch(kind, opts) {
   if (kind === "grade") gradeTargetUid = opts && opts.uid !== undefined ? opts.uid : null;
   if (kind === "makeup") { const mk = KBMeta.canMakeup(state, todayStr(), yesterdayStr(), dayBeforeYesterdayStr()); if (!mk.ok) { toast(mk.reason || "现在不需要补签"); return; } } // 月上限在看广告前先拦，免得看完才发现不算数
+  await settleOldPending(); // 拉起新广告前先结算旧账：旧 PENDING 已落定 → 差量补发恰一次，新广告随即正常拉起；未落定（含 base=null 待核）→ 保留标记，下方 watch 的 pendingKept 拦截与开机口径一致
   const res = await KBAds.watch(state, kind, opts);
   if (!res.ok) { persist(); toast(res.reason); renderMeta(); return; }
   let dynMsg = null;
@@ -4507,14 +4682,7 @@ $("#probClose").onclick = () => $("#probModal").classList.remove("on");
 $("#probModal").addEventListener("click", e => { if (e.target.id === "probModal") $("#probModal").classList.remove("on"); });
 // 开机：广告 PENDING 凭服务端余额差量补发（仅容器内，v5.18 口径；核对不上保留标记下次再核）
 // 第二批：按 PENDING.purpose 分发用途（dia 小包/dia30/grade 三者共用同一平台任务；grade 带 uid 补评目标卡）
-KBAds.recoverPending(state).then(rec => {
-  if (!rec) return;
-  const purpose = rec.purpose || rec.kind;
-  let dynMsg = null;
-  const granted = KBAds.grant(state, rec.runId, purpose, () => { dynMsg = applyAdReward(purpose, rec.uid, rec.prot); });
-  if (granted) { render(); toast(purpose === "grade" && dynMsg ? dynMsg : "上次广告奖励已补发"); }
-  if (granted && purpose === "dia30") maybeDiaReturn(); // 补发到账同样回跳目标包（回跳上下文随存档落盘，杀进程/重载不丢）
-});
+settleOldPending(); // 开机走与看广告前同一条结算链（settleOldPending，见 adWatch 上方）
 // 开机：云存档同步（2026-11-02 大修复）+ 昵称 + 安全距 + 桌面按钮
 // 采用规则：本地开机时无档 → 云端有档即采用；本地有档 → 仅云端 savedAt 更新且本局还没动过进度时采用。
 KBPlatform.applySafeTop();
@@ -4524,14 +4692,23 @@ KBPlatform.setCloudErrorHandler(msg => {
 const bootMeaningful = meaningfulJSON();
 (async () => {
   const slot = KBSave.getMeta().active;
-  const cloud = await KBPlatform.fetchCloud(slot, 4000);
-  if (cloud && (!bootHadSave || ((cloud.savedAt || 0) > bootLoadedSavedAt && meaningfulJSON() === bootMeaningful))) {
+  let cloud = await KBPlatform.fetchCloud(slot, 4000);
+  // 审计修复 F-6/F-9：首读失败先重试再决策（旧版失败与「云端无档」同形）；采用云档两条分支都要求本局未动过进度
+  // （旧版无本地档分支缺进度守卫，拉取窗口内领礼包/开包的进度会被云档静默顶掉）。
+  for (const waitMs of [3000, 8000]) {
+    if (!KBPlatform.cloudFetchFailed(slot)) break;
+    await new Promise(r => setTimeout(r, waitMs));
+    cloud = await KBPlatform.fetchCloud(slot, 4000);
+  }
+  const fetchFailed = KBPlatform.cloudFetchFailed(slot);
+  if (cloud && (cloud.savedAt || 0) > bootLoadedSavedAt && meaningfulJSON() === bootMeaningful) {
     try { localStorage.setItem(KBSave.slotKey(slot), JSON.stringify(cloud)); } catch (e) {}
-    const loaded = KBSave.load() || (cloud.version === 3 ? cloud : null); // 本机存储写不进时直接用云端对象
+    const loaded = adoptLoaded(slot, cloud);
     if (loaded) { state = loaded; state.dayIndex = D; ensurePeriods(); S.accrueIdle(state); if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D); lastPersistJSON = stateJSON(); render(); renderSlots(); toast("已同步云端存档"); }
   }
-  cloudGateOpen = true;
-  if (mirrorWanted) { mirrorWanted = false; KBPlatform.mirrorCloudSave(state, KBSave.getMeta().active); }
+  // 审计修复 F-6：最终读取仍失败 → 本会话不开镜像闸（本地照常玩，防把新档当「云端无档」镜像盖掉真云档），下次启动再试
+  cloudGateOpen = !fetchFailed;
+  if (mirrorWanted) { mirrorWanted = false; if (cloudGateOpen) KBPlatform.mirrorCloudSave(state, KBSave.getMeta().active); }
   if (!KBSave.storageOK()) setTimeout(() => toast(KBPlatform.inContainer() ? "本机存档不可用，已启用云存档，进度不会丢" : "本机存档不可用，请用卡店页的存档码定期备份"), 1800);
   // 开始页档位云探：本地无档的档位若云端有档，卡上标注“云端存档·进入即恢复”（顺序小并发）
   for (const n of [1, 2, 3]) {
@@ -4616,7 +4793,7 @@ $("#importBtn").onclick = () => {
   if (!confirm("导入将覆盖当前存档，确定？")) return;
   r.state.savedAt = Date.now(); // 导入视为最新意图，避免被云端旧档按 savedAt 盖回
   try { localStorage.setItem(KBSave.slotKey(KBSave.getMeta().active), JSON.stringify(r.state)); } catch (e) {}
-  state = KBSave.load() || r.state; // 经存档层加载以便 v2 自动迁移
+  state = adoptLoaded(KBSave.getMeta().active, r.state); // 经存档层加载以便 v2 自动迁移；写回失败/回读更旧时用规范化导入对象（审计修复 F-6）
   lastPersistJSON = ""; // 强制下一轮 persist 落盘+上云
   state.dayIndex = D;
   lastDraw = []; lastMatch = null;
@@ -4659,7 +4836,7 @@ function renderMail() {
     const giftHtml = m.gift ? (m.claimed
       ? `<div class="giftline">🎁 附件：钻石包 ×1 + ${m.gift.dia} 钻 · 已领取 ✓</div>`
       : `<div class="giftline">🎁 附件：钻石包 ×1 + ${m.gift.dia} 钻 <button class="btn" data-mailgift="${m.id}">领取附件</button></div>`) : "";
-    return `<div class="mailitem ${m.read ? "" : "unread"}" data-mail="${m.id}"><div class="mhead"><b>${m.title}</b><span class="hint">${m.day || ""}</span>${m.read ? "" : '<span class="reddot inl"></span>'}</div><div class="mbody" style="display:none">${m.body}${giftHtml}</div></div>`;
+    return `<div class="mailitem ${m.read ? "" : "unread"}" data-mail="${m.id}"><div class="mhead"><b>${esc(m.title)}</b><span class="hint">${m.day || ""}</span>${m.read ? "" : '<span class="reddot inl"></span>'}</div><div class="mbody" style="display:none">${esc(m.body)}${giftHtml}</div></div>`;
   }).join("") : '<p class="hint">邮箱是空的。</p>';
   document.querySelectorAll("[data-mail]").forEach(el => el.onclick = () => {
     const m = (state.mail || []).find(x => String(x.id) === el.dataset.mail); if (!m) return;
@@ -4731,6 +4908,14 @@ $("#moreModal").addEventListener("click", e => { if (e.target.id === "moreModal"
 // ----- 碎片兑换弹窗（第 8 项 UI）：图鉴页入口，仅列未点亮的稀有/史诗 ----------
 function renderFrag() {
   $("#fragBal").textContent = state.frag || 0;
+  // UI 全扫修复：碎片不足时按钮置灰无解释、玩家（张驰实测）会以为坏了——在列表前补一行明示（只插一次）
+  const flEl = $("#fragList");
+  if (flEl && !$("#fragHintLine")) {
+    const hint = document.createElement("p");
+    hint.className = "hint"; hint.id = "fragHintLine";
+    hint.textContent = "碎片不够时兑换按钮会置灰：分解重复卡可得碎片（普通 1 / 稀有 3 / 史诗 10），图鉴页有「批量分解」。";
+    flEl.parentElement.insertBefore(hint, flEl);
+  }
   const owned = new Set(state.cards.map(c => c.pid));
   $("#fragList").innerHTML = ["稀有", "史诗"].map(tier => {
     const pool = PLAYERS.filter(p => p.tier === tier && !E.isEraPlayer(p));
@@ -4855,7 +5040,7 @@ async function enterSlot(n) {
     const cloud = await KBPlatform.fetchCloud(n, 2500);
     if (cloud && (!st || (cloud.savedAt || 0) > (st.savedAt || 0))) {
       try { localStorage.setItem(KBSave.slotKey(n), JSON.stringify(cloud)); } catch (e) {}
-      const re = KBSave.load(n) || (cloud.version === 3 ? cloud : null); // 本机存储写不进时直接用云端对象（云档均为已规范化的 v3 内存态）
+      const re = adoptLoaded(n, cloud); // 审计修复 F-6：同开机口径（回读不新于云端时用规范化云档，不静默退旧档）
       if (re) { st = re; setTimeout(() => toast("已从云端恢复该卡馆存档"), 350); }
     }
   }
@@ -4896,6 +5081,7 @@ $("#compClaimBtn").onclick = () => {
 };
 function showGiftIfPending() { if (state.giftPending) { $("#giftStage1").style.display = ""; $("#giftStage2").style.display = "none"; $("#giftModal").classList.add("show"); } }
 $("#giftClaimBtn").onclick = () => {
+  if (!state.giftPending) { $("#giftModal").classList.remove("show"); return; } // 审计修复：本体补校验，防函数级重调重 roll 首发阵容
   state.coins = 4000; state.dia = 80; state.cards = E.starterEleven(state); E.settleCards(state, state.cards); state.giftPending = false;
   S.migrateSlots(state); S.autoLineup(state);
   $("#giftStage1").style.display = "none"; $("#giftStage2").style.display = "";
@@ -4913,8 +5099,8 @@ if (typeof KBArt !== "undefined") {
 $("#changelogBox").innerHTML = CHANGELOG.slice(0, 2).map(c => `<div class="cl-v">${c.v}</div><ul>${c.items.map(i => `<li>${i}</li>`).join("")}</ul>`).join(""); // 公告只展示最近两版（2026-11-03 主人嫌太长）
 renderSlots();
 ensureMail(); persist(); // 开机补邮箱欢迎信/版本更新信（MAIL_VER 一版一封）并落盘
+if (KBPlatform.flushWipePending) KBPlatform.flushWipePending().then(w => { if (w) lbClearLocalCache(); }).catch(() => {}); // 开机重试删档联动清理（上次删档时离线/失败留下的 PENDING）——审计修复：须先于 inbox 落地，防待清的旧防守日志按 uid 误删新档的卡（uid 低位重排）
 arenaPullInbox(true); // 开机自动拉一次挑战收件箱：防守战报落邮箱、C 池被夺按 uid 删卡（无容器/失败时内部静默），与挑战页「登录时自动处理」文案对齐
-if (KBPlatform.flushWipePending) KBPlatform.flushWipePending().then(w => { if (w) lbClearLocalCache(); }).catch(() => {}); // 开机重试删档联动清理（上次删档时离线/失败留下的 PENDING）
 setTimeout(() => { $("#bootOv").classList.add("done"); $("#startOv").classList.add("show"); }, 1000);
 
 </script>
