@@ -339,6 +339,41 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 .lb-sub{font-size:11px;opacity:.65}
 .lb-score{font-weight:700;flex:none}
 .lb-top1 .lb-rank{color:#ffd94d}.lb-top2 .lb-rank{color:#dfe6ee}.lb-top3 .lb-rank{color:#e8a06a}
+
+/* ===== 竞品抄作业批（2026-11-03）：签到日历/成就轨迹/更多面板/邮箱/碎片/新手引导 ===== */
+#moreBtn { position: relative; }
+.signcal { display: flex; gap: 6px; margin: 4px 0 10px; }
+.scell { flex: 1; text-align: center; background: #1d2129; border: 1px solid #3a4150; border-radius: 10px; padding: 7px 2px; font-size: 12px; min-width: 0; }
+.scell .sd { color: #8b95a3; font-size: 11px; }
+.scell .sr { font-weight: 800; color: #ffd257; margin: 2px 0; font-size: 12.5px; white-space: nowrap; }
+.scell .ss { font-size: 11px; color: #8b95a3; }
+.scell.got { border-color: #4ade80; } .scell.got .ss { color: #4ade80; }
+.scell.today { border-color: #ffb02e; box-shadow: 0 0 0 1px #ffb02e, 0 4px 14px rgba(255,160,40,.3); } .scell.today .ss { color: #ffb02e; font-weight: 700; }
+.scell.lock { opacity: .55; }
+.achtrack { flex-basis: 100%; font-weight: 800; font-size: 14px; margin: 10px 0 2px; color: #ffd257; }
+.reddot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 6px rgba(255,77,94,.8); }
+.reddot.inl { position: static; display: inline-block; margin-left: 6px; vertical-align: middle; }
+#moreModal, #mailModal, #fragModal, #textModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 65; padding: 18px; }
+#moreModal.on, #mailModal.on, #fragModal.on, #textModal.on { display: flex; }
+#moreModal .detailbox, #mailModal .detailbox, #fragModal .detailbox, #textModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
+.mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.mcell { position: relative; background: #1d2129; border: 1px solid #3a4150; border-radius: 12px; color: #e8ebef; padding: 14px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
+.mcell .mic { font-size: 22px; }
+.mcell .msub { font-size: 11px; color: #ff8a95; }
+.mcell .reddot { top: 6px; right: 6px; }
+.mailitem { border: 1px solid #3a4150; border-radius: 10px; padding: 9px 11px; margin-top: 8px; cursor: pointer; background: #1d2129; }
+.mailitem.unread { border-color: #ffb02e; }
+.mailitem .mhead { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.mailitem .mhead .hint { margin-left: auto; }
+.mailitem .mbody { margin-top: 7px; font-size: 13px; line-height: 1.7; color: #cfd6de; }
+#fragModal .drow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 13.5px; }
+#fragModal .frack { font-weight: 800; font-size: 14px; margin: 10px 0 2px; color: #ffd257; }
+#guideOv { position: fixed; inset: 0; z-index: 320; display: none; }
+#guideOv.on { display: block; }
+#guideHL { position: absolute; border: 2px solid #ffd257; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(4,5,8,.78); transition: all .25s; pointer-events: none; }
+#guideCard { position: absolute; background: linear-gradient(180deg, #2b3242, #20262f); border: 1px solid rgba(255,210,87,.55); border-radius: 14px; padding: 14px; box-shadow: 0 18px 44px rgba(0,0,0,.55); }
+#guideCard p { font-size: 14.5px; line-height: 1.65; }
+#guideCard .gstep { color: #8b95a3; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -346,7 +381,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <header>
   <h1>足坛卡王 <small>概率全公示 · 无充值</small> <span id="titleTag" class="titletag"></span> <span id="nickTag" class="hint"></span></h1>
   <div class="wallet"><button id="homeBtn" title="开始页">🏠</button>
-    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><span>🪙 <b id="coins">0</b> 金币</span><span class="d" id="diaPill" title="钻石用于开钻石包，点我直达" style="cursor:pointer">💎 <b id="dia">0</b> 钻石</span></div>
+    <button id="muteBtn" class="mutebtn" title="音乐/音效开关">🔊</button><button id="moreBtn" class="mutebtn" title="更多功能">⋯<span id="moreDot" class="reddot" style="display:none"></span></button><span>🪙 <b id="coins">0</b> 金币</span><span class="d" id="diaPill" title="钻石用于开钻石包，点我直达" style="cursor:pointer">💎 <b id="dia">0</b> 钻石</span></div>
 </header>
 <div class="pitybar"><div id="pityFill"></div><span id="pityText"></span></div>
 <nav>
@@ -373,12 +408,13 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到 300 金。<br>钻石：用来开钻石包（史诗 55% · 传说 35% · 传世 10%）与豪华钻石包（传说 55% · 传世 15% · 含时期卡惊喜槽），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +10 · 成就（金币+钻石）· 看广告（钻石广告 +30/次、每日 30 次）。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到日历（金币递增、第 3/6 天送高级包）。<br>钻石：用来开钻石包（史诗 55% · 传说 35% · 传世 10%）与豪华钻石包（传说 55% · 传世 15% · 含时期卡惊喜槽），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +50 · 成就（金币+钻石）· 看广告（钻石广告 +30/次、每日 30 次）。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
   <div id="commArea"></div>
   <h2>签到与任务</h2>
+  <div id="signCal" class="signcal"></div>
   <div class="row"><button class="btn" id="signBtn">每日签到</button><span id="adTotal" class="hint"></span></div>
   <div class="row" id="dailyTasks"></div>
   <div class="row"><button class="btn ghost" id="dailyClaim">领取每日任务奖励</button><button class="btn ghost" id="adDoubleBtn">广告双倍领取</button><button class="btn ghost" id="adDiaBtn">📺 钻石小包 +10 钻</button></div>
@@ -386,6 +422,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="row"><button class="btn ghost" id="weeklyClaim">领取每周任务奖励</button></div>
   <h2>成就</h2>
   <p class="hint" id="recordsLine"></p>
+  <p class="hint" id="achSummary"></p>
   <div id="achGrid" class="achgrid"></div>
   <h2>存档码（防丢档）</h2>
   <p class="hint">导出后请把存档码复制到安全的地方；换设备/清缓存后粘贴回来导入（含保底计数、委托与广告日限状态）。</p>
@@ -443,6 +480,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <section class="page" id="page-dex">
   <h2>图鉴 · 卡库（<span id="libCount">0</span> 张）</h2>
   <p id="dexInfo"></p>
+  <div class="row"><span>🧩 碎片 <b id="fragCount">0</b></span><button class="btn ghost" id="fragBtn">🧩 碎片兑换未点亮球员</button><span class="hint">重复的普通/稀有/史诗卡在卡片详情里分解换碎片（1/3/10）；稀有 15 · 史诗 60 指定兑换一张基础卡</span></div>
   <div class="row">
     <label>档位 <select id="fltTier"><option value="">全部</option><option>普通</option><option>稀有</option><option>史诗</option><option>传说</option><option>传世</option></select></label>
     <label>版本 <select id="fltVar"><option value="">全部</option><option value="base">普卡</option><option>银折</option><option>红折</option><option>签字</option><option>球衣</option></select></label>
@@ -516,6 +554,11 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
     <button class="btn" id="posterShare">分享给好友</button><button class="btn" id="posterClose">关闭</button></div></div></div>
 <div id="revealOv"><div class="rv-pos"></div><div class="rv-rating"></div><div class="rv-tier"></div><img class="rv-img" alt=""><div class="rv-name"></div><div class="rv-skip">点击任意处跳过</div></div>
+<div id="moreModal"><div class="detailbox"><h3>⚙️ 更多功能</h3><div id="moreGrid" class="mgrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="moreClose">关闭</button></div></div></div>
+<div id="mailModal"><div class="detailbox"><h3>✉️ 通知邮箱</h3><div id="mailList"></div><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn ghost" id="mailReadAll">全部已读</button><button class="btn ghost" id="mailClose">关闭</button></div></div></div>
+<div id="fragModal"><div class="detailbox"><h3>🧩 碎片兑换</h3><p class="hint">碎片余额 <b id="fragBal">0</b> · 只能兑换图鉴里还没点亮的球员，发出的是基础卡（无编 · 普卡 · 0 星 · 无评级）</p><div id="fragList"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="fragClose">关闭</button></div></div></div>
+<div id="textModal"><div class="detailbox"><h3 id="textTitle"></h3><p id="textBody" style="line-height:1.8;font-size:14px;margin-top:8px"></p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="textClose">关闭</button></div></div></div>
+<div id="guideOv"><div id="guideHL"></div><div id="guideCard"><span class="gstep" id="guideStep"></span><p id="guideText"></p><div class="row" style="margin-top:10px"><button class="btn" id="guideNext">知道了</button><button class="btn ghost" id="guideSkip">跳过引导</button></div></div></div>
 <div id="bootOv"><div class="boot-logo">足坛卡王</div><div class="boot-sub">开 包 当 卡 王</div><div class="boot-bar"><i></i></div><div class="boot-tip">正在打开卡店…</div></div>
 <div id="startOv">
   <div class="start-inner">
@@ -733,11 +776,11 @@ const KBEngine = (() => {
     const st = { version: 3, coins: 1500, dia: 40, cards: [], pity: 0, hjNoLegend: 0, draws: 0, uid: 1, freeDay: "", shopLv: 1, createdAt: Date.now(),
       display: [], lineup: { GK: null, DF: null, MF: null, WG: null, ST: null }, formation: "4-4-2", slots: null, captainUid: null, tactic: "全力进攻",
       division: 0, stars: 0, streak: 0, matchesLeft: 20, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null,
-      signTotal: 0, lastSignDay: "", daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
+      signTotal: 0, lastSignDay: "", signStreak: null, daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
       adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, adLocked: false, weekKey: "", weekPending: false, furnaceHeat: 0, gambleLuck: 0,
-      mats: { universal: 0 }, ad: { dia30: 0 } }; // 第二批：万能材料计数 + 钻石广告 30/日独立 bucket 镜像（主计数在 adDay.counts.dia30）
+      mats: { universal: 0 }, ad: { dia30: 0 }, frag: 0, mail: [], lastMailVer: "" }; // 第二批：万能材料计数 + 钻石广告 30/日独立 bucket 镜像（主计数在 adDay.counts.dia30）；竞品抄作业批：碎片余额 + 本地邮箱 + 邮箱版本标记
     st.cards = starterFive(st, rng);
     settleCards(st, st.cards);
     return st;
@@ -814,6 +857,10 @@ const KBSave = (() => {
     (st.cards || []).forEach(c => { if (c.grade === undefined) c.grade = null; if (c.gradeTries === undefined) c.gradeTries = 0; if (c.bmult === undefined) c.bmult = 1; });
     if (!st.formation) st.formation = "4-4-2"; // 全场阵型版字段补齐（2026-11-02）：slots=null 由 systems.migrateSlots 首载迁移
     if (st.slots === undefined) st.slots = null;
+    // 竞品抄作业批加性字段（2026-11-03）：碎片余额、本地邮箱、邮箱版本标记
+    if (typeof st.frag !== "number") st.frag = 0;
+    if (!Array.isArray(st.mail)) st.mail = [];
+    if (typeof st.lastMailVer !== "string") st.lastMailVer = "";
     return st;
   }
   function load(slot) {
@@ -1377,7 +1424,35 @@ const KBSystems = (() => {
     return { ok: true, cards };
   }
 
-  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack };
+  // ---------- 碎片系统（竞品抄作业第 8 项，已模拟定价勿改数）：低三档分解换碎片，指定兑换未点亮球员 ----------
+  const FRAG_GAIN = { "普通": 1, "稀有": 3, "史诗": 10 };
+  const FRAG_COST = { "稀有": 15, "史诗": 60 };
+  function fragDecompose(state, uid) {
+    const c = state.cards.find(x => x.uid === uid);
+    if (!c) return { ok: false, reason: "卡已不在卡库" };
+    if (!(c.tier in FRAG_GAIN)) return { ok: false, reason: "只有普通/稀有/史诗卡可以分解换碎片（传说走合成/升星，传世走万能材料）" };
+    if (c.stamp === "/1") return { ok: false, reason: "/1 独一无二，不可分解" };
+    if (c.grade) return { ok: false, reason: "已评级的卡不可分解" };
+    if (lineupUids(state).includes(uid) || (state.display || []).includes(uid)) return { ok: false, reason: "阵容/展示中的卡不可分解" };
+    state.cards.splice(state.cards.findIndex(x => x.uid === uid), 1);
+    state.frag = (state.frag || 0) + FRAG_GAIN[c.tier];
+    return { ok: true, card: c, gain: FRAG_GAIN[c.tier], frag: state.frag };
+  }
+  function fragExchange(state, pid) {
+    const p = E.playerById(pid);
+    if (!p) return { ok: false, reason: "球员不存在" };
+    if (!(p.tier in FRAG_COST)) return { ok: false, reason: "碎片只能兑换稀有/史诗球员" };
+    if (state.cards.some(c => c.pid === pid)) return { ok: false, reason: "该球员图鉴已点亮，不用兑换" };
+    const cost = FRAG_COST[p.tier];
+    if ((state.frag || 0) < cost) return { ok: false, reason: "碎片不足（需 " + cost + "）" };
+    state.frag -= cost;
+    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, value: E.cardValue(p.tier, p.rating, 1) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+    E.settleCards(state, [card]);
+    state.cards.push(card);
+    return { ok: true, card, cost, frag: state.frag };
+  }
+
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack, FRAG_GAIN, FRAG_COST, fragDecompose, fragExchange };
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
@@ -1714,16 +1789,23 @@ if (typeof module !== "undefined") module.exports = KBAds;
 // 《足坛卡王》M3 — 规格 §10/§9/§12：签到、每日/每周任务、成就、套卡、纪录、赛报文案池、存档码
 const KBMeta = (() => {
   const E = KBEngine, S = KBSystems;
-  // ---------- 签到（§10）：日奖 300 金，第 7 天另 +10 钻 ----------
-  function signIn(state, dayStr) {
+  // ---------- 签到（§10；2026-11-03 竞品抄作业第 1 项改版）：7 天周期日历整表替换旧「300 金/日＋第 7 天 10 钻」 ----------
+  // 连签口径（2026-11-03 整合修正，与篮坛 claimSignin 对齐）：断签清零，cycleDay = ((signStreak-1)%7)+1；signTotal 只作累计统计；金币/钻石由 signIn 直接入账，开包类只回传 pack 键由 UI 层走开包呈现
+  const SIGN_REWARDS = [
+    { coins: 200 }, { coins: 300 }, { pack: "premium" }, { coins: 500 }, { coins: 800 }, { pack: "premium" }, { dia: 50 }
+  ];
+  function signRewardLabel(rw) { return rw.pack ? "高级包 ×1" : rw.dia ? rw.dia + " 钻" : rw.coins + " 金"; }
+  function signIn(state, dayStr, yesterdayStr) {
     if (state.lastSignDay === dayStr) return { ok: false, reason: "今日已签到" };
+    if (state.signStreak == null) state.signStreak = (state.lastSignDay === yesterdayStr) ? state.signTotal : 0; // 旧档迁移：无连签字段时，昨日签过则按累计天数估算连签
+    state.signStreak = (state.lastSignDay === yesterdayStr) ? state.signStreak + 1 : 1; // 断签清零
     state.lastSignDay = dayStr;
     state.signTotal++;
-    const cycleDay = ((state.signTotal - 1) % 7) + 1;
-    state.coins += 300;
-    let diaBonus = 0;
-    if (cycleDay === 7) { diaBonus = 10; state.dia += 10; }
-    return { ok: true, cycleDay, diaBonus };
+    const cycleDay = ((state.signStreak - 1) % 7) + 1;
+    const rw = SIGN_REWARDS[cycleDay - 1];
+    if (rw.coins) state.coins += rw.coins;
+    if (rw.dia) state.dia += rw.dia;
+    return { ok: true, cycleDay, streak: state.signStreak, reward: rw, coins: rw.coins || 0, dia: rw.dia || 0, pack: rw.pack || null };
   }
   // ---------- 每日任务（§10）：开1包/打1场/收1次挂机 → 400 金 + 3 钻 ----------
   function dailyDone(state) { const d = state.daily; return d.packs >= 1 && d.matches >= 1 && d.idle >= 1; }
@@ -1783,6 +1865,14 @@ const KBMeta = (() => {
     { id: "era3", name: "时期收藏 3", dia: 15, coins: 1200, test: st => new Set(st.cards.filter(c => c.pid >= 200).map(c => c.pid)).size >= 3 },
     { id: "era7", name: "时期/双人全集 7", dia: 40, coins: 3000, test: st => new Set(st.cards.filter(c => c.pid >= 200).map(c => c.pid)).size >= 7 }
   ];
+  // 成就轨迹分组（竞品抄作业第 2 项：纯呈现分组，条件与奖励零改动）
+  const ACH_TRACKS = {
+    "收藏": ["firstUR", "firstOne", "firstPara", "para10", "para30", "para80", "jersey1", "jersey3", "dex30", "dex60", "dex90", "dex120", "ur3", "ur6", "ur10", "era3", "era7", "one3"],
+    "财富": ["rich100k", "rich500k", "rich500w", "single100k"],
+    "征程": ["shop5", "shop10", "master", "synthLegend", "draws500", "draws1500", "draws4000"],
+    "养成": ["star5one", "star5three", "star5eight", "gradeFirst", "gradeBlack", "gradeTen"]
+  };
+  for (const t of Object.keys(ACH_TRACKS)) for (const id of ACH_TRACKS[t]) { const a = ACHS.find(x => x.id === id); if (a) a.track = t; }
   function claimAchievement(state, id) {
     const a = ACHS.find(x => x.id === id);
     if (!a || state.achClaimed[id]) return { ok: false };
@@ -1809,6 +1899,8 @@ const KBMeta = (() => {
     let total = 0, single = 0, cabinet = 0;
     const disp = new Set(state.display);
     for (const c of state.cards) { const v = S.instanceValue(state, c, dIdx); total += v; if (v > single) single = v; if (disp.has(c.uid)) cabinet += v; }
+    // 资产日增量（竞品抄作业第 4 项）：跨日首次计算时，把上次全仓值（昨日收盘）落为今日基线 dayBase
+    if (!state.records.dayBase || state.records.dayBase.day !== dIdx) state.records.dayBase = { day: dIdx, total: state.records.curTotal || 0 };
     state.records.total = Math.max(state.records.total || 0, total);
     state.records.single = Math.max(state.records.single || 0, single);
     state.records.cabinet = Math.max(state.records.cabinet || 0, cabinet);
@@ -1860,7 +1952,7 @@ const KBMeta = (() => {
       return { ok: true, state: st };
     } catch (e) { return { ok: false, reason: "存档码解析失败" }; }
   }
-  return { signIn, dailyDone, claimDaily, weeklyProgress, weeklyDone, claimWeekly, ACHS, claimAchievement, titleOf, SETS, updateRecords, reportLine, posterLine, exportCode, importCode };
+  return { signIn, SIGN_REWARDS, signRewardLabel, dailyDone, claimDaily, weeklyProgress, weeklyDone, claimWeekly, ACHS, ACH_TRACKS, claimAchievement, titleOf, SETS, updateRecords, reportLine, posterLine, exportCode, importCode };
 })();
 if (typeof module !== "undefined") module.exports = KBMeta;
 
@@ -2045,7 +2137,7 @@ const KBPackArt = {"normal": "data:image/webp;base64,UklGRhg4AABXRUJQVlA4IAw4AAD
 const SHOP_NAMES = { 1: "街角小卡摊", 2: "巷口卡店", 3: "球迷卡吧", 4: "城西卡馆", 5: "金字招牌卡馆", 6: "全市闻名的卡馆", 7: "卡界旗舰店", 8: "藏家圣地", 9: "传奇卡馆", 10: "卡王殿堂" };
 const TIER_COLOR = { "普通": "#9aa3ad", "稀有": "#4da3ff", "史诗": "#b678ff", "传说": "#ffb02e", "传世": "#ff4d5e" };
 const S = KBSystems, E = KBEngine;
-function freshState() { const st = E.newSave(); st.coins = 0; st.dia = 0; st.cards = []; st.uid = 1; if (st.flags) st.flags.oneUsed = {}; st.giftPending = true; st.startDay = S.todayIndex(); return st; }
+function freshState() { const st = E.newSave(); st.coins = 0; st.dia = 0; st.cards = []; st.uid = 1; if (st.flags) { st.flags.oneUsed = {}; st.flags.guideNew = true; } st.giftPending = true; st.startDay = S.todayIndex(); return st; }
 let state = KBSave.load();
 const bootHadSave = !!state; const bootLoadedSavedAt = state ? (state.savedAt || 0) : 0;
 let curTab = "shop";
@@ -2093,6 +2185,7 @@ function persist() {
   else mirrorWanted = true;
 }
 function todayStr() { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function yesterdayStr() { const d = new Date(Date.now() - 864e5); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 const avatarCache = {};
 function avatarURL(p) {
   const reused = portraitOf(p); if (reused) return reused;
@@ -2337,8 +2430,10 @@ function showCardDetail(pid) {
   $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep;
     const gradeBtn = (c.star || 0) >= 5 ? ((c.gradeTries || 0) < 3 ? `<button class="btn ghost" data-grade="${c.uid}">🏅 评级（余 ${3 - (c.gradeTries || 0)} 次 · 看广告）</button>` : `<span class="hint">评级次数已用完</span>`) : "";
     const decBtn = c.tier === "传世" && c.stamp !== "/1" && !c.grade && !inUse.has(c.uid) ? `<button class="btn ghost" data-decomp="${c.uid}">分解→万能材料</button>` : "";
-    return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>${gradeBtn}${decBtn}</span></div>`; }).join("") +
-    ((state.mats && state.mats.universal) ? `<p class="hint">🧩 万能材料 ×${state.mats.universal}（分解传世卡获得，传世升星时可顶替同球员材料）</p>` : "") : "<p class='hint'>已全部卖出。</p>";
+    const fragBtn = (S.FRAG_GAIN[c.tier] !== undefined) && c.stamp !== "/1" && !c.grade && !inUse.has(c.uid) ? `<button class="btn ghost" data-frag="${c.uid}">分解 · +${S.FRAG_GAIN[c.tier]} 碎片</button>` : "";
+    return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>${gradeBtn}${decBtn}${fragBtn}</span></div>`; }).join("") +
+    ((state.mats && state.mats.universal) ? `<p class="hint">🧩 万能材料 ×${state.mats.universal}（分解传世卡获得，传世升星时可顶替同球员材料）</p>` : "") +
+    ((state.frag || 0) > 0 ? `<p class="hint">🧩 碎片 ×${state.frag}（图鉴页可指定兑换未点亮的稀有/史诗球员）</p>` : "") : "<p class='hint'>已全部卖出。</p>";
   $("#detailModal").classList.add("on");
   bindDynamic();
 }
@@ -2347,7 +2442,8 @@ function renderDex() {
   const paraSet = new Set(state.cards.filter(c => c.pid < 200 && c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)); // 平行版口径保持基础 120 人（时期卡平行版不计入 480 分母体系）
   const baseOwned = PLAYERS.filter(p => p.id < 200 && ownedIds.has(p.id)).length;
   const eraOwned = PLAYERS.filter(p => E.isEraPlayer(p) && ownedIds.has(p.id)).length;
-  $("#dexInfo").textContent = `图鉴点亮 ${baseOwned}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480 · 时期/双人收藏 ${eraOwned}/7`;
+  $("#dexInfo").textContent = `图鉴点亮 ${baseOwned}/120 · 现役 ${PLAYERS.filter(p => p.series === "现役" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "现役").length} · 名宿 ${PLAYERS.filter(p => p.series === "名宿" && ownedIds.has(p.id)).length}/${PLAYERS.filter(p => p.series === "名宿").length} · 平行版 ${paraSet.size}/480 · 时期/双人收藏 ${eraOwned}/7 · 全仓身价 ${state.records.curTotal || 0}${(() => { const db = state.records.dayBase; if (!db || !(db.total > 0)) return ""; const dl = (state.records.curTotal || 0) - db.total; return ` · 今日 ${dl >= 0 ? "↑ +" : "↓ "}${dl}（${dl >= 0 ? "+" : ""}${(dl / db.total * 100).toFixed(1)}%）`; })()}`;
+  const fragCountEl = $("#fragCount"); if (fragCountEl) fragCountEl.textContent = state.frag || 0;
   // 合并图鉴/卡库（2026-11-03 主人令对标篮坛）：单网格——点亮=持有，点卡开详情逐张卖；版本/限编筛选按实例匹配（只显示持有匹配实例的球员）
   const _dexKey = D + "|" + libFilter.tier + "|" + libFilter.variant + "|" + libFilter.stamp + "|" + libFilter.q + "|" + PLAYERS.map(p => { const mine = state.cards.filter(c => c.pid === p.id); return mine.length ? mine.map(c => c.uid + ":" + c.stamp + ":" + (c.variant || "base") + ":" + (c.star || 0) + ":" + (c.grade ? c.grade.label : "")).join(",") : "0"; }).join(";");
   if (_dexKey !== dexGridKey) { dexGridKey = _dexKey;
@@ -2463,6 +2559,14 @@ function bindDynamic() {
     if (!confirm(`把传世卡 ${c.name} 分解为 1 个万能材料？分解后卡消失，万能材料可给任意传世卡升星顶替同球员材料。`)) return;
     const r = S.decomposeCard(state, uid);
     if (r.ok) { renderKeepScroll(); if (detailPid != null) showCardDetail(detailPid); toast(`已分解 ${r.card.name}，万能材料 ×${r.universal}`); }
+    else toast(r.reason);
+  });
+  document.querySelectorAll("[data-frag]").forEach(btn => btn.onclick = () => {
+    const uid = +btn.dataset.frag;
+    const c = state.cards.find(x => x.uid === uid); if (!c) return;
+    if (!confirm(`把 ${c.name}（${c.tier}）分解为 ${S.FRAG_GAIN[c.tier]} 个碎片？分解后卡消失，碎片可在图鉴页指定兑换还没点亮的稀有/史诗球员。`)) return;
+    const r = S.fragDecompose(state, uid);
+    if (r.ok) { renderKeepScroll(); if (detailPid != null) showCardDetail(detailPid); toast(`已分解 ${r.card.name}，碎片 +${r.gain}（现有 ${r.frag}）`); }
     else toast(r.reason);
   });
   const dc = $("#detailClose"); if (dc) dc.onclick = () => { $("#detailModal").classList.remove("on"); detailPid = null; };
@@ -2786,8 +2890,21 @@ function renderMeta() {
   const lbTabBtn = document.querySelector('[data-tab="board"]'); if (lbTabBtn) lbTabBtn.style.display = KBPlatform.lbAvailable() ? "" : "none"; // 排行榜仅虎扑容器内显示
   // 签到与任务（卡店页）
   const d = state.daily;
-  $("#signBtn").textContent = state.lastSignDay === todayStr() ? `已签到（累计 ${state.signTotal} 天）` : "每日签到 +300 金";
-  $("#signBtn").disabled = state.lastSignDay === todayStr();
+  // 签到日历（竞品抄作业第 1 项）：7 格三态全展示——已领/今日可领/未解锁，今日格高亮，按钮写明今日奖励
+  const signedToday = state.lastSignDay === todayStr();
+  // 连签口径（与篮坛对齐）：断签清零，周期日由 signStreak 决定；旧档 signStreak 未落盘时以 signTotal 估算
+  const streakAlive = signedToday || state.lastSignDay === yesterdayStr();
+  const streakEff = streakAlive ? (state.signStreak == null ? state.signTotal : state.signStreak) : 0;
+  const curCycle = signedToday ? ((streakEff - 1) % 7) + 1 : (streakEff % 7) + 1;
+  const calEl = $("#signCal");
+  if (calEl) calEl.innerHTML = KBMeta.SIGN_REWARDS.map((rw, i) => {
+    const dd = i + 1;
+    const cls = (dd < curCycle || (signedToday && dd === curCycle)) ? "got" : (!signedToday && dd === curCycle ? "today" : "lock");
+    const stTxt = cls === "got" ? "已领" : cls === "today" ? "今日" : "未解锁";
+    return `<div class="scell ${cls}"><div class="sd">第 ${dd} 天</div><div class="sr">${KBMeta.signRewardLabel(rw)}</div><div class="ss">${stTxt}</div></div>`;
+  }).join("");
+  $("#signBtn").textContent = signedToday ? `已签到（本轮第 ${curCycle} 天 · 累计 ${state.signTotal} 天）` : `签到领 ${KBMeta.signRewardLabel(KBMeta.SIGN_REWARDS[curCycle - 1])}（第 ${curCycle} 天）`;
+  $("#signBtn").disabled = signedToday;
   const task = (label, cur, goal) => `<span class="taskchip ${cur >= goal ? "done" : ""}">${label} ${Math.min(cur, goal)}/${goal}</span>`;
   $("#dailyTasks").innerHTML = task("开 1 包", d.packs, 1) + task("打 1 场联赛", d.matches, 1) + task("领 1 次挂机", d.idle, 1);
   $("#dailyClaim").disabled = !(KBMeta.dailyDone(state) && !d.claimed);
@@ -2809,15 +2926,28 @@ function renderMeta() {
   const hb = $("#adHeatBtn"); if (hb) hb.disabled = cnt("heat") >= 3 || (state.furnaceHeat || 0) >= 3;
   $("#adTotal").textContent = `今日广告 ${KBAds.capCount(state)}/${KBAds.TOTAL_CAP}（纯自愿，不看也能玩）· 联赛广告不限次 · 钻石广告独立计次不占此额`;
   // 成就（卡店页，签到与任务下方；2026-11-02 从图鉴页最下面移来，对标篮坛）
+  // 竞品抄作业第 2 项·轨迹呈现：顶部汇总（已完成 n/35 · 可领钻石合计）＋按线分组＋组内排序（可领→未达成→已领）；条件与奖励零改动
+  const achSumEl = $("#achSummary");
+  if (achSumEl) {
+    const doneN = KBMeta.ACHS.filter(a => state.achClaimed[a.id] || a.test(state)).length;
+    const claimDia = KBMeta.ACHS.filter(a => !state.achClaimed[a.id] && a.test(state)).reduce((s, a) => s + a.dia, 0);
+    achSumEl.textContent = `成就轨迹 · 已完成 ${doneN}/${KBMeta.ACHS.length} · 可领钻石合计 ${claimDia}`;
+  }
   // 性能:成就/套卡网格只在达成态/已领态/进度签名变化时重建,避免每次 render 全量重建(内容一致)
   const achSig = KBMeta.ACHS.map(a => (a.test(state) ? "1" : "0") + (state.achClaimed[a.id] ? "c" : "")).join("");
   if (achSig !== renderMeta._achSig) { renderMeta._achSig = achSig;
-  $("#achGrid").innerHTML = KBMeta.ACHS.map(a => {
+  const achRow = a => {
     const done = a.test(state), claimed = !!state.achClaimed[a.id];
     return `<div class="ach ${done ? "done" : ""}"><b>${a.name}</b><span>${a.coins ? `💰${a.coins} · ` : ""}💎${a.dia}</span>${claimed ? "<em>已领取</em>" : done ? `<button class="btn achbtn" data-ach="${a.id}">领取</button>` : "<em>未达成</em>"}</div>`;
-  }).join("");
+  };
+  const achRank = a => state.achClaimed[a.id] ? 2 : a.test(state) ? 0 : 1; // 可领 0 → 未达成 1 → 已领 2
+  const trackIcon = { "收藏": "📚", "财富": "💰", "征程": "🗺", "养成": "🌱" };
+  $("#achGrid").innerHTML = Object.keys(KBMeta.ACH_TRACKS).map(t =>
+    `<div class="achtrack">${trackIcon[t] || ""} ${t}线</div>` + KBMeta.ACHS.filter(a => a.track === t).sort((x, y) => achRank(x) - achRank(y)).map(achRow).join("")
+  ).join("");
   document.querySelectorAll("[data-ach]").forEach(b => b.onclick = () => { const r = KBMeta.claimAchievement(state, b.dataset.ach); if (r.ok) { render(); toast(`成就「${r.name}」${r.coins ? "+" + r.coins + " 金 · " : ""}+${r.dia} 钻`); } });
   }
+  updateMailBadge();
   // 套卡
   const setSig = KBMeta.SETS.map(set => (set.test(state) ? "1" : "0") + (state.setsClaimed[set.id] ? "c" : "") + set.prog(state)).join("|");
   if (setSig !== renderMeta._setSig) { renderMeta._setSig = setSig;
@@ -2940,7 +3070,25 @@ async function adWatch(kind, opts) {
   if (granted && kind === "urdraw" && lastDraw.length) showPackResult(lastDraw, "钻石包体验抽");
   if (granted && kind === "grade" && detailPid != null) showCardDetail(detailPid);
 }
-$("#signBtn").onclick = () => { const r = KBMeta.signIn(state, todayStr()); if (r.ok) { render(); toast(`签到成功 +300 金${r.diaBonus ? "，第 7 天额外 +10 钻" : ""}`); } };
+$("#signBtn").onclick = () => {
+  const r = KBMeta.signIn(state, todayStr(), yesterdayStr());
+  if (!r.ok) { toast(r.reason); return; }
+  render();
+  if (r.pack) { // 开包类奖励：走既有开包流程 + 揭晓/结果弹窗呈现（竞品抄作业第 1 项）
+    const ownedBefore = new Set(state.cards.map(c => c.pid));
+    const res = E.openPack(state, r.pack, Math.random, { free: true });
+    if (res.ok) {
+      for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
+      state.daily.packs++;
+      markNewAndSummary(res.cards, ownedBefore);
+      lastDraw = res.cards; render();
+      afterDraw(res.cards, null, "签到奖励 · 高级包");
+    }
+    toast(`签到第 ${r.cycleDay} 天：高级包 ×1`);
+  } else {
+    toast(`签到成功（第 ${r.cycleDay} 天）${r.coins ? " +" + r.coins + " 金" : ""}${r.dia ? " +" + r.dia + " 钻" : ""}`);
+  }
+};
 $("#dailyClaim").onclick = () => { const r = KBMeta.claimDaily(state); if (r.ok) { render(); toast("每日任务奖励 +400 金 +3 钻"); } else toast(r.reason); };
 $("#weeklyClaim").onclick = () => { const r = KBMeta.claimWeekly(state); if (r.ok) { render(); toast("每周任务奖励 +30 钻"); } else toast(r.reason); };
 $("#adDoubleBtn").onclick = () => adWatch("double");
@@ -3070,6 +3218,144 @@ $("#importBtn").onclick = () => {
   lastDraw = []; lastMatch = null;
   render(); toast("存档导入成功");
 };
+// ================= 竞品抄作业批（2026-11-03）：邮箱 / 更多功能面板 / 碎片兑换弹窗 / 新手引导 =================
+// ----- 邮箱（第 7 项，本地版 v1，无奖励附件）：state.mail 上限 40、新在前；生产者=欢迎信 + 版本更新信 -----
+const MAIL_VER = "2026-11-03b";
+function mailPush(title, body) {
+  state.mail = state.mail || [];
+  state.mail.unshift({ id: Date.now() + "-" + Math.floor(Math.random() * 1e6), title, body, day: todayStr(), read: false });
+  if (state.mail.length > 40) state.mail.length = 40;
+}
+function ensureMail() {
+  state.mail = state.mail || [];
+  state.flags = state.flags || {};
+  if (!state.flags.mailWelcome) {
+    state.flags.mailWelcome = 1;
+    mailPush("📬 欢迎来到足坛卡王", "店主好！这里是你的通知邮箱：版本更新、活动和补偿都会发到这里，记得常来看看。先去开几包把卡攒起来，再组队打联赛赚钱养店——早日集齐图鉴，当上卡王！");
+  }
+  if (state.lastMailVer !== MAIL_VER) { // 版本更新信：一版一封，内容取最新更新日志条目摘要；后推入使之排在欢迎信之前（新在前）
+    state.lastMailVer = MAIL_VER;
+    const c = CHANGELOG[0];
+    if (c) mailPush("📢 版本更新：" + c.v, c.items.slice(0, 3).join("；") + "……（开始页公告有完整版）");
+  }
+  updateMailBadge();
+}
+function mailUnread() { return (state.mail || []).filter(m => !m.read).length; }
+function updateMailBadge() { const dEl = $("#moreDot"); if (dEl) dEl.style.display = mailUnread() > 0 ? "" : "none"; }
+function renderMail() {
+  const list = state.mail || [];
+  $("#mailList").innerHTML = list.length ? list.map(m => `<div class="mailitem ${m.read ? "" : "unread"}" data-mail="${m.id}"><div class="mhead"><b>${m.title}</b><span class="hint">${m.day || ""}</span>${m.read ? "" : '<span class="reddot inl"></span>'}</div><div class="mbody" style="display:none">${m.body}</div></div>`).join("") : '<p class="hint">邮箱是空的。</p>';
+  document.querySelectorAll("[data-mail]").forEach(el => el.onclick = () => {
+    const m = (state.mail || []).find(x => String(x.id) === el.dataset.mail); if (!m) return;
+    m.read = true;
+    const body = el.querySelector(".mbody"); if (body) body.style.display = body.style.display === "none" ? "" : "none";
+    el.classList.remove("unread"); const dot = el.querySelector(".reddot"); if (dot) dot.remove();
+    updateMailBadge(); persist();
+  });
+}
+function openMail() { renderMail(); $("#mailModal").classList.add("on"); }
+$("#mailClose").onclick = () => $("#mailModal").classList.remove("on");
+$("#mailModal").addEventListener("click", e => { if (e.target.id === "mailModal") $("#mailModal").classList.remove("on"); });
+$("#mailReadAll").onclick = () => { (state.mail || []).forEach(m => { m.read = true; }); renderMail(); updateMailBadge(); persist(); toast("邮箱已全部标为已读"); };
+// ----- 通用文本弹窗（关于/建议共用） -----
+function showText(title, body) { $("#textTitle").textContent = title; $("#textBody").textContent = body; $("#textModal").classList.add("on"); }
+$("#textClose").onclick = () => $("#textModal").classList.remove("on");
+$("#textModal").addEventListener("click", e => { if (e.target.id === "textModal") $("#textModal").classList.remove("on"); });
+// ----- 更多功能面板（第 3 项）：九宫格只放真能用的入口；分享走 KBPlatform.shareCard、桌面仅容器有真实 API 时出现 -----
+function renderMore() {
+  const unread = mailUnread();
+  const cells = [
+    { icon: "📢", label: "游戏公告", act: "notice" },
+    { icon: "🧭", label: "玩法引导", act: "guide" },
+    { icon: "✉️", label: "通知邮箱", act: "mail", dot: unread > 0, sub: unread ? unread + " 封未读" : "" },
+    { icon: KBAudio.isMuted() ? "🔇" : "🔊", label: KBAudio.isMuted() ? "声音：关" : "声音：开", act: "sound" },
+    { icon: "💾", label: "存档管理", act: "save" },
+    { icon: "ℹ️", label: "关于游戏", act: "about" },
+    { icon: "💬", label: "问题与建议", act: "suggest" },
+    { icon: "📤", label: "分享游戏", act: "share" }
+  ];
+  if (KBPlatform.desktopAvailable()) cells.push({ icon: "🖥", label: "添加到桌面", act: "desktop" });
+  $("#moreGrid").innerHTML = cells.map(c => `<button class="mcell" data-more="${c.act}">${c.dot ? '<span class="reddot"></span>' : ""}<span class="mic">${c.icon}</span><span>${c.label}</span>${c.sub ? `<span class="msub">${c.sub}</span>` : ""}</button>`).join("");
+  document.querySelectorAll("[data-more]").forEach(b => b.onclick = () => moreAction(b.dataset.more));
+}
+function closeMore() { $("#moreModal").classList.remove("on"); }
+function moreAction(act) {
+  if (act === "sound") { const md = KBAudio.toggleMute(); if (muteBtnEl) muteBtnEl.textContent = md ? "🔇" : "🔊"; renderMore(); return; }
+  closeMore();
+  if (act === "notice") { $("#homeBtn").click(); }
+  else if (act === "guide") { startGuide(); }
+  else if (act === "mail") { openMail(); }
+  else if (act === "save") { switchTab("shop"); setTimeout(() => { const el = $("#codeBox"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
+  else if (act === "about") { showText("ℹ️ 关于《足坛卡王》", "足球球星卡收集游戏：开包、集卡、升星评级、组队打联赛，一路当上卡王。120 名球员卡池（另有时期卡/双人卡 7 张），概率全公示、无任何充值入口，广告纯自愿——不看也能完整游玩。姊妹作《篮坛卡王》也在虎扑 AI 工坊，欢迎一起玩。"); }
+  else if (act === "suggest") { showText("💬 问题与建议", "玩的过程中遇到 bug、数值不合理，或者有想要的新功能，都欢迎去虎扑 AI 工坊《足坛卡王》的帖子下留言，店主每条都看。存档出问题先别删档：先用卡店页的存档码导出备份，再来留言求助。"); }
+  else if (act === "share") { KBPlatform.shareCard("足坛卡王｜足球球星卡 · 开包当卡王", "120 名球星真人海报卡，概率全公示、无充值，你也来开包当卡王！").then(r => { if (!r.ok) toast(r.message || "分享请在虎扑 App 内使用"); }); }
+  else if (act === "desktop") { KBPlatform.addToDesktop().then(r => { if (r.message) toast(r.message); }); }
+}
+$("#moreBtn").onclick = () => { renderMore(); $("#moreModal").classList.add("on"); };
+$("#moreClose").onclick = closeMore;
+$("#moreModal").addEventListener("click", e => { if (e.target.id === "moreModal") closeMore(); });
+// ----- 碎片兑换弹窗（第 8 项 UI）：图鉴页入口，仅列未点亮的稀有/史诗 ----------
+function renderFrag() {
+  $("#fragBal").textContent = state.frag || 0;
+  const owned = new Set(state.cards.map(c => c.pid));
+  $("#fragList").innerHTML = ["稀有", "史诗"].map(tier => {
+    const pool = PLAYERS.filter(p => p.tier === tier && !E.isEraPlayer(p));
+    const unlit = pool.filter(p => !owned.has(p.id));
+    const head = `<div class="frack">🧩 ${tier} · ${S.FRAG_COST[tier]} 碎片/张（未点亮 ${unlit.length}/${pool.length}）</div>`;
+    if (!unlit.length) return head + `<p class="hint">${tier}图鉴已集齐，这一档没有可兑换的了。</p>`;
+    return head + unlit.sort((a, b) => b.rating - a.rating).map(p => `<div class="drow"><span>${p.name} · ${p.pos} ${p.rating}${p.series === "名宿" ? " · 名宿" : ""}</span><span><button class="btn" data-fragex="${p.id}" ${((state.frag || 0) >= S.FRAG_COST[tier]) ? "" : "disabled"}>兑换 ${S.FRAG_COST[tier]} 碎片</button></span></div>`).join("");
+  }).join("");
+  document.querySelectorAll("[data-fragex]").forEach(b => b.onclick = () => {
+    const p = E.playerById(+b.dataset.fragex); if (!p) return;
+    if (!confirm(`用 ${S.FRAG_COST[p.tier]} 碎片兑换 ${p.name}（${p.tier}）？发出一张基础卡（无编/普卡/0 星/无评级）。`)) return;
+    const r = S.fragExchange(state, p.id);
+    if (r.ok) { render(); renderFrag(); toast(`兑换成功：${r.card.name} 已入卡库（碎片余 ${r.frag}）`); }
+    else toast(r.reason);
+  });
+}
+$("#fragBtn").onclick = () => { renderFrag(); $("#fragModal").classList.add("on"); };
+$("#fragClose").onclick = () => $("#fragModal").classList.remove("on");
+$("#fragModal").addEventListener("click", e => { if (e.target.id === "fragModal") $("#fragModal").classList.remove("on"); });
+// ----- 新手引导（第 6 项）：5 步聚光灯；新档首播一次（礼包领完后），更多面板可重播；目标缺失自动跳过 -----
+const GUIDE_STEPS = [
+  { tab: "packs", sel: '[data-pack="normal"]', text: "先开几包，把卡攒起来" },
+  { tab: "dex", sel: "#synthArea", text: "重复卡别急着卖：这里能合成升档、升星，还能分解换碎片" },
+  { tab: "league", sel: "#playBtn", text: "组好阵容打联赛，赢球赚钱养卡店" },
+  { tab: "shop", sel: "#signCal", text: "每天签到领奖励，连签第 7 天有 50 钻大奖" },
+  { tab: "packs", sel: "#adDia30Btn", text: "看广告攒钻石，传说和传世只在钻石包出" }
+];
+let guideIdx = -1;
+function startGuide() { guideIdx = 0; $("#guideOv").classList.add("on"); showGuideStep(); }
+function endGuide() { guideIdx = -1; $("#guideOv").classList.remove("on"); state.flags = state.flags || {}; state.flags.guideDone = true; persist(); }
+function showGuideStep() {
+  if (guideIdx < 0) return;
+  if (guideIdx >= GUIDE_STEPS.length) { endGuide(); return; }
+  const step = GUIDE_STEPS[guideIdx];
+  $("#guideText").textContent = step.text; // 文案先填，定位随后跟上，避免空卡闪烁
+  $("#guideStep").textContent = (guideIdx + 1) + " / " + GUIDE_STEPS.length;
+  if (step.tab !== curTab) switchTab(step.tab);
+  setTimeout(() => {
+    if (guideIdx < 0) return;
+    const el = document.querySelector(step.sel);
+    if (!el || el.getClientRects().length === 0) { guideIdx++; showGuideStep(); return; } // 目标缺失/不可见则跳过该步
+    el.scrollIntoView({ block: "center" });
+    setTimeout(() => { if (guideIdx >= 0) positionGuide(el, step.text); }, 90);
+  }, 70);
+}
+function positionGuide(el, text) {
+  const r = el.getBoundingClientRect();
+  const hl = $("#guideHL"), card = $("#guideCard");
+  hl.style.left = (r.left - 6) + "px"; hl.style.top = (r.top - 6) + "px";
+  hl.style.width = (r.width + 12) + "px"; hl.style.height = (r.height + 12) + "px";
+  const cw = Math.min(330, window.innerWidth - 24);
+  card.style.width = cw + "px";
+  card.style.left = Math.max(12, Math.min(r.left, window.innerWidth - cw - 12)) + "px";
+  let top = r.bottom + 16;
+  if (top + 180 > window.innerHeight) top = Math.max(12, r.top - 196);
+  card.style.top = top + "px";
+}
+$("#guideNext").onclick = () => { guideIdx++; showGuideStep(); };
+$("#guideSkip").onclick = () => endGuide();
 
 // 埋点绑定（技能包 track-report：点击与曝光成对、同 label）
 document.querySelectorAll(".tab").forEach(b => KBTrack.bind(b, "足坛卡王-" + b.textContent.trim() + "页签"));
@@ -3097,6 +3383,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
+  { v: "签到日历 · 成就轨迹 · 邮箱与碎片", items: ["🗓 签到改版：7 天日历全摆明面——金币 200→800 递增、第 3/6 天送高级包、第 7 天大奖 50 钻（旧版每天 300 金作废）", "🏆 成就改轨迹呈现：收藏/财富/征程/养成四条线分组，顶部能看到已完成数和可领钻石合计", "✉️ 通知邮箱上线：版本更新和公告都进邮箱，右上角「⋯」更多里打开，未读有红点；新店主首次进店还有 5 步聚光灯引导（老店主可在「更多」里重播）", "🧩 碎片兑换：重复的普通/稀有/史诗卡在卡片详情里分解换碎片（1/3/10），去图鉴页指定兑换还没点亮的球员（稀有 15 · 史诗 60）", "📈 图鉴页全仓身价旁新增今日涨跌，今天赚了还是亏了一眼看清"] },
   { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出", "💰 名宿系列包调价 30→60 钻：与钻石包、豪华包的性价比对齐，概率不变", "🏆 成就扩容到 35 个：低阶成就钻石变少、高阶更丰厚（图鉴全集 40 钻、传世收藏 10 张 80 钻），难度整体上调，钻石更金贵——重度玩家主要靠钻石广告攒钻", "🔥 合成炉出卡改揭晓演出：合成/冲档成功先慢揭看卡（史诗以上）、再弹结果卡，不再只闪一行字"] },
   { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
@@ -3139,6 +3426,7 @@ async function enterSlot(n) {
   if (state.matchDay !== String(D)) { state.matchesLeft = 20; state.matchDay = String(D); }
   if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
   ensurePeriods(); S.accrueIdle(state);
+  ensureMail(); // 换档后按新档邮箱状态补欢迎信/版本信并刷新红点
   S.migrateSlots(state);
   if (S.lineupUids(state).length === 0 && state.cards.length) S.autoLineup(state);
   lastDraw = []; lastMatch = null; lastSummary = "";
@@ -3177,7 +3465,7 @@ $("#giftClaimBtn").onclick = () => {
   try { KBAudio.fanfare(2); } catch (e) {}
   render();
 };
-$("#giftGoBtn").onclick = () => { $("#giftModal").classList.remove("show"); render(); };
+$("#giftGoBtn").onclick = () => { $("#giftModal").classList.remove("show"); render(); if (state.flags && state.flags.guideNew && !state.flags.guideDone) setTimeout(startGuide, 350); }; // 新档首播引导：礼包领完进店后自动播一次
 // 开机动画 → 开始页
 if (typeof KBArt !== "undefined") {
   $("#startArt").src = KBArt.start;
@@ -3186,6 +3474,7 @@ if (typeof KBArt !== "undefined") {
 }
 $("#changelogBox").innerHTML = CHANGELOG.slice(0, 2).map(c => `<div class="cl-v">${c.v}</div><ul>${c.items.map(i => `<li>${i}</li>`).join("")}</ul>`).join(""); // 公告只展示最近两版（2026-11-03 主人嫌太长）
 renderSlots();
+ensureMail(); persist(); // 开机补邮箱欢迎信/版本更新信（MAIL_VER 一版一封）并落盘
 setTimeout(() => { $("#bootOv").classList.add("done"); $("#startOv").classList.add("show"); }, 1000);
 
 </script>
