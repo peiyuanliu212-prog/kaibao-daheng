@@ -384,6 +384,12 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 #moreModal, #mailModal, #fragModal, #textModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 65; padding: 18px; }
 #moreModal.on, #mailModal.on, #fragModal.on, #textModal.on { display: flex; }
 #moreModal .detailbox, #mailModal .detailbox, #fragModal .detailbox, #textModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
+#textBody p { margin: 0 0 8px; }
+.wxbox { margin-top: 14px; background: #10141b; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; padding: 14px 12px; text-align: center; }
+.wxbox .wxt { font-size: 12px; color: #9fb0c3; letter-spacing: 3px; }
+.wxbox .wxn { font-size: 27px; font-weight: 800; letter-spacing: 1px; color: #fff; margin: 6px 0; -webkit-user-select: text; user-select: text; word-break: break-all; }
+.wxbox .wxh { font-size: 12px; color: #9fb0c3; line-height: 1.7; }
+.wxfoot { margin-top: 12px; font-size: 12px; color: #9fb0c3; text-align: center; }
 .mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
 .mcell { position: relative; background: #1d2129; border: 1px solid #3a4150; border-radius: 12px; color: #e8ebef; padding: 14px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
 .mcell .mic { font-size: 22px; }
@@ -452,11 +458,13 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <h2>展示柜（点空位选卡上柜）</h2>
   <div class="grid" id="cabinet"></div>
   <details class="earn"><summary>金币和钻石从哪来？</summary>
-    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到日历（金币递增、第 3/6 天送高级包）。<br>钻石：用来开钻石包（史诗 55% · 传说 35% · 传世 10%）与豪华钻石包（传说 55% · 传世 15% · 含时期卡惊喜槽），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +50 · 成就（金币+钻石）· 看广告（钻石广告 +30/次、每日 30 次）。</p>
+    <p class="hint">金币：卖卡是主要来源——点上方「去卖卡」或去图鉴页点开卡片卖出（开业首日 85%、平时 50%），重复卡可一键卖；展示柜挂机（离线也算，封顶 8 小时）· 联赛奖金与周结算 · 收藏家委托 · 每日任务 400 金 · 签到日历（金币递增、第 3/6 天送高级包）。<br>钻石：用来开钻石包（史诗 55% · 传说 35% · 传世 10%）与豪华钻石包（传说 55% · 传世 15% · 含时期卡惊喜槽），不卖不换；来源：每日任务 3/日 · 签到第 7 天 +50 · 成就（金币+钻石）· 看广告（钻石广告前 20 次 +30/次、21–40 次 +10/次，每日 40 次）· 收藏家订单交重复基础卡换钻（每日最多 100 钻）。</p>
   </details>
   <div id="pickArea"></div>
   <h2>今日收藏家委托</h2>
   <div id="commArea"></div>
+  <h2>收藏家订单</h2>
+  <div id="ordersArea"></div>
   <h2>签到与任务</h2>
   <div id="signCal" class="signcal"></div>
   <div class="row"><button class="btn" id="signBtn">每日签到</button><span id="adTotal" class="hint"></span></div>
@@ -486,7 +494,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="row">
     <button class="btn" id="freeBtn">领今日免费包</button>
     <button class="btn ghost" id="adUrBtn">📺 钻石包体验抽（助力）</button>
-    <button class="btn ghost" id="adDia30Btn">📺 看广告 +30 钻（今日 0/30）</button>
+    <button class="btn ghost" id="adDia30Btn">📺 看广告领钻（今日 0/40）</button>
     <button class="btn ghost" id="probBtn">📊 概率与保底细则</button>
   </div>
   <div id="adChain" style="margin-top:8px"></div>
@@ -621,7 +629,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <div id="moreModal"><div class="detailbox"><h3>⚙️ 更多功能</h3><div id="moreGrid" class="mgrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="moreClose">关闭</button></div></div></div>
 <div id="mailModal"><div class="detailbox"><h3>✉️ 通知邮箱</h3><div id="mailList"></div><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn ghost" id="mailReadAll">全部已读</button><button class="btn ghost" id="mailClose">关闭</button></div></div></div>
 <div id="fragModal"><div class="detailbox"><h3>🧩 碎片兑换</h3><p class="hint">碎片余额 <b id="fragBal">0</b> · 只能兑换图鉴里还没点亮的球员，发出的是基础卡（无编 · 普卡 · 0 星 · 无评级）</p><div id="fragList"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="fragClose">关闭</button></div></div></div>
-<div id="textModal"><div class="detailbox"><h3 id="textTitle"></h3><p id="textBody" style="line-height:1.8;font-size:14px;margin-top:8px"></p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="textClose">关闭</button></div></div></div>
+<div id="textModal"><div class="detailbox"><h3 id="textTitle"></h3><div id="textBody" style="line-height:1.8;font-size:14px;margin-top:8px"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="textClose">关闭</button></div></div></div>
 <div id="guideOv"><div id="guideHL"></div><div id="guideCard"><span class="gstep" id="guideStep"></span><p id="guideText"></p><div class="row" style="margin-top:10px"><button class="btn" id="guideNext">知道了</button><button class="btn ghost" id="guideSkip">跳过引导</button></div></div></div>
 <div id="listModal"><div class="detailbox"><h3>🏛 挂牌出售</h3><p class="hint" id="listCardLine"></p><p style="margin-top:8px">定价（钻石，10–100000）：<input id="listPrice" type="number" min="10" max="100000" step="1" style="width:120px;background:#1d2129;color:#e8ebef;border:1px solid #3a4150;border-radius:6px;padding:6px"></p><p class="hint">成交后你实得 95%（平台收 5% 手续费，向下取整）。挂牌期间卡被冻结：退出阵容/展示，不能出售、分解、升星、评级。</p><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn" id="listConfirm">确认挂牌</button><button class="btn ghost" id="listCancel">取消</button></div></div></div>
 <div id="lootModal"><div class="detailbox"><h3>🎯 选择可夺池（3–6 张）</h3><p class="hint">C 池参战要先亮出可夺池：被打输了，对方会从里面随机夺走 1 张（每天最多被夺 1 张）。只能放史诗及以下的<b>重复卡</b>，/1、已评级、阵容/展示中的卡不行。已选 <b id="lootCount">0</b> 张。</p><div id="lootList" style="max-height:46vh;overflow:auto"></div><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn" id="lootConfirm">就这些，参战 C 池</button><button class="btn ghost" id="lootCancel">取消</button></div></div></div>
@@ -887,7 +895,7 @@ const KBEngine = (() => {
   function newSave(rng) {
     const st = { version: 3, coins: 1500, dia: 40, cards: [], pity: 0, hjNoLegend: 0, draws: 0, uid: 1, freeDay: "", shopLv: 1, createdAt: Date.now(),
       display: [], lineup: { GK: null, DF: null, MF: null, WG: null, ST: null }, formation: "4-4-2", slots: null, captainUid: null, tactic: "全力进攻",
-      division: 0, stars: 0, streak: 0, matchesLeft: 20, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null,
+      division: 0, stars: 0, streak: 0, matchesLeft: 20, matchDay: "", idlePending: 0, lastTs: Date.now(), commission: null, orders: null,
       signTotal: 0, lastSignDay: "", signStreak: null, daily: { day: "", packs: 0, matches: 0, idle: 0, claimed: false },
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
@@ -999,6 +1007,8 @@ const KBSave = (() => {
     if (st.adDay && typeof st.adDay === "object") { if (typeof st.adDay.views !== "number") st.adDay.views = 0; if (!st.adDay.chain || typeof st.adDay.chain !== "object") st.adDay.chain = {}; }
     // 转卖新规矩存量补发（2026-11-03）：已有 src='market' 且无 resell 字段的卡一律补 1 次额度，buyDay 置很久以前＝冷却视为已满（不设冷却）
     (st.cards || []).forEach(c => { if (c.src === "market" && c.resell === undefined) { c.resell = 1; c.buyDay = -10000; } });
+    // 改革一期加性字段（2026-11-04）：收藏家订单态（null=未生成，进卡店页时按 dayIndex 生成；形状不对整置 null 防坏档毒化）
+    if (st.orders !== null && st.orders !== undefined && (typeof st.orders !== "object" || !Array.isArray(st.orders.batch))) st.orders = null;
     return st;
   }
   function load(slot) {
@@ -1483,6 +1493,57 @@ const KBSystems = (() => {
     return { day: dIdx, persona: persona.name, desc: persona.desc, uid: target.uid, price, mult: Math.round(mult * 100) / 100, done: false };
   }
 
+  // ---------- 收藏家订单（交易所改革一期，2026-11-04；与上方「收藏家委托」是两套系统：委托=卖高档卡换金币每日一单，订单=交重复低档基础卡换钻石每日一批+广告刷新） ----------
+  const ORDER_PAYOUT = { "普通": 5, "稀有": 12, "史诗": 30 }; // 终稿待批 1：竞品 N/R/SR 原值平移
+  const ORDER_DIA_CAP = 100; // 每日领钻封顶（资金由 dia30 阶梯切出，总发行 Δ=0，见 ads/main 的 dia30 阶梯注释）
+  const ORDER_REFRESH_MAX = 5; // 看广告刷新日上限（终稿待批 2；与 ads LIMITS.orders 双向同值，改一处须同步另一处）
+  function genOrderBatch(dIdx, seq) { // 确定性生成：同 (日, 批次序) 恒同批；每批 3 条 = 普通/稀有/史诗各 1 条，指定基础卡款（卡池外/时期卡不入池）
+    const rng = rng32(hashStr("orders-" + dIdx + "-" + seq));
+    return ["普通", "稀有", "史诗"].map(tier => {
+      const pool = PLAYERS.filter(p => p.tier === tier && !E.isEraPlayer(p));
+      const p = pool[Math.floor(rng() * pool.length)];
+      return { pid: p.id, tier, payout: ORDER_PAYOUT[tier], done: false };
+    });
+  }
+  function ensureOrders(state, dIdx) { // 日界与 commission 同口径（dayIndex）；跨日整批重置，earned/刷新计数清零
+    if (!state.orders || typeof state.orders !== "object" || state.orders.day !== dIdx || !Array.isArray(state.orders.batch)) {
+      state.orders = { day: dIdx, batch: genOrderBatch(dIdx, 0), refreshUsed: 0, earned: 0 };
+    }
+    return state.orders;
+  }
+  function refreshOrders(state, dIdx) { // 广告刷新换批（次数由 ads LIMITS.orders 把关）：earned 跨批累计不清零（日封顶按全天计），未交付条目随批更换
+    const o = ensureOrders(state, dIdx);
+    o.refreshUsed = (o.refreshUsed || 0) + 1;
+    o.batch = genOrderBatch(dIdx, o.refreshUsed);
+    return o;
+  }
+  function orderPick(state, order) { // 可交付实例裁定：保最后一张（该款总数 ≤1 不可交）＋基础款限定（平行/限编排除）＋挂牌冻结/阵容/展示排除；多张合格取静态身价最低者（护玩家不误交高配）
+    const copies = state.cards.filter(c => c.pid === order.pid);
+    if (!copies.length) return { ok: false, reason: "还没有这张卡" };
+    if (copies.length <= 1) return { ok: false, reason: "只剩最后一张，要留着收藏" };
+    const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display || []);
+    const pool = copies.filter(c => (c.variant || "base") === "base" && c.stamp === "无编" && !c.listed && !inLineup.has(c.uid) && !inDisp.has(c.uid));
+    if (!pool.length) return { ok: false, reason: "没有可交付的重复基础款（平行/限编/阵容/展示/挂牌中的不算）" };
+    pool.sort((a, b) => staticValue(a) - staticValue(b));
+    return { ok: true, card: pool[0] };
+  }
+  function deliverOrder(state, dIdx, idx) { // 交付：复核订单态/日封顶/可交付实例后扣卡发钻，恰好一次（done 落账）
+    const o = ensureOrders(state, dIdx);
+    const order = o.batch[idx];
+    if (!order) return { ok: false, reason: "订单不存在" };
+    if (order.done) return { ok: false, reason: "这条订单已经交付过了" };
+    if ((o.earned || 0) + order.payout > ORDER_DIA_CAP) return { ok: false, reason: `今日订单钻石已达上限 ${ORDER_DIA_CAP}（已领 ${o.earned || 0} 钻）` };
+    const pick = orderPick(state, order);
+    if (!pick.ok) return pick;
+    const i = state.cards.findIndex(x => x.uid === pick.card.uid);
+    if (i < 0) return { ok: false, reason: "卡已不在卡库" };
+    state.cards.splice(i, 1);
+    o.earned = (o.earned || 0) + order.payout;
+    state.dia += order.payout;
+    order.done = true;
+    return { ok: true, payout: order.payout, name: pick.card.name, earned: o.earned };
+  }
+
   // ---------- 合成炉（§7，Lv.3） ----------
   function synthCost(targetTier) { return Math.round(E.BASE[targetTier] * .10); }
   function synthesize(state, tier, rng) {
@@ -1656,7 +1717,7 @@ const KBSystems = (() => {
     return { sell, gain, prot };
   }
 
-  // 名宿系列包（§7 Lv.7 解锁）：2026-11-03 改钻石包，5 张专属概率；抽到传说/传世时必为名宿；价格 30→60 钻（2026-11-03 三包定价对齐：每钻效率与 dia120 拉平，概率不动）
+  // 名宿系列包（§7 Lv.7 解锁）：2026-11-03 改钻石包，5 张专属概率；抽到传说/传世时必为名宿；价格 30→60 钻，概率不动（2026-11-03 三包定价对齐，口径见《传说包口径裁决单-20261103》B 案冻结：每钻 EV 比 dia120 约低 5%，单张传说/传世钻耗约高 10% 为定向池溢价——「拉平」仅就 EV 口径成立）
   // （原 1800 金借高级包概率；金币包封顶史诗后传说/传世只走钻石，本包随之改钻价并自带概率表）
   const LEGEND_ODDS = { "普通": 0, "稀有": .30, "史诗": .38, "传说": .24, "传世": .08 };
   function openLegendPack(state, rng) {
@@ -1757,6 +1818,7 @@ const KBSystems = (() => {
   function marketEligible(state, c) {
     if (!c) return { ok: false, reason: "卡不存在" };
     if (c.listed) return { ok: false, reason: "这张卡已在挂牌中" };
+    if (c.src === "official") return { ok: false, reason: "官方补货卡已绑定，不可挂牌转卖" }; // 交易所改革一期（2026-11-04）：来源绑定堵套利——资格函数单列拒绝该来源，不用 resell=0 冒充（来源可审计，resell 另行落 0 双保险）
     if (c.src === "market") { // 买入卡（玩家挂单/官方补货同口径）：只认转卖额度+冷却；档位门与原生卡一致
       if (!(c.tier === "传世" || c.tier === "传说" || c.tier === "史诗" || c.pid >= 200)) return { ok: false, reason: "只有传世/传说/史诗与时期/双人卡可以挂牌" };
       return resaleCheck(state, c);
@@ -1773,6 +1835,7 @@ const KBSystems = (() => {
   function cardSnap(c) { // 挂单/托管快照：cardvalue 复算字段（pid/mult/vmult/star/grade）＋展示字段＋uid（C 池删卡定位用）
     const snap = { uid: c.uid, pid: c.pid, name: c.name, pos: c.pos, tier: c.tier, rating: c.rating, series: c.series, stamp: c.stamp, mult: c.mult, variant: c.variant || "base", vmult: c.vmult || 1, star: c.star || 0, grade: c.grade ? c.grade.label : null, bmult: c.bmult || 1, gradeTries: c.gradeTries || 0, starLuck: c.starLuck || 0 };
     if (c.src === "market" && (c.resell || 0) >= 1) snap.resale = true; // 转卖单标记（客户端断言、服务端存字段不复核来源）：买家据此落 resell=0，claim 按 10% 销毁分档
+    if (c.src === "official") { snap.official = 1; snap.src = "official"; } // 改革一期：官方来源随快照转移——服务端 /market/list 据此双保险拒绝；经 C 池夺卡也不得洗掉绑定（见 snapToInstance）
     if (c.src === "market") snap.wasMarket = 1; // 审计修复：来源标记随快照转移——防 C 池夺卡后 src 变 loot 把「买入卡绑定」洗掉（见 snapToInstance）
     return snap;
   }
@@ -1787,6 +1850,7 @@ const KBSystems = (() => {
     // 审计修复（同族 E）：快照转移不得重置评级次数/升星幸运（旧版买入评级卡 gradeTries 归 0 可再评 3 次）；
     // 买入卡经 C 池被夺时绑定不得蒸发——夺方得到的仍是买入卡：落 src='market' 且 resell=0（与转卖单买入同口径，永久绑定）
     if (src === "loot" && snap.wasMarket) { inst.src = "market"; inst.resell = 0; inst.buyDay = typeof state.dayIndex === "number" ? state.dayIndex : 0; }
+    if (src === "loot" && snap.official) { inst.src = "official"; inst.resell = 0; } // 改革一期：官方绑定卡经 C 池被夺同样不蒸发绑定
     inst.value = staticValue(inst);
     return inst;
   }
@@ -1891,7 +1955,7 @@ const KBSystems = (() => {
   }
 
   function gradableCard(c) { return !!c && (c.star || 0) >= 5 && (c.gradeTries || 0) < 3; } // D3 可评级口径：满星且评级次数未用完（S5 保分卡 tries=2 天然命中）
-  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_SUB, SUB_LINE, SUB_NAMES, FORM_IDENTITY, __setIdentity, subOfPlayer, subOfCard, subTierOf, penOf, effInSlot, slotListOf, gradableCard, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, applyGradeProtected, effRating, VARIANT_BONUS, variantBonus, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack, FRAG_GAIN, FRAG_COST, fragDecompose, fragExchange, fragBatchPlan, fragBatchExecute, pruneSlotsToShape, MARKET_SRCS, marketEligible, cardSnap, snapToInstance, lineupSnap, snapCardEff, ARENA, lootEligible, openArenaPack, playArenaMatch, UNIQUE_FALLBACK_DIA, uniqueDowngrade };
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_SUB, SUB_LINE, SUB_NAMES, FORM_IDENTITY, __setIdentity, subOfPlayer, subOfCard, subTierOf, penOf, effInSlot, slotListOf, gradableCard, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, applyGradeProtected, effRating, VARIANT_BONUS, variantBonus, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, ORDER_PAYOUT, ORDER_DIA_CAP, ORDER_REFRESH_MAX, genOrderBatch, ensureOrders, refreshOrders, orderPick, deliverOrder, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack, FRAG_GAIN, FRAG_COST, fragDecompose, fragExchange, fragBatchPlan, fragBatchExecute, pruneSlotsToShape, MARKET_SRCS, marketEligible, cardSnap, snapToInstance, lineupSnap, snapCardEff, ARENA, lootEligible, openArenaPack, playArenaMatch, UNIQUE_FALLBACK_DIA, uniqueDowngrade };
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
@@ -1963,7 +2027,7 @@ const KBPlatform = (() => {
     let p = get(key);
     if (timeoutMs) { const t = await Promise.race([p.then(v => ({ v })), new Promise(r => setTimeout(() => r({ timeout: true }), timeoutMs))]); if (t.timeout) { cloudFail[key] = true; return null; } p = Promise.resolve(t.v); }
     let obj = await p;
-    if (obj === undefined && slot === 1) { const leg = await get(LEGACY_CLOUD_KEY); if (leg) obj = leg; } // 主键失败时也探旧键，有旧档优先于报错
+    if ((obj === undefined || obj === null) && slot === 1) { const leg = await get(LEGACY_CLOUD_KEY); if (leg) obj = leg; } // 主键失败或确认无档都探旧键（存量老备份只剩旧单键一份时，200+null 不回退就永远探不到；与篮坛同口径）；有旧档优先于报错
     if (obj === undefined) { cloudFail[key] = true; return null; } // 对外保持旧契约（null），失败标记供启动流程决定是否开闸
     delete cloudFail[key];
     cloudCache[key] = obj || null;
@@ -2124,10 +2188,13 @@ const KBTrack = (() => {
 // 无容器（Pages/本地）：3 秒模拟广告浮层，UI 明示，供试玩验收。
 const KBAds = (() => {
   // 广告改版定版（2026-11-03）：dia 钻石小包下线（存量 PENDING 在 applyAdReward 静默作废一个版本周期）；软点位 double/heat/league 不限次；新点位 makeup 断签补签（1/日、月 ≤2 由 m3 侧把关）、redraw 开包续抽（3/日）
-  const LIMITS = { double: Infinity, league: Infinity, urdraw: 1, heat: Infinity, dia30: 30, grade: Infinity, makeup: 1, redraw: 3 }; // 游戏侧点位日限；free 广告免费包点位已于 2026-11-03 按主人令下线（金币通胀、奖励无意义）
-  // 第二批（2026-11-03）：dia30=钻石广告独立 bucket 30 次/日×30 钻、grade=评级（每卡 ≤3 次由卡侧封顶）；底层平台只有一个 reward 任务，各点位共用同一 vatask 任务，靠 PENDING.purpose 区分发奖用途
+  const LIMITS = { double: Infinity, league: Infinity, urdraw: 1, heat: Infinity, dia30: 40, grade: Infinity, makeup: 1, redraw: 3, orders: 5 }; // 游戏侧点位日限；free 广告免费包点位已于 2026-11-03 按主人令下线（金币通胀、奖励无意义）
+  // 第二批（2026-11-03）：dia30=钻石广告独立 bucket、grade=评级（每卡 ≤3 次由卡侧封顶）；底层平台只有一个 reward 任务，各点位共用同一 vatask 任务，靠 PENDING.purpose 区分发奖用途
+  // 交易所改革一期（2026-11-04）：dia30 改阶梯 bucket——日上限 30→40 次，前 20 次 ×30 钻、21–40 次 ×10 钻，日发放上限 900→800；切出的 100 钻恰为收藏家订单日封顶（总发行 Δ=0，终稿 §三资金切法）。金额分档由 diaReward(count) 按「本次发放前的当日计数」裁定，发放点（main.applyAdReward）在 grant 计数自增前调用。
+  // orders=收藏家订单广告刷新（5/日，与 systems.ORDER_REFRESH_MAX 同值，改一处须同步另一处）
+  function diaReward(count) { return (count || 0) < 20 ? 30 : 10; }
   // 总闸口径（广告改版定版）：只有 redraw 等硬点位计入 12/日总闸；软点位（double/heat/league）与独立追求型点位（dia30/grade/urdraw/makeup）全部豁免；已下线点位（dia/free）的存量计数同样不占额，防旧档同日升级被幽灵计数堵住续抽
-  const CAP_EXEMPT = ["league", "dia30", "grade", "makeup", "double", "heat", "urdraw", "dia", "free"];
+  const CAP_EXEMPT = ["league", "dia30", "grade", "makeup", "double", "heat", "urdraw", "dia", "free", "orders"];
   const TOTAL_CAP = 12;
   const PENDING_KEY = "kaibao_pending_ad";
   const PENDING_TTL = 12 * 3600 * 1000; // 与篮坛 settlePending 同口径：12h 内保留待核，超时才判未完播清掉
@@ -2277,7 +2344,7 @@ const KBAds = (() => {
     }
     return null; // 余额查不到：保留 PENDING，下次启动再核
   }
-  return { LIMITS, TOTAL_CAP, CAP_EXEMPT, isNative, canWatch, watch, grant, recoverPending, todayCount, capCount, getBalance };
+  return { LIMITS, TOTAL_CAP, CAP_EXEMPT, isNative, canWatch, watch, grant, recoverPending, todayCount, capCount, getBalance, diaReward };
 })();
 if (typeof module !== "undefined") module.exports = KBAds;
 
@@ -2827,6 +2894,7 @@ function sellRate() { return state.startDay === D ? 0.85 : 0.5; }
 function sellPrice(c) { return Math.floor(S.instanceValue(state, c, D) * sellRate()); }
 if (state.matchDay !== String(D)) { state.matchesLeft = 20; state.matchDay = String(D); }
 if (!state.commission || state.commission.day !== D) state.commission = S.genCommission(state, D);
+S.ensureOrders(state, D); // 改革一期：收藏家订单按 dayIndex 生成/跨日重置（与 commission 同日界）
 // M3 每日/每周/广告日计数重置
 ensurePeriods();
 function ensurePeriods() {
@@ -3038,6 +3106,30 @@ function renderShop() {
       <button class="btn" id="commYes">卖给他</button> <button class="btn ghost" id="commNo">拒绝</button></div></div>`
       : `<p class="hint">委托目标卡已不在卡库。</p>`;
   }
+  // 收藏家订单（交易所改革一期，2026-11-04）：交重复低档基础卡换钻；与上方「收藏家委托」（卖卡换金币）两套系统并列展示、文案分名
+  const oa = $("#ordersArea");
+  if (oa) {
+    const o = S.ensureOrders(state, D);
+    const rows = o.batch.map((ord, i) => {
+      const p = E.playerById(ord.pid);
+      const nm = p ? esc(p.name) : "?";
+      let tail;
+      if (ord.done) tail = `<span class="hint">✅ 已交付</span>`;
+      else if ((o.earned || 0) + ord.payout > S.ORDER_DIA_CAP) tail = `<span class="hint">今日订单钻石已达上限</span>`;
+      else { const pick = S.orderPick(state, ord); tail = pick.ok ? `<button class="btn" data-order="${i}">交付</button>` : `<span class="hint">${pick.reason}</span>`; }
+      return `<div class="row"><b style="color:${TIER_COLOR[ord.tier] || "#ccc"}">${ord.tier}</b><span>${nm} · 基础款 ×1</span><span class="hint">交付得 <b style="color:#ffd257">${ord.payout} 钻</b></span>${tail}</div>`;
+    }).join("");
+    const rLeft = S.ORDER_REFRESH_MAX - (o.refreshUsed || 0);
+    oa.innerHTML = `<div class="row"><b>🧾 收藏家订单</b><span class="hint">交重复基础卡换钻石 · 今日已领 ${o.earned || 0}/${S.ORDER_DIA_CAP} 钻</span></div>${rows}` +
+      `<div class="row"><button class="btn ghost" id="orderRefreshBtn" ${rLeft <= 0 ? "disabled" : ""}>📺 看广告换一批（今日剩 ${Math.max(0, rLeft)} 次）</button></div>` +
+      `<p class="hint">每款保留最后一张；阵容/展示/挂牌中的卡与平行版、限编款不能交付。</p>`;
+    oa.querySelectorAll("[data-order]").forEach(b => b.onclick = () => {
+      const r = S.deliverOrder(state, D, Number(b.dataset.order));
+      if (r.ok) { persist(); render(); toast(`订单交付：${r.name} +${r.payout} 钻（今日已领 ${r.earned}/${S.ORDER_DIA_CAP}）`); }
+      else toast(r.reason);
+    });
+    const orb = $("#orderRefreshBtn"); if (orb) orb.onclick = () => adWatch("orders");
+  }
 }
 // ---------- 开包 ----------
 // ----- D1 时期卡 1/1 认领状态公示（仅足坛）：数据走 /unique/status 只读路由（证书号+认领日期，服务端无昵称不编造）；拉不到静默降级为空，不挡开包 -----
@@ -3104,7 +3196,7 @@ function diaPackInfo(key) {
   const p = E.PACKS[key]; if (!p || p.cur !== "dia") return null;
   return { key, name: p.name, price: p.price, lv: DIA_JUMP[key].lv };
 }
-function dia30Left() { return Math.max(0, 30 - ((state.adDay && state.adDay.day === todayStr()) ? (state.adDay.counts.dia30 || 0) : 0)); } // 与 dia30 点位同一计数（adDay.counts.dia30）
+function dia30Left() { return Math.max(0, 40 - ((state.adDay && state.adDay.day === todayStr()) ? (state.adDay.counts.dia30 || 0) : 0)); } // 与 dia30 点位同一计数（adDay.counts.dia30）；上限 40 = 改革一期阶梯 bucket（前 20 次 +30、21–40 次 +10）
 function diaShortfall(key) { // 够钻/未解锁/非钻石包 → null（购买行为与改前完全一致）；不够 → 差额信息
   const info = diaPackInfo(key); if (!info) return null;
   if (state.shopLv < info.lv || state.dia >= info.price) return null;
@@ -3117,7 +3209,7 @@ function openDiaShortfall(key) {
   $("#diaShortTitle").textContent = `钻石不够开「${s.info.name}」`;
   $("#diaShortLack").textContent = `这个包要 ${s.info.price} 钻，你现在有 ${state.dia} 钻，还差 ${s.lack} 钻。看广告攒钻，攒够了自己点开包。`;
   const btn = $("#diaShortAdBtn"), src = $("#diaShortSources");
-  if (s.diaLeft > 0) { btn.style.display = ""; src.style.display = "none"; btn.textContent = `📺 看广告 +30 钻（今日剩 ${s.diaLeft} 次）`; }
+  if (s.diaLeft > 0) { btn.style.display = ""; src.style.display = "none"; const cnt30 = (state.adDay && state.adDay.day === todayStr()) ? (state.adDay.counts.dia30 || 0) : 0; btn.textContent = `📺 看广告 +${cnt30 < 20 ? 30 : 10} 钻（今日剩 ${s.diaLeft} 次）`; } // 阶梯口径：下一次发放额（前 20 次 +30、之后 +10，与 KBAds.diaReward 同档）
   else { btn.style.display = "none"; src.style.display = ""; } // dia30 今日耗尽：改列其他钻石来源，不留死按钮
   $("#diaShortModal").classList.add("on");
   return true;
@@ -3127,7 +3219,7 @@ function onDiaShortAd() { // 回跳上下文先落盘再看广告：中途杀进
   const key = diaShortKey; closeDiaShortfall(); if (!key) return;
   if (!state.flags) state.flags = {};
   state.flags.diaReturn = key; persist();
-  adWatch("dia30"); // 只走现有 dia30 发放通道（计入其 30 次/日上限与计数）
+  adWatch("dia30"); // 只走现有 dia30 发放通道（计入其 40 次/日阶梯上限与计数）
 }
 function diaReturnFlash(key) {
   const b = key === "legend" ? $("#legendPackBtn") : document.querySelector(`[data-pack="${key}"]`);
@@ -3140,7 +3232,8 @@ function maybeDiaReturn() { // dia30 到账后回跳（即时发放与开机补�
   const info = diaPackInfo(key); if (!info) return;
   switchTab("packs");
   setTimeout(() => diaReturnFlash(key), 60);
-  toast(state.dia >= info.price ? `钻石到账！「${info.name}」现在够开了，点它开包` : `+30 钻已到账，还差 ${info.price - state.dia} 钻开「${info.name}」，可继续看广告攒钻`);
+  const cntAfter = (state.adDay && state.adDay.counts && state.adDay.counts.dia30) || 0; // 本函数在 grant 之后调用：计数已自增，第 cntAfter 次发放的金额按阶梯 = (cntAfter<=20 ? 30 : 10)
+  toast(state.dia >= info.price ? `钻石到账！「${info.name}」现在够开了，点它开包` : `+${cntAfter <= 20 ? 30 : 10} 钻已到账，还差 ${info.price - state.dia} 钻开「${info.name}」，可继续看广告攒钻`);
 }
 // ---------- 阵容（全场 11 人，2026-11-02 阵型版） ----------
 const FORM_DESC = { "4-4-2": "双前锋 · 边路一边前卫一边锋，阵型加成 +6（均衡）", "4-3-3": "双边锋压上 · 边路/锋线每人 +2，阵型加成 +6", "4-2-3-1": "双后腰配前腰 · 中场每人 +1.5，阵型加成 +6", "5-3-2": "五后卫铁桶 · 后卫线每人 +1.5，阵型加成 +8", "3-5-2": "双边前卫 · 中场每人 +2，阵型加成 +8", "4-5-1": "单箭头 · 锋线 +3、中场每人 +1.5，阵型加成 +12（单前锋专属）" }; // 阶段 C 定版：与 FORM_IDENTITY 构成对应
@@ -3923,7 +4016,7 @@ function renderMeta() {
   const cnt = k => state.adDay.counts[k] || 0;
   $("#adDoubleBtn").disabled = Math.floor(state.idlePending || 0) <= 0;
   $("#adDoubleBtn").textContent = `📺 广告双倍领取（不限次）`;
-  const d30 = $("#adDia30Btn"); if (d30) { d30.disabled = cnt("dia30") >= 30; d30.textContent = `📺 看广告 +30 钻（今日 ${cnt("dia30")}/30）`; }
+  const d30 = $("#adDia30Btn"); if (d30) { const c30 = cnt("dia30"); d30.disabled = c30 >= 40; d30.textContent = `📺 看广告 +${c30 < 20 ? 30 : 10} 钻（今日 ${c30}/40）`; }
   if (state.ad) state.ad.dia30 = cnt("dia30"); // 钻石广告独立 bucket 镜像字段同步
   $("#adLeagueBtn").disabled = state.matchesLeft > 0;
   $("#adUrBtn").disabled = cnt("urdraw") >= 1;
@@ -4215,7 +4308,7 @@ async function mktBuy(it) {
     const pay = r.payDia;
     state.dia -= pay;
     const inst = S.snapToInstance(state, snap, "market");
-    if (inst) { inst.bornDay = D; inst.resell = snap && snap.resale ? 0 : 1; inst.buyDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); } // 转卖单买入→额度归 0 永久绑定；普通单买入→附 1 次额度
+    if (inst) { if (snap && snap.official) inst.src = "official"; inst.bornDay = D; inst.resell = (snap && (snap.resale || snap.official)) ? 0 : 1; inst.buyDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); } // 转卖单买入→额度归 0 永久绑定；普通单买入→附 1 次额度；官方来源标记若混入玩家单（伪造快照）→按绑定卡落码，防绑定蒸发
     mktCache = null; persist(); render();
     toast(`买入成功：${nm} 已入卡库（-${pay} 钻）`);
   } catch (e) { toast("买入失败：" + errMsg(e)); mktCache = null; renderExchange(true); }
@@ -4225,7 +4318,7 @@ async function mktBuyOfficial(it) {
   if (mktBuyBusy) { toast("上一笔买入还在处理中，请稍候"); return; }
   const nm = it.snap.name || (E.playerById(it.snap.pid) || {}).name || "这张卡";
   if (state.dia < it.price) { toast(`钻石不足：这张要 ${it.price} 钻，你有 ${state.dia} 钻`); return; }
-  if (!confirm(`花 ${it.price} 钻买下「${nm}」？这是官方补货，钻石由系统回收（不进入任何玩家账户）。买入附 1 次转卖额度，持满 3 天可挂牌转卖，转卖成交销毁 10%。买入后直接入你的卡库。`)) return;
+  if (!confirm(`花 ${it.price} 钻买下「${nm}」？这是官方补货，钻石由系统回收（不进入任何玩家账户）。官方补货卡为绑定卡，不可挂牌转卖。买入后直接入你的卡库。`)) return;
   mktBuyBusy = true;
   try {
     const r = await KBPlatform.lbRequest("/market/buy-official", { idx: it.idx });
@@ -4233,10 +4326,10 @@ async function mktBuyOfficial(it) {
     const snap = r.snap;
     const pay = r.payDia;
     state.dia -= pay;
-    const inst = S.snapToInstance(state, snap, "market"); // src=market：与玩家买入同规，附 1 次转卖额度
-    if (inst) { inst.bornDay = D; inst.resell = 1; inst.buyDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); }
+    const inst = S.snapToInstance(state, snap, "official"); // 改革一期来源绑定：src='official' 落码可审计 + resell=0 双保险；marketEligible 对该来源单列拒绝挂牌，服务端 /market/list 据 snap.official 同口径拒绝
+    if (inst) { inst.bornDay = D; inst.resell = 0; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); }
     mktCache = null; persist(); render();
-    toast(`买入成功：${nm} 已入卡库（-${pay} 钻，官方补货）`);
+    toast(`买入成功：${nm} 已入卡库（-${pay} 钻，官方补货 · 绑定卡）`);
   } catch (e) { toast("买入失败：" + errMsg(e)); mktCache = null; renderExchange(true); }
   finally { mktBuyBusy = false; }
 }
@@ -4596,7 +4689,8 @@ function applyAdReward(kind, uid, prot) {
   if (kind === "free") return null; // 点位已下线（2026-11-03）：存量 PENDING 补发到此静默作废，不发包
   if (kind === "dia") return null; // 钻石小包已下线（广告改版 2026-11-03）：存量 PENDING 补发到此静默作废，不发钻（保留分支一个版本周期，防补发链报错/复活发钻）
   if (kind === "double") { const g = Math.floor(state.idlePending || 0); state.coins += g * 2; state.idlePending = 0; state.daily.idle = 1; }
-  else if (kind === "dia30") { state.dia += 30; } // 钻石广告独立 bucket，每次 +30 钻
+  else if (kind === "dia30") { const n30 = (state.adDay && state.adDay.day === todayStr()) ? (state.adDay.counts.dia30 || 0) : 0; const amt30 = KBAds.diaReward(n30); state.dia += amt30; return `钻石广告 +${amt30} 钻`; } // 阶梯发放（改革一期）：grant 在 applyFn 后才自增计数，n30 即本次序数（0 起）——前 20 次 +30、21–40 次 +10；补发路径同走此函数，口径一致
+  else if (kind === "orders") { S.refreshOrders(state, D); } // 收藏家订单刷新换批（次数由 ads LIMITS.orders=5 把关；earned 跨批累计不清零）
   else if (kind === "league") { state.matchesLeft += 10; }
   else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.dia60, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; c.src = "urdraw"; state.cards.push(c); lastDraw = [c]; checkPoster([c]); } // 体验抽改钻石包（60 档）口径单张；来源标记（体验抽产出可挂牌）
   else if (kind === "redraw") { const tier = E.rollTier(E.PACKS.dia120, Math.random); const c = E._rollInstance(state, tier, Math.random, false, "redraw"); E.settleCards(state, [c]); c.bornDay = D; state.cards.push(c); state.draws++; lastDraw = [c]; checkPoster([c]); } // S4 开包续抽：dia120 单卡口径（史诗 .30/传说 .55/传世 .15），无时期槽、不碰 240 保底（不走 _drawOne 的保底计数）、src=redraw 不在 MARKET_SRCS 内不可挂牌
@@ -4605,7 +4699,7 @@ function applyAdReward(kind, uid, prot) {
   else if (kind === "grade") { return prot ? settleGradeProtected(uid) : settleGrade(uid !== null && uid !== undefined ? uid : gradeTargetUid); }
   return null;
 }
-const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia30: "钻石广告 +30 钻", league: "联赛场次 +10", urdraw: "钻石包体验抽已出卡（助力卡，图鉴照常点亮）", redraw: "开包续抽已出卡", makeup: "补签成功", heat: "炉温 +1（满 3 下次合成免费）", grade: "评级完成" };
+const AD_OK_MSG = { double: "挂机收益双倍领取成功", dia30: "钻石广告奖励到账", orders: "新一批收藏家订单来了，去卡店页看看", league: "联赛场次 +10", urdraw: "钻石包体验抽已出卡（助力卡，图鉴照常点亮）", redraw: "开包续抽已出卡", makeup: "补签成功", heat: "炉温 +1（满 3 下次合成免费）", grade: "评级完成" };
 // 会话内复核（双生子同步，2026-11-03）：旧版 recoverPending 只在开机调一次，被保留的 PENDING
 // 在会话内无法自愈——服务端余额稍后到账也得等冷启动才补发，且期间每次看广告都被 pendingKept 拦。
 // 现把开机补发逻辑提成共用结算链：开机与每次拉起广告前都先跑一遍，口径与开机完全一致
@@ -4801,7 +4895,7 @@ $("#importBtn").onclick = () => {
 };
 // ================= 竞品抄作业批（2026-11-03）：邮箱 / 更多功能面板 / 碎片兑换弹窗 / 新手引导 =================
 // ----- 邮箱（第 7 项，本地版 v1）：state.mail 上限 40、新在前；广告改版起支持附件礼包（gift: {pack, dia} + claimed 领取标记） -----
-const MAIL_VER = "2026-11-03e";
+const MAIL_VER = "2026-11-04a";
 function mailPush(title, body, gift) {
   state.mail = state.mail || [];
   const m = { id: Date.now() + "-" + Math.floor(Math.random() * 1e6), title, body, day: todayStr(), read: false };
@@ -4870,6 +4964,20 @@ $("#mailModal").addEventListener("click", e => { if (e.target.id === "mailModal"
 $("#mailReadAll").onclick = () => { (state.mail || []).forEach(m => { m.read = true; }); renderMail(); updateMailBadge(); persist(); toast("邮箱已全部标为已读"); };
 // ----- 通用文本弹窗（关于/建议共用） -----
 function showText(title, body) { $("#textTitle").textContent = title; $("#textBody").textContent = body; $("#textModal").classList.add("on"); }
+// ----- 关于游戏：开发者信 + 微信号拉群（微信号仅静态文本展示、长按选中复制；严禁调用任何剪贴板 API） -----
+function showAbout() {
+  $("#textTitle").textContent = "ℹ️ 关于《足坛卡王》";
+  $("#textBody").innerHTML = [
+    "<p>致每一位喜欢足球的玩家：</p>",
+    "<p>你好，我是《足坛卡王》的独立开发者。</p>",
+    "<p>因为喜欢足球，也喜欢拆开一包卡时那一下的期待，我把这两件事凑到一起，做了这个小小的球星卡世界。从第一行代码到现在，它一直是我一个人在慢慢打磨。</p>",
+    "<p>游戏还远谈不上完美：哪里卡、哪里不好用、奖励发得对不对，你玩的时候遇到了，就直说。可以在虎扑评论里留言，也可以加我微信——你的每一次反馈，都可能是下一次更新的起点。</p>",
+    "<p>我建了一个《足坛卡王》交流群，聊球、晒卡、提意见都欢迎。想进群的话，先加我微信，我拉你进来。姊妹作《篮坛卡王》也在虎扑 AI 工坊，欢迎一起玩。</p>",
+    '<div class="wxbox"><div class="wxt">开发者微信</div><div class="wxn">m19011281900</div><div class="wxh">长按微信号选中复制，再到微信添加好友，备注「卡王」拉你进群</div></div>',
+    '<p class="wxfoot">开包集卡 · 120 名球员卡池 · 概率全公示 · 无充值 · 广告纯自愿</p>'
+  ].join("");
+  $("#textModal").classList.add("on");
+}
 $("#textClose").onclick = () => $("#textModal").classList.remove("on");
 $("#textModal").addEventListener("click", e => { if (e.target.id === "textModal") $("#textModal").classList.remove("on"); });
 // ----- 更多功能面板（第 3 项）：九宫格只放真能用的入口；分享走 KBPlatform.shareCard、桌面仅容器有真实 API 时出现 -----
@@ -4897,7 +5005,7 @@ function moreAction(act) {
   else if (act === "guide") { startGuide(); }
   else if (act === "mail") { openMail(); }
   else if (act === "save") { switchTab("shop"); setTimeout(() => { const el = $("#codeBox"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80); }
-  else if (act === "about") { showText("ℹ️ 关于《足坛卡王》", "足球球星卡收集游戏：开包、集卡、升星评级、组队打联赛，一路当上卡王。120 名球员卡池（另有时期卡/双人卡 7 张），概率全公示、无任何充值入口，广告纯自愿——不看也能完整游玩。姊妹作《篮坛卡王》也在虎扑 AI 工坊，欢迎一起玩。"); }
+  else if (act === "about") { showAbout(); }
   else if (act === "suggest") { showText("💬 问题与建议", "玩的过程中遇到 bug、数值不合理，或者有想要的新功能，都欢迎去虎扑 AI 工坊《足坛卡王》的帖子下留言，店主每条都看。存档出问题先别删档：先用卡店页的存档码导出备份，再来留言求助。"); }
   else if (act === "share") { KBPlatform.shareCard("足坛卡王｜足球球星卡 · 开包当卡王", "120 名球星真人海报卡，概率全公示、无充值，你也来开包当卡王！").then(r => { if (!r.ok) toast(r.message || "分享请在虎扑 App 内使用"); }); }
   else if (act === "desktop") { KBPlatform.addToDesktop().then(r => { if (r.message) toast(r.message); }); }
@@ -5002,6 +5110,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
+  { v: "收藏家订单 · 钻石广告阶梯 · 官方补货绑定", items: ["🧾 收藏家订单上线：卡店页每天有一批订单——把重复的基础款卡交给收藏家直接换钻石（普通 5 · 稀有 12 · 史诗 30），每天最多领 100 钻；每款最后一张不收，阵容/展示/挂牌中的卡与折射版、限编号也不收；看广告可换一批新订单（每天 5 次）", "📺 钻石广告改阶梯：每天可看 40 次——前 20 次每次 +30 钻，21–40 次每次 +10 钻", "🏛 官方补货卡改绑定：今后从官方补货货架买到的卡不可转卖（此前买到的不受影响、照常可卖）；货架价格与每日 8 件不变", "✉️ 「更多」九宫格新增「关于游戏」：开发者的信和玩家交流群入口都在里面"] },
   { v: "交易所放开 · 官方补货 · 买入可转卖 · 存档码瘦身", items: ["🏛 交易所大放开：传说、史诗卡也能挂牌卖钻了（原先只有传世和时期卡）；交易所还新增「官方补货」货架——每日 8 件史诗/传说明码标价，排在玩家挂单之后、带官方徽标，售完不补、次日 0 点刷新", "🔁 买来的卡能转卖了：从交易所买入的卡附 1 次转卖额度，持满 3 天就能挂牌转卖（转卖成交收 10% 手续费，普通挂单仍是 5%）；转卖来的卡再买走就永久绑定；老早就买入的卡自动补发 1 次额度、不用等冷却", "🧩 一键批量分解：卡库新增批量分解碎片——每个球员自动保留现价最高的一张，其余重复卡一次分光（史诗默认不勾，保护合成/升星材料）", "📋 存档码大瘦身：新存档码只有原来的几十分之一长，复制到备忘录也不会被截断；老存档码照常能导入", "⚔️ 挑战次数提升：B 池每日可挑战 10 次、C 池 5 次；挑战战报和待领奖励此前可能刷不出来，已修复——记得去挑战页看看有没有没领的胜场金", "💎 钻石不足时开钻石包会直接提示去看钻石广告补钻，看完自动回到开包页", "🔧 细节修复：传世保底计数显示封顶 240/240（攒满会提示去钻石包兑现）；合成炉显示每档可用材料数（挂牌中的卡不算）；卡片详情会写明不可分解的原因"] },
   { v: "签字卡面 · 广告改版 · 保分评级 · 圣杯图鉴", items: ["📺 广告改版：钻石小包下线（钻石广告 +30 保留，每天 30 次）；联赛、挂机双倍、熔炉炉温改为不限次；新增今日广告任务链——看广告攒进度，5/10/20/30 次领高级包、炉温、碎片与万能材料（奖励全非钻石）", "🎁 开包续抽：开完豪华钻石包后可看 1 支广告再抽 1 张（概率与豪华包单卡一致：史诗 30% · 传说 55% · 传世 15%；无时期槽、不计 240 保底、产出不可挂牌，每日 3 次）", "🛡 保分评级上线：满星卡已有评级、只剩最后 1 次机会时，可看 2 支广告保分评级——照常摇号，只升不降；中途退出进度不丢，回来能续", "📅 断签补签：恰好漏签一天时，可看 1 支广告保住连签（每月 2 次；只恢复连签天数，漏签那天的奖励不补发）；签到区第 7 天大奖提示更醒目", "👑 开服元老收藏认证：早期收藏的 /1 传世卡一切权益照旧（限编/×20 身价/挂牌资格不变）；持有者邮箱里有一份元老礼包（钻石包 ×1 + 60 钻，每档一次）；只有服务器登记过的时期卡 /1 带「全服唯一」证书徽章", "✍️ 签字卡面焕新：签字版告别印刷排字——换成球员本国文字的手写签名（哪国人签哪国字），笔迹各不相同，落在肖像开阔处，不遮五官、不压印刷名", "🏆 圣杯图鉴：图鉴里传世/传说球员新增「圣杯」三格——集齐该球员的 /1 签字、/1 红折、/1 球衣分别点亮一格，点亮后卖掉或分解也不熄灭；另有圣杯专属成就（最高 50 钻）", "🕰 时期卡 /1 认领状态公示：开包页新增公示栏——5 张时期卡的 /1 哪些已被全服认领（附证书号与日期）、哪些还没被抽走，开豪华钻石包前先看一眼", "📊 排行榜修复：个别设备因本地存储已满打开排行榜报错、榜单加载不出来，已修复——存储写不进时榜单照常打开"] },
   { v: "细分位置上线 · 布阵按实战强度选人", items: ["⚽ 细分位置上线：五大位置拆成 10 个小位置——中后卫/边后卫、后腰/中前卫/前腰、边锋/边前卫、中锋/影锋；卡面和图鉴都能看到每位球员的本职小位置，图鉴新增按小位置筛选", "🧠 一键布阵升级：按实战强度选人——高分球员客串也能挤掉本职球员，不再只认本职", "⚠️ 客串有代价：球员打非本职小位置扣评分——同一条线内客串 −6、跨线客串 −12（比如前腰拉去打后腰），门将位置专属、不可客串；阵容页里客串球员会标红显示扣了多少分", "🎯 阵型微调：4-4-2 与 4-5-1 改成一边前卫一边锋的双边路；联赛段位目标与对手强度按新战力同步上调；老存档自动迁移，卡一张不少"] },
