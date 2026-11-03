@@ -374,6 +374,19 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 #guideCard { position: absolute; background: linear-gradient(180deg, #2b3242, #20262f); border: 1px solid rgba(255,210,87,.55); border-radius: 14px; padding: 14px; box-shadow: 0 18px 44px rgba(0,0,0,.55); }
 #guideCard p { font-size: 14.5px; line-height: 1.65; }
 #guideCard .gstep { color: #8b95a3; font-size: 12px; }
+
+/* ===== 第三批（2026-11-03）：交易所/挑战/挂牌与可夺池弹窗 ===== */
+#listModal, #lootModal { position: fixed; inset: 0; background: rgba(5,6,9,.88); display: none; align-items: center; justify-content: center; z-index: 66; padding: 18px; }
+#listModal.on, #lootModal.on { display: flex; }
+#listModal .detailbox, #lootModal .detailbox { background: #171b23; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; max-height: 86vh; overflow: auto; }
+.mktitem { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #3a4150; border-radius: 12px; padding: 10px; margin-top: 10px; background: #1d2129; }
+.mktitem .minf { flex: 1; min-width: 0; font-size: 13px; line-height: 1.65; }
+.mktitem .mprice { color: #7dd7ff; font-weight: 800; font-size: 16px; white-space: nowrap; }
+.certbadge { display: inline-block; background: linear-gradient(120deg, #ffe9a8, #d4a017); color: #2a1802; font-size: 10px; font-weight: 900; padding: 1px 5px; border-radius: 4px; letter-spacing: .5px; }
+.lootrow { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 13px; cursor: pointer; }
+.lootrow.off { opacity: .5; cursor: default; }
+.lootrow .lwhy { margin-left: auto; color: #8b95a3; font-size: 11.5px; text-align: right; }
+.arena-vs { display: flex; align-items: center; gap: 10px; border: 1px solid #3a4150; border-radius: 12px; padding: 10px; background: #1d2129; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -391,6 +404,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <button class="tab" data-tab="league"><span class="tic">🏆</span>联赛</button>
   <button class="tab" data-tab="dex"><span class="tic">📖</span>图鉴</button>
   <button class="tab" data-tab="board"><span class="tic">📊</span>排行榜</button>
+  <button class="tab" data-tab="arena"><span class="tic">⚔️</span>挑战</button>
   <button class="tab" data-tab="exchange"><span class="tic">🏛</span>交易所</button>
 </nav>
 
@@ -524,11 +538,22 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </section>
 
 <section class="page" id="page-exchange">
-  <h2>🏛 交易所 · 待开启</h2>
-  <p>交易所正在筹备中，敬请期待。开启后，你手里的稀有卡能挂牌卖给其他玩家，用<b>钻石</b>结算。</p>
-  <p><b>可交易范围（预告）</b><br>· 传世卡：钻石包、名宿包开出的传世卡<br>· 时期卡 / 双人卡：豪华钻石包惊喜槽限定，天然稀缺<br>· 已评级的高分卡会更抢手（评级标签随卡转移）</p>
-  <p><b>规则预告</b><br>· 只用钻石交易，金币不参与<br>· 成交收少量钻石手续费<br>· 交易所开启后，<b>史诗及以上卡的系统回收将同步调整</b>（普通/稀有回收不变）——想出手的趁现在，想留的放心留</p>
-  <p class="hint">先把传世和时期卡攒起来：升满 5 星、评个高分，开市那天就是硬通货。</p>
+  <h2>🏛 交易所</h2>
+  <div class="row" style="gap:8px;margin-bottom:8px">
+    <button class="btn" id="mktTabMarket">🛒 市场</button>
+    <button class="btn ghost" id="mktTabMine">📦 我的挂单</button>
+    <button class="btn ghost" id="mktRefresh">刷新</button>
+    <span class="hint" id="mktDiaLine"></span>
+  </div>
+  <div id="mktBody"><p class="hint">加载中…</p></div>
+  <p class="hint" style="margin-top:10px"><b>交易规则</b>：只用钻石结算，金币不参与。只有<b>传世卡与时期/双人卡</b>可以挂牌，且必须是钻石包 / 豪华钻石包 / 名宿包 / 钻石包体验抽开出的（合成、冲档产出的传世不可挂牌，防金币印钻）；定价 10–100000 钻，每人最多同时挂 10 张。挂牌后卡会被<b>冻结</b>：自动退出阵容与展示柜，不能出售、分解、升星、评级，直到取消挂牌或售出。成交后卖家实得 <b>95%</b>（平台收 5% 手续费，向下取整）。买入的卡直接入仓。余额与库存都在本机，成交以服务器挂单记录为准；请勿用回档等手段刷单，异常记录会被清理。</p>
+</section>
+
+<section class="page" id="page-arena">
+  <h2>⚔️ 异步挑战</h2>
+  <div id="arenaBody"><p class="hint">加载中…</p></div>
+  <div id="arenaResult"></div>
+  <p class="hint" style="margin-top:10px"><b>玩法</b>：把你当前的首发阵容托管参战，其他玩家会来挑战你的阵容，你也可以去挑战别人的托管阵容——比赛离线自动进行，战报进邮箱。<b>B 池 · 金币奖池</b>：每场入场 200 金，赢了凭战报领 350 金，每天最多发起 5 场。<b>C 池 · 夺卡池</b>：参战前先选 3–6 张可夺卡（史诗及以下的重复卡），被打输了可能被夺走其中 1 张（每天最多被夺 1 张、被挑战合计最多 5 次），你赢了也能从对方可夺池里夺 1 张，每天最多发起 3 场。胜 +12 / 败 −8 挑战积分（防守成功 +6 / 失败 −4，不低于 0），300 积分可换 1 个专属包（3 张、保底史诗+）。参战有效期 24 小时，过期重新参战即可。</p>
 </section>
 
 <section class="page" id="page-board">
@@ -536,11 +561,12 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
   <div class="row" style="gap:8px;margin-bottom:8px">
     <button class="btn" id="lbTabPower">⚔️ 战力榜</button>
     <button class="btn ghost" id="lbTabValue">💎 单卡价值榜</button>
+    <button class="btn ghost" id="lbTabGrowth">📈 涨幅榜</button>
     <button class="btn ghost" id="lbRefresh">刷新</button>
   </div>
   <p class="hint" id="lbMe"></p>
   <div id="lbList"><p class="hint">加载中…</p></div>
-  <p class="hint">战力＝首发 11 人评分之和（含星级与评级加成）；单卡价值＝你最贵一张卡的静态身价（不随每日行情浮动）。打开本页时自动提交成绩，只升不降。</p>
+  <p class="hint">战力＝首发 11 人评分之和（含星级、评级与平行版上场加成）；单卡价值＝你最贵一张卡的静态身价（不随每日行情浮动）；涨幅榜＝全仓身价近 7 日涨幅（基线身价低于 5 万不入榜，需积累至少 5 天快照，打开本页时每日自动记录一次身价）。打开本页时自动提交成绩，只升不降。</p>
 </section>
 
 <footer>
@@ -548,7 +574,7 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 </footer>
 <div id="flash"></div>
 <div id="toast"></div>
-<div id="probModal"><div class="detailbox"><h3>📊 概率与保底细则</h3><p><b>各包概率（每张）</b><br>普通包：普通 62% · 稀有 26% · 史诗 12%<br>高级包：普通 32% · 稀有 38% · 史诗 30%<br>钻石包（60 钻）：史诗 55% · 传说 35% · 传世 10%<br>豪华钻石包（120 钻）：史诗 30% · 传说 55% · 传世 15%，另每包 12.5% 概率把 1 张换成时期卡/双人卡（7 张等权）<br>名宿系列包：稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><p><b>限编戳</b>：无编 70% · /99 18% · /25 8% · /10 3% · /1 1%<br><b>平行版</b>：普卡 88% · 银折 7% · 红折 3.5% · 签字 1.2% · 球衣 0.3%<br><b>金币包分层</b>：普通包/高级包的限编只出到 /99、平行版只出到银折；/25、/10、/1 与红折、签字、球衣只在钻石包、豪华钻石包、名宿系列包和合成/冲档产出。</p><p><b>评级出分</b>（5 星卡看广告评级，每卡 3 次，重评覆盖）：PSA 9 40%（身价 ×1.9 · 战力 +2）· BGS 9.5 25%（×2.6 · +4）· PSA 10 20%（×3.6 · +6）· BGS 10 10%（×6.2 · +8）· 黑标 5%（×9.5 · +12）</p><p><b>保底</b>：传世保底跨包累计，第 240 张必出传世，只在钻石包/豪华钻石包/名宿系列包兑现（当前 <span id="probPity">0/240</span>）；钻石包每包保底 1 张史诗+；每包至少覆盖 3 个位置（钻石包 2 个）；1/1 同一球员全版本只出一张，重复抽到自动变 /10。</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="probClose">关闭</button></div></div></div>
+<div id="probModal"><div class="detailbox"><h3>📊 概率与保底细则</h3><p><b>各包概率（每张）</b><br>普通包：普通 62% · 稀有 26% · 史诗 12%<br>高级包：普通 32% · 稀有 38% · 史诗 30%<br>钻石包（60 钻）：史诗 55% · 传说 35% · 传世 10%<br>豪华钻石包（120 钻）：史诗 30% · 传说 55% · 传世 15%，另每包 12.5% 概率把 1 张换成时期卡/双人卡（7 张等权）<br>名宿系列包：稀有 30% · 史诗 38% · 传说 24% · 传世 8%</p><p><b>限编戳</b>：无编 70% · /99 18% · /25 8% · /10 3% · /1 1%<br><b>平行版</b>：普卡 88% · 银折 7% · 红折 3.5% · 签字 1.2% · 球衣 0.3%<br><b>平行版上场加成</b>（只对上场卡生效，计入有效评分与阵容战力）：银折 +1 · 红折 +2 · 签字 +3 · 球衣 +3<br><b>金币包分层</b>：普通包/高级包的限编只出到 /99、平行版只出到银折；/25、/10、/1 与红折、签字、球衣只在钻石包、豪华钻石包、名宿系列包和合成/冲档产出。</p><p><b>评级出分</b>（5 星卡看广告评级，每卡 3 次，重评覆盖）：PSA 9 40%（身价 ×1.9 · 战力 +2）· BGS 9.5 25%（×2.6 · +4）· PSA 10 20%（×3.6 · +6）· BGS 10 10%（×6.2 · +8）· 黑标 5%（×9.5 · +12）</p><p><b>保底</b>：传世保底跨包累计，第 240 张必出传世，只在钻石包/豪华钻石包/名宿系列包兑现（当前 <span id="probPity">0/240</span>）；钻石包每包保底 1 张史诗+；每包至少覆盖 3 个位置（钻石包 2 个）；1/1 同一球员全版本只出一张，重复抽到自动变 /10。</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="probClose">关闭</button></div></div></div>
 <div id="packModal"><div class="packbox"><h3 id="packTitle">开包结果</h3><p class="hint" id="packSummary"></p><div class="grid" id="packGrid"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn gold" id="packClose">收下</button></div></div></div>
 <div id="detailModal"><div class="detailbox"><h3 id="detailTitle"></h3><div id="detailBody"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="detailClose">关闭</button></div></div></div>
 <div id="posterModal"><div class="posterbox"><img id="posterImg" alt="晒单卡"><p class="hint">长按图片保存 · 抽到传世或 /1 时自动生成</p><div class="row"><button class="btn gold" id="posterPost">发帖晒一晒</button>
@@ -559,6 +585,8 @@ textarea { width: 100%; background: #1d2129; color: #e8ebef; border: 1px solid #
 <div id="fragModal"><div class="detailbox"><h3>🧩 碎片兑换</h3><p class="hint">碎片余额 <b id="fragBal">0</b> · 只能兑换图鉴里还没点亮的球员，发出的是基础卡（无编 · 普卡 · 0 星 · 无评级）</p><div id="fragList"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="fragClose">关闭</button></div></div></div>
 <div id="textModal"><div class="detailbox"><h3 id="textTitle"></h3><p id="textBody" style="line-height:1.8;font-size:14px;margin-top:8px"></p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="textClose">关闭</button></div></div></div>
 <div id="guideOv"><div id="guideHL"></div><div id="guideCard"><span class="gstep" id="guideStep"></span><p id="guideText"></p><div class="row" style="margin-top:10px"><button class="btn" id="guideNext">知道了</button><button class="btn ghost" id="guideSkip">跳过引导</button></div></div></div>
+<div id="listModal"><div class="detailbox"><h3>🏛 挂牌出售</h3><p class="hint" id="listCardLine"></p><p style="margin-top:8px">定价（钻石，10–100000）：<input id="listPrice" type="number" min="10" max="100000" step="1" style="width:120px;background:#1d2129;color:#e8ebef;border:1px solid #3a4150;border-radius:6px;padding:6px"></p><p class="hint">成交后你实得 95%（平台收 5% 手续费，向下取整）。挂牌期间卡被冻结：退出阵容/展示，不能出售、分解、升星、评级。</p><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn" id="listConfirm">确认挂牌</button><button class="btn ghost" id="listCancel">取消</button></div></div></div>
+<div id="lootModal"><div class="detailbox"><h3>🎯 选择可夺池（3–6 张）</h3><p class="hint">C 池参战要先亮出可夺池：被打输了，对方会从里面随机夺走 1 张（每天最多被夺 1 张）。只能放史诗及以下的<b>重复卡</b>，/1、已评级、阵容/展示中的卡不行。已选 <b id="lootCount">0</b> 张。</p><div id="lootList" style="max-height:46vh;overflow:auto"></div><div class="row" style="justify-content:center;margin-top:12px;gap:8px"><button class="btn" id="lootConfirm">就这些，参战 C 池</button><button class="btn ghost" id="lootCancel">取消</button></div></div></div>
 <div id="bootOv"><div class="boot-logo">足坛卡王</div><div class="boot-sub">开 包 当 卡 王</div><div class="boot-bar"><i></i></div><div class="boot-tip">正在打开卡店…</div></div>
 <div id="startOv">
   <div class="start-inner">
@@ -648,17 +676,17 @@ const KBEngine = (() => {
   function cardValue(tier, rating, mult) {
     return Math.round(BASE[tier] * (0.9 + (rating % 10) / 50) * mult);
   }
-  // 按指定球员构造实例（rollInstance 与时期槽共用）；capped=金币包分层上下文
-  function makeInstance(state, p, rng, capped) {
+  // 按指定球员构造实例（rollInstance 与时期槽共用）；capped=金币包分层上下文；src=来源标记（第三批：包 id/synth/gamble 等，挂牌资格按它裁定；升星/评级不改）
+  function makeInstance(state, p, rng, capped, src) {
     const s = rollStamp(rng, capped); const v = rollVariant(rng, capped);
     // 1/1 全版本唯一（大改版决策 4）：该球员名额已用，roll 出的 /1 当场降为 /10
     if (s.stamp === "/1" && state.flags && state.flags.oneUsed && state.flags.oneUsed[p.id]) { s.stamp = "/10"; s.mult = 5.5; s.idleBonus = 1.0; }
-    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+    return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1, src: src || null };
   }
-  function rollInstance(state, tier, rng, capped) {
+  function rollInstance(state, tier, rng, capped, src) {
     const pool = byTier(tier);
     const p = pool[Math.floor(rng() * pool.length)];
-    return makeInstance(state, p, rng, capped);
+    return makeInstance(state, p, rng, capped, src);
   }
   // /1 名额结算：新卡进入卡库前逐张核对——首张 /1 登记名额，后续同球员 /1 降为 /10（覆盖同批多张与内联构造的卡）
   function settleCards(state, cards) {
@@ -680,12 +708,12 @@ const KBEngine = (() => {
     return used;
   }
   // Draw one delivered card for a pack, applying UR pity. forceTier overrides odds (legend pity / box guarantee handled by caller).
-  function drawOne(state, pack, rng, forceTier) {
+  function drawOne(state, pack, rng, forceTier, src) {
     let tier;
     if (state.pity >= PITY_UR - 1 && pack.odds["传世"] > 0) tier = "传世"; // 保底计数跨包累计，但只在能出传世的包（钻石包）兑现——金币包已封顶史诗
     else if (forceTier) tier = forceTier;
     else tier = rollTier(pack, rng);
-    const card = rollInstance(state, tier, rng, pack.cur === "coins"); // 金币包透传分层上下文（限编≤/99、版本≤银折）
+    const card = rollInstance(state, tier, rng, pack.cur === "coins", src); // 金币包透传分层上下文（限编≤/99、版本≤银折）
     state.draws++;
     if (card.tier === "传世") state.pity = 0; else state.pity++;
     return card;
@@ -704,7 +732,7 @@ const KBEngine = (() => {
     const forceLegendFirst = (packKey === "premium" && pack.odds["传说"] > 0 && state.hjNoLegend >= PITY_LEGEND_PACKS - 1); // 金币包封顶后 odds 为 0，此保底自动停用
     const cards = [];
     for (let i = 0; i < pack.size; i++) {
-      cards.push(drawOne(state, pack, rng, (i === 0 && forceLegendFirst) ? "传说" : null));
+      cards.push(drawOne(state, pack, rng, (i === 0 && forceLegendFirst) ? "传说" : null, packKey)); // 第三批：来源=包 id
     }
     // 位置分布规则（§6）：5张≥3位置 / 3张≥2位置；只重roll非传世、非保底位的重复位置卡
     let guard = 0;
@@ -713,7 +741,7 @@ const KBEngine = (() => {
       cards.forEach(c => counts[c.pos] = (counts[c.pos] || 0) + 1);
       const idx = cards.findIndex((c, i) => counts[c.pos] > 1 && c.tier !== "传世" && !(forceLegendFirst && i === 0));
       if (idx < 0) break;
-      const nc = rollInstance(state, rollTier(pack, rng), rng, pack.cur === "coins");
+      const nc = rollInstance(state, rollTier(pack, rng), rng, pack.cur === "coins", packKey);
       nc.uid = cards[idx].uid; cards[idx] = nc;
       if (nc.tier === "传世") state.pity = 0;
     }
@@ -723,7 +751,7 @@ const KBEngine = (() => {
       const old = cards[idx];
       const pool = byTierPos("史诗", old.pos);
       const p = pool[Math.floor(rng() * pool.length)];
-      const nc = makeInstance(state, p, rng, false);
+      const nc = makeInstance(state, p, rng, false, packKey);
       nc.uid = old.uid; cards[idx] = nc;
     }
     // 时期卡槽（第二批，dia120 专属）：12.5% 概率把 1 张替换为时期卡/双人卡（时期池等权）；额外惊喜槽——不吃 240 保底计数、也不重置
@@ -731,7 +759,7 @@ const KBEngine = (() => {
       const pool = eraPool();
       const p = pool[Math.floor(rng() * pool.length)];
       const idx = Math.floor(rng() * cards.length);
-      const nc = makeInstance(state, p, rng, false);
+      const nc = makeInstance(state, p, rng, false, packKey);
       nc.uid = cards[idx].uid; cards[idx] = nc;
     }
     // 高级包传说保底计数
@@ -753,21 +781,27 @@ const KBEngine = (() => {
       const pool = byTierPos(tier, pos);
       const p = pool[Math.floor(rng() * pool.length)];
       const s = rollStamp(rng); const v = rollVariant(rng);
-      return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), starter: true, star: 0, starLuck: 0 };
+      return { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), starter: true, star: 0, starLuck: 0, src: "starter" };
     });
   }
-  function starterEleven(state, rng) { // 全场阵型版礼包:4-4-2 形 11 人(2 史诗 + 9 稀有),口径同 starterFive
+  function starterEleven(state, rng) { // 全场阵型版礼包:4-4-2 形 11 人(2 史诗 + 9 稀有),口径同 starterFive；同人不重复抽取（原有放回抽取会出重复球员、被同人互斥顶掉首发位，实测 200 档仅 22% 能组满 11 人）
     rng = rng || Math.random;
     const shape = { GK: 1, DF: 4, MF: 2, WG: 2, ST: 2 };
     const epicPos = ["ST", "MF"];
+    const usedPid = new Set();
+    const pick = (tierChain, pos) => {
+      for (const tier of tierChain) {
+        const pool = byTierPos(tier, pos).filter(p => !usedPid.has(p.id));
+        if (pool.length) { const p = pool[Math.floor(rng() * pool.length)]; usedPid.add(p.id); return p; }
+      }
+      return null;
+    };
     const out = [];
     for (const pos of Object.keys(shape)) {
       for (let i = 0; i < shape[pos]; i++) {
-        const tier = epicPos.includes(pos) && i === 0 ? "史诗" : "稀有";
-        const pool = byTierPos(tier, pos);
-        const p = pool[Math.floor(rng() * pool.length)];
+        const p = pick(epicPos.includes(pos) && i === 0 ? ["史诗", "稀有", "普通"] : ["稀有", "普通"], pos);
         const s = rollStamp(rng); const v = rollVariant(rng);
-        out.push({ uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), starter: true, star: 0, starLuck: 0 });
+        out.push({ uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: cardValue(p.tier, p.rating, s.mult * v.vmult), starter: true, star: 0, starLuck: 0, src: "starter" });
       }
     }
     return out;
@@ -780,7 +814,8 @@ const KBEngine = (() => {
       weekly: { key: "", synth: 0, wins: 0, dexBase: 0, claimed: false },
       achClaimed: {}, setsClaimed: {}, records: { total: 0, single: 0, cabinet: 0, curTotal: 0 }, flags: {},
       adDay: { day: "", counts: {} }, adGrants: {}, adPending: null, adLocked: false, weekKey: "", weekPending: false, furnaceHeat: 0, gambleLuck: 0,
-      mats: { universal: 0 }, ad: { dia30: 0 }, frag: 0, mail: [], lastMailVer: "" }; // 第二批：万能材料计数 + 钻石广告 30/日独立 bucket 镜像（主计数在 adDay.counts.dia30）；竞品抄作业批：碎片余额 + 本地邮箱 + 邮箱版本标记
+      mats: { universal: 0 }, ad: { dia30: 0 }, frag: 0, mail: [], lastMailVer: "",
+      myListings: {}, claimedSales: {}, arena: { points: 0, entered: {}, lootUids: [], claimedLogs: {} } }; // 第二批：万能材料计数 + 钻石广告 30/日独立 bucket 镜像（主计数在 adDay.counts.dia30）；竞品抄作业批：碎片余额 + 本地邮箱 + 邮箱版本标记；第三批：交易所本地账（挂单映射/已售领取去重）+ 挑战本地态（积分缓存/参战到期/可夺池/凭证去重）
     st.cards = starterFive(st, rng);
     settleCards(st, st.cards);
     return st;
@@ -789,6 +824,7 @@ const KBEngine = (() => {
     const i = state.cards.findIndex(c => c.uid === uid);
     if (i < 0) return { ok: false };
     const c = state.cards[i];
+    if (c.listed) return { ok: false, reason: "挂牌中的卡已冻结" }; // 第三批：冻结卡禁售（引擎层兜底）
     const gain = Math.floor((valueNow !== undefined ? valueNow : c.value) * (rate === undefined ? 0.5 : rate));
     state.cards.splice(i, 1);
     state.display = state.display.filter(u => u !== uid);
@@ -861,6 +897,14 @@ const KBSave = (() => {
     if (typeof st.frag !== "number") st.frag = 0;
     if (!Array.isArray(st.mail)) st.mail = [];
     if (typeof st.lastMailVer !== "string") st.lastMailVer = "";
+    // 第三批加性字段（2026-11-03）：交易所本地账 + 挑战本地态（存量实例 src 缺失=可挂牌兼容口径，不回填）
+    if (!st.myListings || typeof st.myListings !== "object") st.myListings = {};
+    if (!st.claimedSales || typeof st.claimedSales !== "object") st.claimedSales = {};
+    if (!st.arena || typeof st.arena !== "object") st.arena = { points: 0, entered: {}, lootUids: [], claimedLogs: {} };
+    if (typeof st.arena.points !== "number") st.arena.points = 0;
+    if (!st.arena.entered || typeof st.arena.entered !== "object") st.arena.entered = {};
+    if (!Array.isArray(st.arena.lootUids)) st.arena.lootUids = [];
+    if (!st.arena.claimedLogs || typeof st.arena.claimedLogs !== "object") st.arena.claimedLogs = {};
     return st;
   }
   function load(slot) {
@@ -975,7 +1019,10 @@ const KBSystems = (() => {
     return { gain, lose };
   }
   // 升星（2026-11-02 双游升星案，与篮坛同规）：每星有效评分 +2、身价 ×1.25
-  function effRating(c) { return c.rating + 2 * (c.star || 0) + (c.grade ? c.grade.ovr : 0); } // 第二批：评级战力加成并入有效评分
+  // 平行加成（第三批，竞品考究定版）：平行版上场加成只进有效评分——银折 +1/红折 +2/签字 +3/球衣 +3（对手生成不补偿）；服务端排行榜同表复算
+  const VARIANT_BONUS = { base: 0, "银折": 1, "红折": 2, "签字": 3, "球衣": 3 };
+  function variantBonus(c) { return VARIANT_BONUS[c.variant || "base"] || 0; }
+  function effRating(c) { return c.rating + 2 * (c.star || 0) + (c.grade ? c.grade.ovr : 0) + variantBonus(c); } // 第二批：评级战力加成并入有效评分；第三批：平行加成并入
   function starMult(c) { return Math.pow(1.25, c.star || 0); }
   const STAR_RATES = { 1: 1, 2: 1, 3: 1, 4: 0.7, 5: 0.5 }; // 2026-11-03 主人令难度上调：4 星 80%→70%、5 星 60%→50%（双游同规）
   // 评级（第二批，大改版决策 8 定稿）：覆盖式、仅 5 星可评、每卡 ≤3 次、每次 1 支广告（广告链在 main/ads）；出分概率与倍率定稿值
@@ -1073,7 +1120,7 @@ const KBSystems = (() => {
     const used = new Set();
     const usedLink = new Set(); // 时期卡与原型同场互斥（第二批）：同一 link 归一键只上一张；双人卡仅收藏不上阵
     for (const pos of POS5) {
-      const best = state.cards.filter(c => c.pos === pos && !used.has(c.uid) && !isCollectionOnly(c.pid)).sort((a, b) => effRating(b) - effRating(a));
+      const best = state.cards.filter(c => c.pos === pos && !used.has(c.uid) && !isCollectionOnly(c.pid) && !c.listed).sort((a, b) => effRating(b) - effRating(a)); // 第三批：挂牌冻结卡不进自动组队
       state.slots[pos] = [];
       for (const c of best) { // 逐个贪心挑：同位置多槽时互斥也要即时生效（批量 filter 会让同 link 两张一起过筛）
         if (state.slots[pos].length >= shape[pos]) break;
@@ -1212,7 +1259,7 @@ const KBSystems = (() => {
     const rng = rng32(hashStr("comm-" + dIdx));
     const persona = PERSONAS[dIdx % 3];
     const dispSet = new Set(state.display);
-    const cands = state.cards.filter(c => ["稀有", "史诗", "传说", "传世"].includes(c.tier) && c.stamp !== "/1" && !dispSet.has(c.uid) && persona.test(c));
+    const cands = state.cards.filter(c => ["稀有", "史诗", "传说", "传世"].includes(c.tier) && c.stamp !== "/1" && !dispSet.has(c.uid) && !c.listed && persona.test(c));
     if (!cands.length) return null;
     const w = c => Math.pow(E.TIERS.indexOf(c.tier) + 1, 2);
     let tot = cands.reduce((s, c) => s + w(c), 0), x = rng() * tot, target = cands[0];
@@ -1235,7 +1282,7 @@ const KBSystems = (() => {
     let fee = synthCost(target);
     const waived = (state.furnaceHeat || 0) >= 3; if (waived) fee = 0; // 炉温满 3 免手续费
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
-    const pool = state.cards.filter(c => c.tier === tier && !inLineup.has(c.uid) && !inDisp.has(c.uid))
+    const pool = state.cards.filter(c => c.tier === tier && !inLineup.has(c.uid) && !inDisp.has(c.uid) && !c.listed)
       .sort((a, b) => a.value - b.value);
     if (pool.length < 3) return { ok: false, reason: tier + "卡不足 3 张（阵容/展示中与首发组不计）" };
     if (state.coins < fee) return { ok: false, reason: "手续费不足" };
@@ -1248,7 +1295,7 @@ const KBSystems = (() => {
     const p = players[Math.floor(rng() * players.length)];
     const s = (() => { let x = rng(), c = 0; for (const [n, pr, m] of E.STAMPS) { c += pr; if (x < c) return { stamp: n, mult: m }; } return { stamp: "无编", mult: 1 }; })();
     const v = E.rollVariant(rng); // 大改版 1.1：合成产卡补平行版 roll（此前漏接，产出恒为普卡）
-    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1, src: "synth" }; // 第三批：来源标记（合成产出传世禁挂牌）
     E.settleCards(state, [card]);
     state.cards.push(card);
     if (card.tier === "传说") { state.flags = state.flags || {}; state.flags.synthLegend = 1; }
@@ -1268,7 +1315,7 @@ const KBSystems = (() => {
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
     // 材料口径（2026-11-03 主人定版）：同球员重复卡，或与主卡同系列（名宿/现役）的同档卡；双人卡仅收藏，不作材料
     const sameOnly = STAR_SAME_ONLY_TIERS.includes(main.tier);
-    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && !isCollectionOnly(c.pid) && (samePlayer(c.pid, main.pid) || (!sameOnly && c.tier === main.tier && c.series === main.series)))
+    return state.cards.filter(c => c.uid !== main.uid && !inLineup.has(c.uid) && !inDisp.has(c.uid) && !c.listed && !isCollectionOnly(c.pid) && (samePlayer(c.pid, main.pid) || (!sameOnly && c.tier === main.tier && c.series === main.series)))
       .sort((a, b) => a.value - b.value);
   }
   function starUp(state, mainUid, matUids, rng) {
@@ -1332,6 +1379,7 @@ const KBSystems = (() => {
   function decomposeCard(state, uid) {
     const c = state.cards.find(x => x.uid === uid);
     if (!c) return { ok: false, reason: "卡已不在卡库" };
+    if (c.listed) return { ok: false, reason: "挂牌中的卡已冻结，先取消挂牌" };
     if (c.tier !== "传世") return { ok: false, reason: "只有传世卡可以分解" };
     if (c.stamp === "/1") return { ok: false, reason: "/1 独一无二，不可分解" };
     if (c.grade) return { ok: false, reason: "已评级的卡不可分解" };
@@ -1349,7 +1397,7 @@ const KBSystems = (() => {
     if (!(tier in order)) return { ok: false, reason: "该档不可冲档" };
     const target = E.TIERS[order[tier] + 1];
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
-    const pool = state.cards.filter(c => c.tier === tier && !inLineup.has(c.uid) && !inDisp.has(c.uid))
+    const pool = state.cards.filter(c => c.tier === tier && !inLineup.has(c.uid) && !inDisp.has(c.uid) && !c.listed)
       .sort((a, b) => a.value - b.value);
     if (pool.length < 3) return { ok: false, reason: tier + "卡不足 3 张（阵容/展示中与首发组不计）" };
     const used = pool.slice(0, 3);
@@ -1359,7 +1407,7 @@ const KBSystems = (() => {
     state.flags = state.flags || {}; state.flags.gambles = (state.flags.gambles || 0) + 1;
     if (rng() < rate) {
       const card = E._rollInstance(state, target, rng);
-      card.star = 0; card.starLuck = 0; card.bornDay = state.dayIndex;
+      card.star = 0; card.starLuck = 0; card.bornDay = state.dayIndex; card.src = "gamble"; // 第三批：来源标记（冲档产出传世禁挂牌）
       E.settleCards(state, [card]);
       state.cards.push(card);
       state.gambleLuck = 0;
@@ -1378,10 +1426,12 @@ const KBSystems = (() => {
     const inLineup = new Set(lineupUids(state)); const inDisp = new Set(state.display);
     const keep = {};
     for (const c of state.cards) { const v = instanceValue(state, c, dIdx); if (!keep[c.pid] || v > keep[c.pid].v) keep[c.pid] = { uid: c.uid, v }; }
-    const sell = [], prot = { lineup: 0, display: 0, star: 0, one: 0, keep: 0 };
+    const sell = [], prot = { lineup: 0, display: 0, star: 0, one: 0, keep: 0, hightier: 0, listed: 0 };
     let gain = 0;
     for (const c of state.cards) {
       if (!tiers.has(c.tier) || !vars.has(c.variant || "base")) continue;
+      if (c.listed) { prot.listed++; continue; } // 第三批：挂牌冻结卡不可售（先于高档判定：挂牌中的史诗+ 报「挂牌中」而非「回收关闭」）
+      if (["史诗", "传说", "传世"].includes(c.tier)) { prot.hightier++; continue; } // 第三批：史诗+ 系统回收关闭（交易所开启同步调整），即使勾选档位也不卖
       if (inLineup.has(c.uid)) { prot.lineup++; continue; }
       if (inDisp.has(c.uid)) { prot.display++; continue; }
       if ((c.star || 0) > 0) { prot.star++; continue; }
@@ -1414,7 +1464,7 @@ const KBSystems = (() => {
       const p = pool[Math.floor(rng() * pool.length)];
       const s = E.rollStamp(rng);
       const v = E.rollVariant(rng); // 大改版 1.1：名宿包补平行版 roll（此前漏接，产出恒为普卡、红折为 0）
-      const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+      const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: s.stamp, mult: s.mult, variant: v.variant, vmult: v.vmult, value: E.cardValue(p.tier, p.rating, s.mult * v.vmult) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1, src: "legend" }; // 第三批：来源标记（名宿包产出可挂牌）
       state.draws++;
       if (tier === "传世") state.pity = 0; else state.pity++;
       cards.push(card);
@@ -1430,6 +1480,7 @@ const KBSystems = (() => {
   function fragDecompose(state, uid) {
     const c = state.cards.find(x => x.uid === uid);
     if (!c) return { ok: false, reason: "卡已不在卡库" };
+    if (c.listed) return { ok: false, reason: "挂牌中的卡已冻结，先取消挂牌" };
     if (!(c.tier in FRAG_GAIN)) return { ok: false, reason: "只有普通/稀有/史诗卡可以分解换碎片（传说走合成/升星，传世走万能材料）" };
     if (c.stamp === "/1") return { ok: false, reason: "/1 独一无二，不可分解" };
     if (c.grade) return { ok: false, reason: "已评级的卡不可分解" };
@@ -1446,13 +1497,135 @@ const KBSystems = (() => {
     const cost = FRAG_COST[p.tier];
     if ((state.frag || 0) < cost) return { ok: false, reason: "碎片不足（需 " + cost + "）" };
     state.frag -= cost;
-    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, value: E.cardValue(p.tier, p.rating, 1) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1 };
+    const card = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: "无编", mult: 1, variant: "base", vmult: 1, value: E.cardValue(p.tier, p.rating, 1) * (p.bmult || 1), bornDay: state.dayIndex, star: 0, starLuck: 0, grade: null, gradeTries: 0, bmult: p.bmult || 1, src: "frag" }; // 第三批：来源标记
     E.settleCards(state, [card]);
     state.cards.push(card);
     return { ok: true, card, cost, frag: state.frag };
   }
 
-  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, effRating, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack, FRAG_GAIN, FRAG_COST, fragDecompose, fragExchange };
+  // ================= 第三批（2026-11-03）：交易所 / 异步挑战 / 全服唯一 1/1 =================
+  // ---------- 交易所口径（纯函数；服务端只做挂单状态机与记账，本地冻结/入仓在此裁定） ----------
+  const MARKET_SRCS = ["dia60", "dia120", "legend", "urdraw"]; // 可挂牌来源：钻石系产出；存量无 src 兼容放行
+  function marketEligible(state, c) {
+    if (!c) return { ok: false, reason: "卡不存在" };
+    if (c.listed) return { ok: false, reason: "这张卡已在挂牌中" };
+    if (!(c.tier === "传世" || c.pid >= 200)) return { ok: false, reason: "只有传世卡与时期/双人卡可以挂牌" };
+    if (c.src === "synth" || c.src === "gamble") return { ok: false, reason: "合成/冲档产出的传世不可挂牌（防金币印钻）" };
+    if (c.src && !MARKET_SRCS.includes(c.src)) return { ok: false, reason: "这张卡的来源不可挂牌" };
+    return { ok: true };
+  }
+  function cardSnap(c) { // 挂单/托管快照：cardvalue 复算字段（pid/mult/vmult/star/grade）＋展示字段＋uid（C 池删卡定位用）
+    return { uid: c.uid, pid: c.pid, name: c.name, pos: c.pos, tier: c.tier, rating: c.rating, series: c.series, stamp: c.stamp, mult: c.mult, variant: c.variant || "base", vmult: c.vmult || 1, star: c.star || 0, grade: c.grade ? c.grade.label : null, bmult: c.bmult || 1 };
+  }
+  function snapToInstance(state, snap, src) { // 按快照重建本地实例（买入/夺卡入仓）：身价走静态链（与 staticValue 同式），bornDay 由调用方落今日
+    const p = E.playerById(snap.pid);
+    if (!p) return null;
+    const g = snap.grade ? GRADES.find(x => x.label === snap.grade) : null;
+    const inst = { uid: state.uid++, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: snap.stamp, mult: snap.mult, variant: snap.variant || "base", vmult: snap.vmult || 1, star: snap.star || 0, starLuck: 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: 0, bmult: p.bmult || 1, src: src || "market" };
+    inst.value = staticValue(inst);
+    return inst;
+  }
+  function lineupSnap(state) { // 挑战参战快照：当前阵容 11 人（power dims 同口径＋variant）＋阵型战术；未组齐回 null
+    const byPos = lineupCards(state);
+    const cards = POS5.flatMap(pos => (byPos[pos] || []).filter(Boolean));
+    if (cards.length < 11) return null;
+    return { formation: formationOf(state), tactic: state.tactic, cards: cards.map(c => ({ pid: c.pid, pos: c.pos, star: c.star || 0, grade: c.grade ? c.grade.label : null, variant: c.variant || "base" })) };
+  }
+  function snapCardEff(snapCard) { // 托管阵容单卡有效评分（快照口径，与 effRating 同链）
+    const p = E.playerById(snapCard.pid); if (!p) return 0;
+    const g = snapCard.grade ? GRADES.find(x => x.label === snapCard.grade) : null;
+    return p.rating + 2 * (snapCard.star || 0) + (g ? g.ovr : 0) + (VARIANT_BONUS[snapCard.variant || "base"] || 0);
+  }
+  // ---------- 异步挑战（B 金币奖池 / C 夺卡双池）：积分与入场费常量（积分余额服务端权威维护，此处仅展示与本地预检） ----------
+  const ARENA = { ENTRY_B: 200, WIN_GOLD: 350, PACK_COST: 300, PACK_SIZE: 3, POINTS: { win: 12, lose: -8, defWin: 6, defLose: -4 } };
+  function lootEligible(state, c) { // C 池可夺池单卡资格（UI 逐条提示）：≤史诗、重复卡（同 pid 至少 2 张）、非 /1、非评级、非阵容/展示、非挂牌
+    const reasons = [];
+    if (!c) return { ok: false, reasons: ["卡不存在"] };
+    if (!["普通", "稀有", "史诗"].includes(c.tier)) reasons.push("只能放史诗及以下");
+    if (state.cards.filter(x => x.pid === c.pid).length < 2) reasons.push("须是重复卡（同球员至少 2 张，这张是唯一一张）");
+    if (c.stamp === "/1") reasons.push("/1 不可放");
+    if (c.grade) reasons.push("已评级的卡不可放");
+    if (c.listed) reasons.push("挂牌中的卡不可放");
+    if (lineupUids(state).includes(c.uid)) reasons.push("阵容中的卡不可放");
+    if ((state.display || []).includes(c.uid)) reasons.push("展示中的卡不可放");
+    return { ok: reasons.length === 0, reasons };
+  }
+  function openArenaPack(state, rng) { // 积分专属包：3 张、基础池（非时期/双人）、保底至少 1 张史诗+；src='arena' 不可挂牌
+    rng = rng || Math.random;
+    const odds = [["稀有", .25], ["史诗", .45], ["传说", .22], ["传世", .08]];
+    const cards = [];
+    for (let i = 0; i < ARENA.PACK_SIZE; i++) {
+      let x = rng(), acc = 0, tier = "史诗";
+      for (const [t, p] of odds) { acc += p; if (x < acc) { tier = t; break; } }
+      const card = E._rollInstance(state, tier, rng);
+      card.src = "arena"; card.bornDay = state.dayIndex;
+      cards.push(card);
+    }
+    if (!cards.some(c => ["史诗", "传说", "传世"].includes(c.tier))) { // 保底兑现：末张升为史诗（同位置优先）
+      const old = cards[cards.length - 1];
+      const pool = E._byTier("史诗").filter(p => p.pos === old.pos);
+      const p = (pool.length ? pool : E._byTier("史诗"))[Math.floor(rng() * (pool.length ? pool.length : E._byTier("史诗").length))];
+      const nc = E._makeInstance(state, p, rng, false);
+      nc.uid = old.uid; nc.src = "arena"; nc.bornDay = state.dayIndex;
+      cards[cards.length - 1] = nc;
+    }
+    E.settleCards(state, cards);
+    state.cards.push(...cards);
+    return { ok: true, cards };
+  }
+  function playArenaMatch(state, opp, rng) { // 打托管阵容：胜负/对位/比分逻辑与 playMatch 同构，但不碰段位/场次/连胜（奖励走服务端凭证）；opp={name,picks:{pos:[{name,rating,tier}]},power,formation,tactic}
+    rng = rng || Math.random;
+    const mine = lineupCards(state);
+    const myForm = formationOf(state);
+    const pw = powerOf(mine, state.captainUid, myForm);
+    if (!pw) return { ok: false, reason: "阵容未组齐（需 11 人，先选阵型再组队）" };
+    const adj = tacticAdj(state.tactic, opp.tactic || "全力进攻");
+    const pWin = 1 / (1 + Math.exp(-(pw.power - opp.power + adj) / 40));
+    const won = rng() < pWin;
+    const myIdn = FORM_IDENTITY[myForm] || {}, opIdn = FORM_IDENTITY[opp.formation || "4-4-2"] || {};
+    const flat = m => POS5.flatMap(pos => (m[pos] || []).map(c => ({ pos, c })));
+    const mySlots = flat(mine), opSlots = flat(opp.picks || {});
+    if (opSlots.length < 11) return { ok: false, reason: "对手阵容数据不完整" };
+    const lines = [];
+    for (let i = 0; i < 11; i++) {
+      const ms = mySlots[i], os = opSlots[i];
+      const mc = ms.c, oc = os.c;
+      const myEff = (mc.uid === state.captainUid ? effRating(mc) * 1.1 : effRating(mc)) + (myIdn[ms.pos] || 0);
+      const opEff = oc.rating + (opIdn[os.pos] || 0);
+      const p = 1 / (1 + Math.exp(-(myEff - opEff) / 12));
+      lines.push({ pos: ms.pos, minute: 0, myName: mc.name, myRating: effRating(mc), myTier: mc.tier, opName: oc.name, opRating: oc.rating, win: rng() < p, p, captain: mc.uid === state.captainUid, atk: ms.pos === "WG" || ms.pos === "ST" });
+    }
+    let myLW = lines.filter(l => l.win).length;
+    while ((myLW > 11 - myLW) !== won) {
+      const cand = lines.filter(l => l.win === (myLW > 11 - myLW)).sort((a, b) => Math.abs(a.p - .5) - Math.abs(b.p - .5))[0];
+      if (!cand) break;
+      cand.win = !cand.win;
+      myLW = lines.filter(l => l.win).length;
+    }
+    let myGoals = 0, opGoals = 0;
+    for (const l of lines) { if (!l.atk) continue; if (l.win && rng() < .8) myGoals++; if (!l.win && rng() < .8) opGoals++; }
+    if (won && myGoals <= opGoals) { myGoals = Math.min(5, opGoals + 1); if (opGoals >= 5) opGoals = 4; }
+    if (!won && opGoals <= myGoals) { opGoals = Math.min(5, myGoals + 1); if (myGoals >= 5) myGoals = 4; }
+    myGoals = Math.min(5, myGoals); opGoals = Math.min(5, opGoals);
+    const mins = lines.map(() => 3 + Math.floor(rng() * 87));
+    lines.forEach((l, i) => { l.minute = mins[i]; l.half = mins[i] <= 45 ? 1 : 2; delete l.p; });
+    lines.sort((a, b) => a.minute - b.minute);
+    let htMy = 0, htOp = 0, gMy = myGoals, gOp = opGoals;
+    for (const l of lines) { if (l.atk && l.win && gMy > 0) { l.goalMark = 1; gMy--; if (l.half === 1) htMy++; } }
+    for (const l of lines) { if (l.atk && !l.win && gOp > 0) { l.goalMarkOpp = 1; gOp--; if (l.half === 1) htOp++; } }
+    for (const l of lines) { if (gMy <= 0) break; if (l.atk && !l.goalMark && !l.goalMarkOpp) { l.goalMark = 1; gMy--; if (l.half === 1) htMy++; } }
+    for (const l of lines) { if (gOp <= 0) break; if (l.atk && !l.goalMark && !l.goalMarkOpp) { l.goalMarkOpp = 1; gOp--; if (l.half === 1) htOp++; } }
+    return { ok: true, won, lines, myWins: myGoals, opWins: opGoals, htMy, htOp, myPower: pw.power, oppPower: opp.power, oppName: opp.name, oppTactic: opp.tactic || "全力进攻", oppFormation: opp.formation || "4-4-2", adj };
+  }
+  // ---------- 全服唯一 1/1（足坛时期卡）：注册被占/离线时降级 /10＋补偿 30 钻（纯函数，平台调用在 main） ----------
+  const UNIQUE_FALLBACK_DIA = 30;
+  function uniqueDowngrade(card) {
+    card.stamp = "/10"; card.mult = 5.5;
+    card.value = E.cardValue(card.tier, card.rating, 5.5 * (card.vmult || 1)) * (card.bmult || 1);
+    return UNIQUE_FALLBACK_DIA;
+  }
+
+  return { SHOP, IDLE, UNLOCKS, TACTICS, DIVISIONS, PERSONAS, ASIA, FORMATIONS, FORM_IDENTITY, STAR_RATES, GAMBLE_BASE, GRADES, gradeRoll, applyGrade, effRating, VARIANT_BONUS, variantBonus, hashStr, rng32, dayIndex, todayIndex, idleRate, accrueIdle, claimIdle, factorAt, changeToday, marketBoard, instanceValue, staticValue, hotPlayers, lineupCards, lineupUids, formationOf, slotShape, powerOf, autoLineup, migrateSlots, tacticAdj, genOpponent, playMatch, genCommission, synthCost, synthesize, starUp, starUpAuto, starCandidates, STAR_SAME_ONLY_TIERS, linkKeyOf, samePlayer, isCollectionOnly, decomposeCard, gamble, quickSellPlan, openLegendPack, FRAG_GAIN, FRAG_COST, fragDecompose, fragExchange, MARKET_SRCS, marketEligible, cardSnap, snapToInstance, lineupSnap, snapCardEff, ARENA, lootEligible, openArenaPack, playArenaMatch, UNIQUE_FALLBACK_DIA, uniqueDowngrade };
 })();
 if (typeof module !== "undefined") module.exports = KBSystems;
 
@@ -2245,16 +2418,17 @@ function cardHTML(c, opts) {
   const stamp = c.stamp !== "无编" ? `<span class="stamp">${c.stamp}</span>` : "";
   const hot = c.tag && c.tag.includes("争议") ? `<span class="hot">争议评分</span>` : "";
   const era = c.series === "时期" ? `<span class="erabadge">时期</span>` : c.series === "双人" ? `<span class="erabadge duo">双人</span>` : "";
+  const cert = c.cert ? `<span class="certbadge">全服唯一</span>` : ""; // 第三批：全服唯一 1/1 证书徽章
   const gr = c.grade ? `<span class="gradebadge">🏅${c.grade.label}</span>` : "";
   const newb = opts.new ? `<span class="newb">NEW</span>` : "";
   const vv = c.variant && c.variant !== "base" ? c.variant : "";
   const sig = vv === "签字" ? `<div class="sig">${c.name}</div>` : "";
   return `<div class="card t-${c.tier}${vv ? " v-" + vv : ""}${s1}${popCls}"${popStyle}>
     <img class="cart${portraitOf(playerOf(c)) ? " photo" : ""}" loading="lazy" decoding="async" src="${avatarURL(playerOf(c))}" alt="">
-    <div class="cshade"></div>${newb}${era}${gr}
+    <div class="cshade"></div>${newb}${era}${gr}${cert}
     <div class="chead"><span class="pos">${c.pos}</span><span class="rating">${S.effRating(c)}</span></div>
     <div class="cfoot"><div class="cname" style="font-size:${c.name.length >= 7 ? 12 : c.name.length === 6 ? 13.5 : 15}px">${c.name}</div>
-    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}${c.grade ? ` · <span class="vt">${c.grade.label}</span>` : ""}</div>
+    <div class="ctier">${c.tier}${c.series === "名宿" ? " · 名宿" : ""}${vv ? ` · <span class="vt vt-${vv}">${vv}</span>` : ""}${(c.star || 0) > 0 ? ` · <span class="starBadge">★${c.star}</span>` : ""}${c.grade ? ` · <span class="vt">${c.grade.label}</span>` : ""}${c.cert ? ` · <span class="vt vt-签字">全服唯一</span>` : ""}${c.listed ? ` · <span class="vt">挂牌中</span>` : ""}</div>
     <div class="cval">身价 ${val}</div></div>
     ${stamp}${hot}${sig}</div>`;
 }
@@ -2275,6 +2449,8 @@ function render() {
   else if (curTab === "league") renderLeague();
   else if (curTab === "dex") renderDex();
   else if (curTab === "board") renderBoard();
+  else if (curTab === "exchange") renderExchange();
+  else if (curTab === "arena") renderArena();
   renderMeta();
   bindDynamic();
   persist();
@@ -2299,8 +2475,8 @@ function renderShop() {
   if (pickSlot !== null) {
     const used = new Set([...state.display, ...S.lineupUids(state)]);
     const idleOf = c => S.IDLE[c.tier] * (1 + ((E.STAMPS.find(s => s[0] === c.stamp) || [])[3] || 0));
-    const cands = state.cards.filter(c => !S.isCollectionOnly(c.pid) && (!used.has(c.uid) || state.display[pickSlot] === c.uid))
-      .sort((a, b) => idleOf(b) - idleOf(a) || b.rating - a.rating); // 双人卡仅收藏，不上展示柜
+    const cands = state.cards.filter(c => !S.isCollectionOnly(c.pid) && !c.listed && (!used.has(c.uid) || state.display[pickSlot] === c.uid))
+      .sort((a, b) => idleOf(b) - idleOf(a) || b.rating - a.rating); // 双人卡仅收藏，不上展示柜；挂牌冻结卡不上柜
     pick = `<div class="row"><b>为展示位 ${pickSlot + 1} 选卡（按挂机档位排序）：</b><button class="btn ghost" id="pickCancel">取消</button></div><div class="grid">` +
       cands.slice(0, 24).map(c => `<div class="pickable" data-pick="${c.uid}">${cardHTML(c)}</div>`).join("") + "</div>";
   }
@@ -2380,7 +2556,7 @@ function renderLineup() {
     const cur = mine[pos][idx];
     const inLineup = new Set(S.lineupUids(state));
     const usedLink = new Set(S.lineupUids(state).filter(u => !(cur && u === cur.uid)).map(u => { const cc = state.cards.find(x => x.uid === u); return cc ? S.linkKeyOf(cc.pid) : null; }).filter(x => x !== null)); // 时期卡与原型同场互斥
-    const cands = state.cards.filter(c => c.pos === pos && !S.isCollectionOnly(c.pid) && !usedLink.has(S.linkKeyOf(c.pid)) && (!inLineup.has(c.uid) || (cur && c.uid === cur.uid))).sort((a, b) => b.rating - a.rating);
+    const cands = state.cards.filter(c => c.pos === pos && !S.isCollectionOnly(c.pid) && !c.listed && !usedLink.has(S.linkKeyOf(c.pid)) && (!inLineup.has(c.uid) || (cur && c.uid === cur.uid))).sort((a, b) => b.rating - a.rating);
     phtml = `<div class="row"><b>选择${posNames[pos]}（第 ${idx + 1} 槽）：</b>` +
       (cur ? `<button class="btn ghost" data-cap="${cur.uid}">${cur.uid === state.captainUid ? "已是队长 ⭐" : "设为队长"}</button>` : "") +
       `<button class="btn ghost" id="pickPosCancel">取消</button></div><div class="grid">` +
@@ -2423,15 +2599,20 @@ function showCardDetail(pid) {
   const list = state.cards.filter(c => c.pid === pid);
   // 相同实例归组显示 ×N（2026-11-03 核心玩家 lllzyl 建议：一样的归到一起），卖按钮卖其中一张；第二批起评级计入归组键（不同评级不归组）
   const groups = new Map();
-  for (const c of list) { const k = [c.stamp, c.variant || "base", c.star || 0, c.adAssist ? 1 : 0, c.grade ? c.grade.label : ""].join("|"); if (!groups.has(k)) groups.set(k, { rep: c, n: 0, val: S.instanceValue(state, c, D) }); groups.get(k).n += 1; }
+  for (const c of list) { const k = [c.stamp, c.variant || "base", c.star || 0, c.adAssist ? 1 : 0, c.grade ? c.grade.label : "", c.listed ? "L" : "", c.cert ? "U" : ""].join("|"); if (!groups.has(k)) groups.set(k, { rep: c, n: 0, val: S.instanceValue(state, c, D) }); groups.get(k).n += 1; }
   const rows = [...groups.values()].sort((a, b) => b.val - a.val);
   $("#detailTitle").textContent = `${p.name} · ${p.tier} ${p.rating}（持有 ${list.length} 张）`;
   const inUse = new Set([...S.lineupUids(state), ...(state.display || [])]);
+  const hiTierNote = list.some(c => ["史诗", "传说", "传世"].includes(c.tier) && !c.listed) ? `<p class="hint">史诗及以上卡已关闭系统回收（交易所开启同步调整）：传世/时期卡可挂牌去交易所卖给玩家，史诗可分解换碎片或合成/升星。</p>` : "";
   $("#detailBody").innerHTML = list.length ? rows.map(r => { const c = r.rep;
+    const certTxt = c.cert ? `<div class="hint" style="flex-basis:100%">👑 全服唯一 · 证书 ${c.cert}</div>` : "";
+    if (c.listed) { const li = (state.myListings || {})[c.listed]; return `<div class="drow" style="flex-wrap:wrap"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span class="hint">🏛 挂牌中${li ? " · " + li.price + " 钻" : ""}（在交易所「我的挂单」里取消）</span>${certTxt}</div>`; }
     const gradeBtn = (c.star || 0) >= 5 ? ((c.gradeTries || 0) < 3 ? `<button class="btn ghost" data-grade="${c.uid}">🏅 评级（余 ${3 - (c.gradeTries || 0)} 次 · 看广告）</button>` : `<span class="hint">评级次数已用完</span>`) : "";
     const decBtn = c.tier === "传世" && c.stamp !== "/1" && !c.grade && !inUse.has(c.uid) ? `<button class="btn ghost" data-decomp="${c.uid}">分解→万能材料</button>` : "";
     const fragBtn = (S.FRAG_GAIN[c.tier] !== undefined) && c.stamp !== "/1" && !c.grade && !inUse.has(c.uid) ? `<button class="btn ghost" data-frag="${c.uid}">分解 · +${S.FRAG_GAIN[c.tier]} 碎片</button>` : "";
-    return `<div class="drow"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span><button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>${gradeBtn}${decBtn}${fragBtn}</span></div>`; }).join("") +
+    const sellBtn = ["史诗", "传说", "传世"].includes(c.tier) ? `<button class="btn gold" disabled title="高档卡请走交易所或分解">回收已关闭</button>` : `<button class="btn gold" data-dsell="${c.uid}">卖 ${sellPrice(c)} 金${r.n > 1 ? "（一张）" : ""}</button>`; // 第三批：史诗+ 单张出售关闭
+    const listBtn = S.marketEligible(state, c).ok ? `<button class="btn" data-list="${c.uid}">🏛 挂牌</button>` : "";
+    return `<div class="drow" style="flex-wrap:wrap"><span>${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""}${c.adAssist ? " · 广告助力" : ""}${r.n > 1 ? " · ×" + r.n : ""}</span><span>现价 ${r.val}</span><span>${sellBtn}${listBtn}${gradeBtn}${decBtn}${fragBtn}</span>${certTxt}</div>`; }).join("") + hiTierNote +
     ((state.mats && state.mats.universal) ? `<p class="hint">🧩 万能材料 ×${state.mats.universal}（分解传世卡获得，传世升星时可顶替同球员材料）</p>` : "") +
     ((state.frag || 0) > 0 ? `<p class="hint">🧩 碎片 ×${state.frag}（图鉴页可指定兑换未点亮的稀有/史诗球员）</p>` : "") : "<p class='hint'>已全部卖出。</p>";
   $("#detailModal").classList.add("on");
@@ -2537,9 +2718,12 @@ function renderFurnace() {
 }
 function bindDynamic() {
   document.querySelectorAll("[data-detail]").forEach(el => el.onclick = () => showCardDetail(+el.dataset.detail));
+  document.querySelectorAll("[data-list]").forEach(btn => btn.onclick = () => openListModal(+btn.dataset.list)); // 第三批：挂牌（弹窗里定价再走服务端）
   document.querySelectorAll("[data-dsell]").forEach(btn => btn.onclick = () => {
     const uid = +btn.dataset.dsell;
     const c = state.cards.find(x => x.uid === uid); if (!c) return;
+    if (c.listed) { toast("挂牌中的卡已冻结，先在交易所取消挂牌"); return; }
+    if (["史诗", "传说", "传世"].includes(c.tier)) { toast("史诗及以上已关闭系统回收：高档卡请走交易所或分解"); return; } // 第三批：单张出售口径守卫（按钮已置灰，此处兜底）
     const val = S.instanceValue(state, c, D);
     if ((c.star || 0) > 0 && !confirm(`这是 ★${c.star} 星级卡，出售后星级投入就没了，确认出售？`)) return;
     if ((c.tier === "传世" || c.stamp === "/1") && !confirm(`这张是${c.tier}${c.stamp !== "无编" ? " " + c.stamp : ""}，确定要卖掉？`)) return;
@@ -2549,6 +2733,7 @@ function bindDynamic() {
   document.querySelectorAll("[data-grade]").forEach(btn => btn.onclick = () => {
     const uid = +btn.dataset.grade;
     const c = state.cards.find(x => x.uid === uid); if (!c) return;
+    if (c.listed) { toast("挂牌中的卡已冻结，不能评级"); return; }
     if ((c.star || 0) < 5 || (c.gradeTries || 0) >= 3) return;
     if (c.grade && !confirm(`这张卡已有评级 ${c.grade.label}，重评会覆盖旧分（可能更低），确定看广告重评？`)) return;
     adWatch("grade", { uid });
@@ -2679,7 +2864,7 @@ function playReveal(best, done) {
   ov.querySelector(".rv-pos").textContent = best.pos + " · " + (best.series === "名宿" ? "名宿" : "现役");
   ov.querySelector(".rv-rating").textContent = best.rating;
   ov.querySelector(".rv-tier").textContent = best.tier + "！";
-  ov.querySelector(".rv-name").textContent = best.name + (best.stamp !== "无编" ? " " + best.stamp : "") + (best.variant && best.variant !== "base" ? " · " + best.variant : "");
+  ov.querySelector(".rv-name").textContent = best.name + (best.stamp !== "无编" ? " " + best.stamp : "") + (best.variant && best.variant !== "base" ? " · " + best.variant : "") + (best.cert ? " · 👑全服唯一" : "");
   const img = ov.querySelector(".rv-img");
   img.src = portraitOf(playerOf(best)) || avatarURL(playerOf(best));
   try { KBAudio.revealRise(tierIdx); } catch (e) {}
@@ -2731,13 +2916,31 @@ function markNewAndSummary(cards, ownedBefore) {
   for (const c of cards) { tc[c.tier] = (tc[c.tier] || 0) + 1; if (!ownedBefore.has(c.pid) && !seen.has(c.pid)) { c._isNew = true; newN++; } else dupN++; seen.add(c.pid); }
   lastSummary = `本包：${E.TIERS.filter(t => tc[t]).map(t => `${t} ×${tc[t]}`).join(" · ")} ｜ 新点亮 ${newN} 人 · 重复 ${dupN} 张`;
 }
-function doOpen(key, free) {
+// ----- 全服唯一 1/1（第三批，足坛时期卡专属）：dia120 时期槽命中 pid 200–204 且 roll 得 /1 时，揭晓前先注册 -----
+async function resolveUniqueClaims(cards) {
+  const hits = cards.filter(c => c.pid >= 200 && c.pid <= 204 && c.stamp === "/1" && !c.cert);
+  for (const c of hits) {
+    let cert = null;
+    if (KBPlatform.lbAvailable()) {
+      try { const r = await KBPlatform.lbRequest("/unique/claim", { scope: "era1of1", key: S.linkKeyOf(c.pid) }); if (r && r.cert) cert = r.cert; }
+      catch (e) { cert = null; } // 409 被占或请求失败：走降级，不阻塞开包
+    }
+    if (cert) { c.cert = cert; setTimeout(() => toast(`👑 全服唯一注册成功：${c.name} /1 · 证书 ${cert}`), 60); }
+    else {
+      const comp = S.uniqueDowngrade(c); // 降级 /10＋补偿 30 钻（本地入账）
+      state.dia += comp;
+      setTimeout(() => toast(`这张 ${c.name} 的全服唯一 /1 已被抢先注册：已降为 /10，并补偿 ${comp} 钻`), 60);
+    }
+  }
+}
+async function doOpen(key, free) {
   const ownedBefore = new Set(state.cards.map(c => c.pid));
   const res = E.openPack(state, key, Math.random, free ? { free: true } : undefined);
   if (!res.ok) { toast(res.reason); return; }
   if (free) state.freeDay = todayStr();
   for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
   state.daily.packs++;
+  if (key === "dia120") await resolveUniqueClaims(res.cards); // 揭晓前先落证书/降级，演出与结果弹窗展示最终形态
   markNewAndSummary(res.cards, ownedBefore);
   lastDraw = res.cards; render();
   const ur = res.cards.find(c => c.tier === "传世");
@@ -2845,6 +3048,8 @@ function renderQsPanel() {
     const byTier = {};
     p.sell.forEach(s => { byTier[s.tier] = (byTier[s.tier] || 0) + 1; });
     const protBits = [];
+    if (p.prot.hightier) protBits.push(`史诗及以上已关闭回收 ${p.prot.hightier} 张（走交易所/分解）`);
+    if (p.prot.listed) protBits.push(`挂牌中 ${p.prot.listed} 张`);
     if (p.prot.lineup) protBits.push(`阵容中 ${p.prot.lineup} 张`);
     if (p.prot.display) protBits.push(`展示中 ${p.prot.display} 张`);
     if (p.prot.star) protBits.push(`已升星 ${p.prot.star} 张`);
@@ -2888,6 +3093,7 @@ $("#homeBtn").onclick = () => { persist(); renderSlots(); $("#startOv").classLis
 // ================= M3：签到/任务/成就/套卡/纪录/广告/晒单卡/存档码 =================
 function renderMeta() {
   const lbTabBtn = document.querySelector('[data-tab="board"]'); if (lbTabBtn) lbTabBtn.style.display = KBPlatform.lbAvailable() ? "" : "none"; // 排行榜仅虎扑容器内显示
+  const arTabBtn = document.querySelector('[data-tab="arena"]'); if (arTabBtn) arTabBtn.style.display = KBPlatform.lbAvailable() ? "" : "none"; // 第三批：挑战页签同排行榜口径，无容器/离线隐藏
   // 签到与任务（卡店页）
   const d = state.daily;
   // 签到日历（竞品抄作业第 1 项）：7 格三态全展示——已领/今日可领/未解锁，今日格高亮，按钮写明今日奖励
@@ -2989,7 +3195,7 @@ function lbPayload(board) {
     const byPos = S.lineupCards(state); // {GK:[..],DF:[..],...} 含 null 占位
     const cards = ["GK", "DF", "MF", "WG", "ST"].flatMap(pos => (byPos[pos] || []).filter(Boolean));
     if (cards.length < 11) return null;
-    return { score: cards.reduce((sum, c) => sum + S.effRating(c), 0), dims: { cards: cards.map(c => ({ pid: c.pid, star: c.star || 0, grade: c.grade ? c.grade.label : null })) } };
+    return { score: cards.reduce((sum, c) => sum + S.effRating(c), 0), dims: { cards: cards.map(c => ({ pid: c.pid, star: c.star || 0, grade: c.grade ? c.grade.label : null, variant: c.variant || "base" })) } }; // 第三批：dims 带 variant，服务端加平行加成复算
   }
   let best = null, bestV = 0;
   for (const c of state.cards) { const v = S.staticValue(c); if (v > bestV) { bestV = v; best = c; } }
@@ -3008,7 +3214,24 @@ function lbRenderList() {
   const list = $("#lbList"), me = $("#lbMe");
   $("#lbTabPower").className = "btn" + (lbBoard === "power" ? "" : " ghost");
   $("#lbTabValue").className = "btn" + (lbBoard === "cardvalue" ? "" : " ghost");
+  const gt = $("#lbTabGrowth"); if (gt) gt.className = "btn" + (lbBoard === "growth" ? "" : " ghost");
   if (!lbCache) { list.innerHTML = '<p class="hint">加载中…</p>'; return; }
+  if (lbBoard === "growth") { // 第三批：涨幅榜（服务端快照现算，跨度不足回 accumulating）
+    const data = lbCache.data || {};
+    if (data.accumulating) { me.textContent = ""; list.innerHTML = '<p class="hint">涨幅榜积累中：需要至少 5 天的身价快照才能算 7 日涨幅。每天打开一次排行榜就会自动记一次身价，过几天再来。</p>'; return; }
+    const entries = data.entries || [], mine = lbCache.mine;
+    me.textContent = mine ? `我的涨幅：第 ${mine.rank} 名 · ${(mine.growth >= 0 ? "+" : "") + (mine.growth * 100).toFixed(1)}%（+${(mine.gain || 0).toLocaleString()} 金身价）` : "暂无涨幅成绩：全仓身价基线满 5 万且积累够天数后自动入榜";
+    let html = "";
+    if (!entries.length) html += '<p class="hint">还没有人入榜，来做第一个。</p>';
+    for (const e of entries) {
+      const av = e.avatar ? `<img class="lb-av" src="${e.avatar}" alt="">` : `<span class="lb-avf">${(e.displayName || "?").slice(0, 1)}</span>`;
+      const g = e.growth !== undefined ? e.growth : (e.pct !== undefined ? e.pct : e.rate) || 0;
+      const gain = e.gain !== undefined ? e.gain : (e.delta || 0);
+      html += `<div class="lb-row lb-top${e.rank} ${e.isCurrent ? "me" : ""}"><span class="lb-rank">${e.rank}</span>${av}<span class="lb-name">${e.displayName}${e.isCurrent ? "（我）" : ""}<div class="lb-sub">身价增量 +${Number(gain).toLocaleString()}</div></span><span class="lb-score" style="color:${g >= 0 ? "#ff6b6b" : "#4ade80"}">${g >= 0 ? "+" : ""}${(g * 100).toFixed(1)}%</span></div>`;
+    }
+    list.innerHTML = html;
+    return;
+  }
   const { entries, total } = lbCache.data, mine = lbCache.mine;
   me.textContent = mine ? `我的排名：第 ${mine.rank} 名 · ${lbBoard === "power" ? "战力" : "身价"} ${mine.score.toLocaleString()}` : "暂无成绩：先组满首发阵容、开几包卡再来上榜";
   let html = total < 30 ? `<p class="hint">榜单积累中（${total}/30 人），满 30 人正式开榜</p>` : "";
@@ -3020,9 +3243,17 @@ function lbRenderList() {
   }
   list.innerHTML = html;
 }
+async function lbSnapshotDaily() { // 第三批：涨幅榜身价快照——打开排行榜页每日首次提交（本地日标节流，服务端按日幂等）
+  try {
+    if (localStorage.getItem("zk_snap_day") === todayStr()) return;
+    await KBPlatform.lbRequest("/leaderboard/snapshot", { total: state.records.curTotal || 0 });
+    localStorage.setItem("zk_snap_day", todayStr());
+  } catch (e) { /* 快照失败不阻塞榜单，下次打开再补 */ }
+}
 async function renderBoard(force) {
   $("#lbTabPower").onclick = () => { if (lbBoard !== "power") { lbBoard = "power"; lbCache = null; renderBoard(true); } };
   $("#lbTabValue").onclick = () => { if (lbBoard !== "cardvalue") { lbBoard = "cardvalue"; lbCache = null; renderBoard(true); } };
+  const gt = $("#lbTabGrowth"); if (gt) gt.onclick = () => { if (lbBoard !== "growth") { lbBoard = "growth"; lbCache = null; renderBoard(true); } };
   $("#lbRefresh").onclick = () => renderBoard(true);
   if (!KBPlatform.lbAvailable()) { $("#lbList").innerHTML = '<p class="hint">排行榜仅在虎扑 App 内可用。</p>'; $("#lbMe").textContent = ""; return; }
   lbRenderList();
@@ -3030,14 +3261,387 @@ async function renderBoard(force) {
   if (!force && lbCache && Date.now() - lbCache.at < 15000) return;
   lbBusy = true;
   try {
-    await lbSubmitIfBest("power"); await lbSubmitIfBest("cardvalue");
-    const data = await KBPlatform.lbRequest("/leaderboard?board=" + lbBoard);
-    const mine = await KBPlatform.lbRequest("/leaderboard/me?board=" + lbBoard);
-    lbCache = { at: Date.now(), data, mine };
+    await lbSnapshotDaily();
+    if (lbBoard === "growth") {
+      const data = await KBPlatform.lbRequest("/leaderboard/growth");
+      lbCache = { at: Date.now(), data, mine: data && data.me ? data.me : null };
+    } else {
+      await lbSubmitIfBest("power"); await lbSubmitIfBest("cardvalue");
+      const data = await KBPlatform.lbRequest("/leaderboard?board=" + lbBoard);
+      const mine = await KBPlatform.lbRequest("/leaderboard/me?board=" + lbBoard);
+      lbCache = { at: Date.now(), data, mine };
+    }
     lbRenderList();
   } catch (e) { $("#lbList").innerHTML = `<p class="hint">榜单加载失败：${(e && e.message) || e}</p>`; }
   lbBusy = false;
 }
+
+// ================= 第三批：交易所 / 异步挑战（平台调用全走 KBPlatform.lbRequest 同一网关；离线/无容器时静默不可用） =================
+function arenaSt() { if (!state.arena || typeof state.arena !== "object") state.arena = { points: 0, entered: {}, lootUids: [], claimedLogs: {} }; const a = state.arena; if (!a.entered || typeof a.entered !== "object") a.entered = {}; if (!Array.isArray(a.lootUids)) a.lootUids = []; if (!a.claimedLogs || typeof a.claimedLogs !== "object") a.claimedLogs = {}; if (typeof a.points !== "number") a.points = 0; return a; }
+function unfreezeCleanup(uid) { // 挂牌冻结/售出清账共用：退出展示/阵容/队长（不动卡本身）
+  state.display = (state.display || []).filter(u => u !== uid);
+  for (const pos of Object.keys(state.slots || {})) state.slots[pos] = state.slots[pos].filter(u => u !== uid);
+  for (const pos of Object.keys(state.lineup || {})) if (state.lineup[pos] === uid) state.lineup[pos] = null;
+  if (state.captainUid === uid) state.captainUid = null;
+}
+function purgeCard(uid) { const i = state.cards.findIndex(c => c.uid === uid); if (i >= 0) state.cards.splice(i, 1); unfreezeCleanup(uid); }
+function errMsg(e) { return (e && e.message) || String(e || "未知错误"); }
+
+// ----- 交易所 -----
+let mktTab = "market", mktBusy = false, mktCache = null, mktItems = [], mktOffset = 0;
+function normListing(raw) {
+  if (!raw) return null;
+  const seller = raw.seller && typeof raw.seller === "object" ? raw.seller : {};
+  return { id: raw.listingId !== undefined ? raw.listingId : raw.id, snap: raw.snap || {}, price: raw.price || 0, status: raw.status || "listed",
+    sellerName: raw.sellerName || raw.displayName || seller.nickname || seller.displayName || "玩家", sellerAvatar: raw.sellerAvatar || raw.avatar || seller.avatar || null,
+    claimable: !!(raw.claimable || raw.canClaim) };
+}
+function snapViewHTML(snap, price, sellerName) {
+  const p = E.playerById(snap.pid); if (!p) return "";
+  const g = snap.grade ? S.GRADES.find(x => x.label === snap.grade) : null;
+  const inst = { uid: -1, pid: p.id, name: p.name, pos: p.pos, tier: p.tier, rating: p.rating, series: p.series, tag: p.tag, stamp: snap.stamp, mult: snap.mult, variant: snap.variant || "base", vmult: snap.vmult || 1, star: snap.star || 0, starLuck: 0, grade: g ? { label: g.label, vmult: g.vmult, ovr: g.ovr } : null, gradeTries: 0, bmult: p.bmult || 1 };
+  const meta = `${p.name} · ${p.tier} ${p.rating}${snap.stamp && snap.stamp !== "无编" ? " · 限编" + snap.stamp : ""}${snap.variant && snap.variant !== "base" ? " · " + snap.variant : ""}${(snap.star || 0) > 0 ? " · ★" + snap.star : ""}${snap.grade ? " · 🏅" + snap.grade : ""}<br>静态身价 ${S.staticValue(inst)}${sellerName ? ` · 卖家 ${sellerName}` : ""}`;
+  return `<div class="mktitem">${cardHTML(inst)}<div class="minf">${meta}</div><div class="mprice">💎 ${price}</div></div>`;
+}
+async function renderExchange(force) {
+  const body = $("#mktBody"); if (!body) return;
+  const dl = $("#mktDiaLine"); if (dl) dl.textContent = `我的钻石 💎 ${state.dia}`;
+  $("#mktTabMarket").className = "btn" + (mktTab === "market" ? "" : " ghost");
+  $("#mktTabMine").className = "btn" + (mktTab === "mine" ? "" : " ghost");
+  if (!KBPlatform.lbAvailable()) { body.innerHTML = '<p class="hint">交易所需要在虎扑 App 内使用（买卖记录走平台账号）。在网页版可以先攒传世和时期卡，开市的货先备好。</p>'; return; }
+  if (mktBusy) return;
+  if (!force && mktCache && mktCache.tab === mktTab && Date.now() - mktCache.at < 15000) { drawMktBody(); return; }
+  mktBusy = true;
+  try {
+    if (mktTab === "market") {
+      const data = await KBPlatform.lbRequest("/market/browse?offset=0");
+      mktItems = ((data && (data.items || data.listings || data.entries)) || []).map(normListing).filter(Boolean);
+      mktOffset = mktItems.length;
+      mktCache = { at: Date.now(), tab: "market" };
+    } else {
+      const data = await KBPlatform.lbRequest("/market/mine");
+      mktItems = ((data && (data.items || data.listings || data.entries)) || []).map(normListing).filter(Boolean);
+      // 本地对账：服务端已售且已领（或本地已有领取记录）但本地冻结卡还在 → 清账删卡
+      for (const it of mktItems) {
+        const mine = (state.myListings || {})[it.id];
+        if (it.status === "sold" && (state.claimedSales || {})[it.id]) { if (mine) { purgeCard(mine.uid); delete state.myListings[it.id]; } }
+        if (it.status === "cancelled" && mine) { const c = state.cards.find(x => x.uid === mine.uid); if (c && c.listed) delete c.listed; delete state.myListings[it.id]; }
+      }
+      mktCache = { at: Date.now(), tab: "mine" };
+    }
+    drawMktBody();
+  } catch (e) { body.innerHTML = `<p class="hint">交易所加载失败：${errMsg(e)}</p>`; }
+  mktBusy = false;
+}
+function drawMktBody() {
+  const body = $("#mktBody"); if (!body) return;
+  if (mktTab === "market") {
+    if (!mktItems.length) { body.innerHTML = '<p class="hint">市场上暂时没货。把你的传世/时期卡挂上去，做第一个卖家。</p>'; return; }
+    body.innerHTML = mktItems.map(it => `<div>${snapViewHTML(it.snap, it.price, it.sellerName)}<div class="row" style="margin-top:2px"><button class="btn" data-mktbuy="${it.id}">💎 ${it.price} 买入</button></div></div>`).join("") +
+      (mktItems.length >= 20 ? '<div class="row" style="justify-content:center"><button class="btn ghost" id="mktMore">加载更多</button></div>' : "");
+    body.querySelectorAll("[data-mktbuy]").forEach(b => b.onclick = () => { const it = mktItems.find(x => String(x.id) === b.dataset.mktbuy); if (it) mktBuy(it); });
+    const more = $("#mktMore"); if (more) more.onclick = async () => {
+      try { const data = await KBPlatform.lbRequest("/market/browse?offset=" + mktOffset); const add = ((data && (data.items || data.listings || data.entries)) || []).map(normListing).filter(Boolean); mktItems.push(...add); mktOffset = mktItems.length; drawMktBody(); }
+      catch (e) { toast("加载失败：" + errMsg(e)); }
+    };
+    return;
+  }
+  // 我的挂单
+  if (!mktItems.length) { body.innerHTML = '<p class="hint">你还没有挂单。去图鉴点开一张传世卡或时期卡，详情里有「🏛 挂牌」按钮。</p>'; return; }
+  body.innerHTML = mktItems.map(it => {
+    const mine = (state.myListings || {})[it.id];
+    let action = "";
+    if (it.status === "listed") action = `<button class="btn ghost" data-mktcancel="${it.id}">取消挂牌</button>`;
+    else if (it.status === "sold" && it.claimable) action = `<button class="btn" data-mktclaim="${it.id}">领取 ${Math.floor(it.price * 0.95)} 钻（已扣 5% 手续费）</button>`;
+    else if (it.status === "sold") action = '<span class="hint">已售出</span>';
+    else if (it.status === "cancelled") action = '<span class="hint">已取消</span>';
+    return `<div>${snapViewHTML(it.snap, it.price, "")}<div class="row" style="margin-top:2px"><span class="hint">${it.status === "listed" ? "挂牌中" : it.status === "sold" ? "已售出" : it.status}${mine ? "" : "（其他设备挂的单）"}</span>${action}</div></div>`;
+  }).join("");
+  body.querySelectorAll("[data-mktcancel]").forEach(b => b.onclick = () => { const it = mktItems.find(x => String(x.id) === b.dataset.mktcancel); if (it) mktCancel(it); });
+  body.querySelectorAll("[data-mktclaim]").forEach(b => b.onclick = () => { const it = mktItems.find(x => String(x.id) === b.dataset.mktclaim); if (it) mktClaim(it); });
+}
+async function mktBuy(it) {
+  const nm = it.snap.name || (E.playerById(it.snap.pid) || {}).name || "这张卡";
+  if (state.dia < it.price) { toast(`钻石不足：这张要 ${it.price} 钻，你有 ${state.dia} 钻`); return; }
+  if (!confirm(`花 ${it.price} 钻买下「${nm}」？买入后直接入你的卡库。`)) return;
+  try {
+    const r = await KBPlatform.lbRequest("/market/buy", { listingId: it.id });
+    const snap = (r && r.snap) || it.snap;
+    const pay = r && typeof r.payDia === "number" ? r.payDia : it.price;
+    state.dia -= pay;
+    const inst = S.snapToInstance(state, snap, "market");
+    if (inst) { inst.bornDay = D; E.settleCards(state, [inst]); state.cards.push(inst); checkPoster([inst]); }
+    mktCache = null; persist(); render();
+    toast(`买入成功：${nm} 已入卡库（-${pay} 钻）`);
+  } catch (e) { toast("买入失败：" + errMsg(e)); mktCache = null; renderExchange(true); }
+}
+async function mktCancel(it) {
+  if (!confirm("取消这张挂牌？卡会解冻回到你的卡库可用状态。")) return;
+  try {
+    await KBPlatform.lbRequest("/market/cancel", { listingId: it.id });
+    const mine = (state.myListings || {})[it.id];
+    const c = state.cards.find(x => (mine && x.uid === mine.uid) || String(x.listed) === String(it.id));
+    if (c) delete c.listed;
+    delete state.myListings[it.id];
+    mktCache = null; persist(); render();
+    toast("已取消挂牌，卡已解冻");
+  } catch (e) { toast("取消失败：" + errMsg(e)); }
+}
+async function mktClaim(it) {
+  try {
+    const r = await KBPlatform.lbRequest("/market/claim", { listingId: it.id });
+    const dia = r && typeof r.dia === "number" ? r.dia : Math.floor(it.price * 0.95);
+    if (!(state.claimedSales || {})[it.id]) { state.dia += dia; state.claimedSales[it.id] = 1; }
+    const mine = (state.myListings || {})[it.id];
+    if (mine) { purgeCard(mine.uid); delete state.myListings[it.id]; } // 售出的卡正式离仓
+    mktCache = null; persist(); render();
+    toast(`卖卡收入到账：+${dia} 钻（已扣 5% 手续费）`);
+  } catch (e) { toast("领取失败：" + errMsg(e)); }
+}
+// 挂牌弹窗（详情页入口）
+let listTargetUid = null;
+function openListModal(uid) {
+  const c = state.cards.find(x => x.uid === uid); if (!c) return;
+  const chk = S.marketEligible(state, c); if (!chk.ok) { toast(chk.reason); return; }
+  listTargetUid = uid;
+  $("#listCardLine").textContent = `${c.name} · ${c.tier} ${c.rating} · ${c.stamp}${c.variant && c.variant !== "base" ? " · " + c.variant : ""}${(c.star || 0) > 0 ? " · ★" + c.star : ""}${c.grade ? " · 🏅" + c.grade.label : ""} · 静态身价 ${S.staticValue(c)} 钻参考`;
+  $("#listPrice").value = Math.max(10, S.staticValue(c));
+  $("#listModal").classList.add("on");
+}
+$("#listCancel").onclick = () => { $("#listModal").classList.remove("on"); listTargetUid = null; };
+$("#listModal").addEventListener("click", e => { if (e.target.id === "listModal") { $("#listModal").classList.remove("on"); listTargetUid = null; } });
+$("#listConfirm").onclick = async () => {
+  const c = state.cards.find(x => x.uid === listTargetUid); if (!c) { $("#listModal").classList.remove("on"); return; }
+  const price = Math.floor(Number($("#listPrice").value));
+  if (!Number.isFinite(price) || price < 10 || price > 100000) { toast("定价要在 10–100000 钻之间"); return; }
+  const chk = S.marketEligible(state, c); if (!chk.ok) { toast(chk.reason); return; }
+  $("#listModal").classList.remove("on");
+  try {
+    const r = await KBPlatform.lbRequest("/market/list", { snap: S.cardSnap(c), price });
+    const lid = r && (r.listingId !== undefined ? r.listingId : r.id);
+    if (lid === undefined || lid === null) throw new Error("服务端未返回挂单号");
+    c.listed = lid; // 服务端建单成功才落冻结标记，失败不改本地
+    unfreezeCleanup(c.uid);
+    state.myListings = state.myListings || {};
+    state.myListings[lid] = { uid: c.uid, price, ts: Date.now() };
+    listTargetUid = null;
+    persist(); render();
+    if (detailPid != null) showCardDetail(detailPid);
+    toast("挂牌成功！去交易所「我的挂单」可以管理");
+  } catch (e) { toast("挂牌失败：" + errMsg(e)); }
+};
+$("#mktTabMarket").onclick = () => { if (mktTab !== "market") { mktTab = "market"; mktCache = null; renderExchange(true); } };
+$("#mktTabMine").onclick = () => { if (mktTab !== "mine") { mktTab = "mine"; mktCache = null; renderExchange(true); } };
+$("#mktRefresh").onclick = () => { mktCache = null; renderExchange(true); };
+
+// ----- 异步挑战 -----
+let arenaBusy = false, arenaTargets = { B: null, C: null }, lastArenaMatch = null, inboxCache = null, inboxBusy = false, lootEnterAfter = false;
+function arenaEntered(pool) { return (arenaSt().entered[pool] || 0) > Date.now(); }
+function arenaEnteredText(pool) {
+  const left = (arenaSt().entered[pool] || 0) - Date.now();
+  if (left <= 0) return "未参战";
+  return `参战中（剩 ${Math.floor(left / 3600000)} 小时 ${Math.ceil((left % 3600000) / 60000)} 分）`;
+}
+async function arenaEnter(pool) {
+  const snap = S.lineupSnap(state);
+  if (!snap) { toast("先组满 11 人阵容再参战"); return; }
+  const pw = lbPayload("power");
+  const body = { pool, snap, power: pw ? pw.score : 0 };
+  if (pool === "C") {
+    const loot = arenaSt().lootUids.map(u => state.cards.find(c => c.uid === u)).filter(c => c && S.lootEligible(state, c).ok);
+    if (loot.length < 3 || loot.length > 6) { toast("C 池参战前先选 3–6 张可夺卡"); lootEnterAfter = true; openLootModal(); return; }
+    body.lootPool = loot.map(c => S.cardSnap(c));
+  }
+  try {
+    const r = await KBPlatform.lbRequest("/arena/enter", body);
+    arenaSt().entered[pool] = Date.now() + 24 * 3600 * 1000;
+    if (r && typeof r.points === "number") arenaSt().points = r.points;
+    persist(); render();
+    toast(`${pool} 池参战成功：当前阵容已托管 24 小时`);
+  } catch (e) { toast("参战失败：" + errMsg(e)); }
+}
+async function arenaFindTarget(pool) {
+  try {
+    const t = await KBPlatform.lbRequest("/arena/target?pool=" + pool);
+    if (!t || !t.puid || !t.snap) { arenaTargets[pool] = null; toast("暂时没有合适的对手（参战人数不足，或今日对位已满），晚点再来"); }
+    else arenaTargets[pool] = t;
+    render();
+  } catch (e) { toast("找对手失败：" + errMsg(e)); }
+}
+function oppFromTarget(t) {
+  const picks = {};
+  for (const sc of (t.snap && t.snap.cards) || []) {
+    const p = E.playerById(sc.pid); if (!p) continue;
+    (picks[sc.pos || p.pos] = picks[sc.pos || p.pos] || []).push({ name: p.name, rating: S.snapCardEff(sc), tier: p.tier });
+  }
+  return { name: t.name || "挑战者", picks, power: t.power || 0, formation: (t.snap && t.snap.formation) || "4-4-2", tactic: (t.snap && t.snap.tactic) || "全力进攻" };
+}
+async function arenaFight(pool) {
+  const t = arenaTargets[pool]; if (!t) return;
+  if (!arenaEntered(pool)) { toast("先参战再挑战（参战后阵容才会被托管）"); return; }
+  if (pool === "B" && state.coins < S.ARENA.ENTRY_B) { toast(`金币不足：B 池入场需 ${S.ARENA.ENTRY_B} 金`); return; }
+  const r = S.playArenaMatch(state, oppFromTarget(t));
+  if (!r.ok) { toast(r.reason); return; }
+  lastArenaMatch = Object.assign({}, r, { pool });
+  render(); // 先把赛果亮出来，再走上报
+  try {
+    if (pool === "B") state.coins -= S.ARENA.ENTRY_B; // 入场费在上报前本地扣，上报失败退回
+    const rep = await KBPlatform.lbRequest("/arena/report", { pool, target: t.puid, win: r.won });
+    if (rep && typeof rep.points === "number") arenaSt().points = rep.points;
+    arenaTargets[pool] = null;
+    persist(); render();
+    toast(r.won ? "⚔️ 挑战胜利！奖励凭证在下方领取，战报进邮箱" : "挑战惜败，积分已更新（战报进邮箱）");
+    arenaPullInbox(true);
+  } catch (e) {
+    if (pool === "B") state.coins += S.ARENA.ENTRY_B;
+    persist(); render();
+    toast("上报失败（入场费已退回）：" + errMsg(e));
+  }
+}
+async function arenaSpend() {
+  if (arenaSt().points < S.ARENA.PACK_COST) { toast(`积分不足：专属包要 ${S.ARENA.PACK_COST} 分，你有 ${arenaSt().points} 分`); return; }
+  try {
+    const r = await KBPlatform.lbRequest("/arena/spend", { points: S.ARENA.PACK_COST, item: "arena_pack" });
+    if (r && typeof r.points === "number") arenaSt().points = r.points; else arenaSt().points -= S.ARENA.PACK_COST;
+    const ownedBefore = new Set(state.cards.map(c => c.pid));
+    const res = S.openArenaPack(state);
+    for (const c of res.cards) if (c.bornDay === undefined) c.bornDay = D;
+    markNewAndSummary(res.cards, ownedBefore);
+    lastDraw = res.cards;
+    persist(); render();
+    afterDraw(res.cards, null, "挑战专属包");
+  } catch (e) { toast("兑换失败：" + errMsg(e)); }
+}
+async function arenaPullInbox(force) {
+  if (!KBPlatform.lbAvailable() || inboxBusy) return;
+  if (!force && inboxCache && Date.now() - inboxCache.at < 15000) return;
+  inboxBusy = true;
+  try {
+    const data = await KBPlatform.lbRequest("/arena/inbox");
+    if (data && typeof data.points === "number") arenaSt().points = data.points;
+    const logs = (data && (data.logs || data.items)) || [];
+    inboxCache = { at: Date.now(), logs };
+    let changed = false;
+    for (const log of logs) { // report 类战报：写本地邮箱；C 池被夺按 uid 删卡；处理后 claim 标记已读
+      if (log.kind !== "report") continue;
+      const id = log.id !== undefined ? log.id : log.logId;
+      if (id === undefined || arenaSt().claimedLogs[id]) continue;
+      const p = log.payload || {};
+      if (p.lootUid !== undefined && p.lootUid !== null) {
+        const c = state.cards.find(x => x.uid === p.lootUid);
+        const nm = p.lootName || (c ? c.name : "一张卡");
+        if (c) purgeCard(c.uid);
+        mailPush("⚔️ 挑战战报：可夺卡被夺走", `你 C 池的托管阵容被 ${p.fromName || p.from || "对手"} 击败，可夺池中的「${nm}」已被夺走。换套更强的阵容、调整可夺池再战——被夺的都是你预先亮出的重复卡，核心卡一张没动。`);
+      } else {
+        const winDef = !!p.defWin;
+        mailPush(winDef ? "⚔️ 挑战战报：防守成功" : "⚔️ 挑战战报：防守失败", `${p.fromName || p.from || "有玩家"} 挑战了你 ${p.pool || ""} 池的托管阵容，你${winDef ? "守住了" : "没守住"}${p.myGoals !== undefined ? `（比分 ${p.myGoals}:${p.opGoals}）` : ""}。防守积分 ${winDef ? "+6" : "-4"}（总积分不低于 0），最新积分见挑战页。`);
+      }
+      arenaSt().claimedLogs[id] = 1; changed = true;
+      KBPlatform.lbRequest("/arena/claim", { logId: id }).catch(() => {});
+    }
+    if (changed) { updateMailBadge(); persist(); }
+  } catch (e) { /* inbox 拉取失败静默，下次进页再试 */ }
+  inboxBusy = false;
+  if (curTab === "arena") render();
+}
+async function arenaClaimLog(log) {
+  const id = log.id !== undefined ? log.id : log.logId;
+  if (id === undefined) return;
+  if (arenaSt().claimedLogs[id]) { toast("这份凭证已经领过了"); return; }
+  try {
+    const r = await KBPlatform.lbRequest("/arena/claim", { logId: id });
+    const p = (r && r.payload) || log.payload || {};
+    if (log.kind === "win_gold") { const g = typeof p.coins === "number" ? p.coins : S.ARENA.WIN_GOLD; state.coins += g; toast(`领取胜场金 +${g} 金币`); }
+    else if (log.kind === "loot") {
+      const snap = p.snap || p.card;
+      const inst = snap ? S.snapToInstance(state, snap, "loot") : null;
+      if (inst) { inst.bornDay = D; E.settleCards(state, [inst]); state.cards.push(inst); toast(`🎯 夺得「${inst.name}」，已入卡库`); showPackResult([inst], "🎯 夺得的战利品"); }
+      else toast("战利品数据异常，未能入仓");
+    }
+    else toast("已处理");
+    arenaSt().claimedLogs[id] = 1;
+    inboxCache = null;
+    persist(); render();
+  } catch (e) { toast("领取失败：" + errMsg(e)); }
+}
+function renderArena() {
+  const bodyEl = $("#arenaBody"); if (!bodyEl) return;
+  if (!KBPlatform.lbAvailable()) { bodyEl.innerHTML = '<p class="hint">异步挑战仅在虎扑 App 内可用。</p>'; $("#arenaResult").innerHTML = ""; return; }
+  arenaPullInbox(false);
+  const a = arenaSt();
+  const poolBlock = pool => {
+    const t = arenaTargets[pool];
+    const fee = pool === "B" ? `（入场 ${S.ARENA.ENTRY_B} 金 · 胜场领 ${S.ARENA.WIN_GOLD} 金 · 每日 5 场）` : "（无入场费 · 胜方可夺卡 · 每日 3 场）";
+    let html = `<h2>${pool === "B" ? "🅱 B 池 · 金币奖池" : "🅲 C 池 · 夺卡池"}</h2><p class="hint">${arenaEnteredText(pool)} · 参战阵容＝你当前首发 11 人 ${fee}</p>`;
+    html += `<div class="row"><button class="btn" data-arena-enter="${pool}">${arenaEntered(pool) ? "刷新参战阵容" : "参战（托管 24 小时）"}</button>`;
+    if (pool === "C") html += `<button class="btn ghost" id="lootPickBtn">🎯 可夺池（已选 ${a.lootUids.length} 张）</button>`;
+    html += `<button class="btn ghost" data-arena-find="${pool}" ${arenaEntered(pool) ? "" : "disabled"}>找对手</button></div>`;
+    if (t) {
+      const av = t.avatar ? `<img class="lb-av" src="${t.avatar}" alt="">` : `<span class="lb-avf">${(t.name || "?").slice(0, 1)}</span>`;
+      html += `<div class="arena-vs">${av}<div style="flex:1"><b>${t.name || "挑战者"}</b> · 托管战力 <b>${t.power || "?"}</b><div class="hint">${(t.snap && t.snap.formation) || "4-4-2"} · ${(t.snap && t.snap.tactic) || "全力进攻"}</div></div><button class="btn" data-arena-fight="${pool}">⚔️ 开战${pool === "B" ? `（${S.ARENA.ENTRY_B} 金）` : ""}</button><button class="btn ghost" data-arena-find="${pool}">换一个</button></div>`;
+    }
+    return html;
+  };
+  let inboxHtml = "";
+  const claimable = ((inboxCache && inboxCache.logs) || []).filter(l => (l.kind === "win_gold" || l.kind === "loot") && !a.claimedLogs[l.id !== undefined ? l.id : l.logId]);
+  if (claimable.length) {
+    inboxHtml = `<h2>🎁 待领奖励</h2>` + claimable.map(l => {
+      const p = l.payload || {};
+      const label = l.kind === "win_gold" ? `胜场金 +${typeof p.coins === "number" ? p.coins : S.ARENA.WIN_GOLD} 金币` : `战利品：${(p.snap && p.snap.name) || (p.card && p.card.name) || "一张卡"}`;
+      return `<div class="lb-row"><span style="flex:1">${label}</span><button class="btn" data-arena-claim="${l.id !== undefined ? l.id : l.logId}">领取</button></div>`;
+    }).join("");
+  }
+  bodyEl.innerHTML = `<div class="row"><span>我的挑战积分 <b style="color:#ffd257">${a.points}</b></span><button class="btn" id="arenaSpendBtn" ${a.points >= S.ARENA.PACK_COST ? "" : "disabled"}>🎁 ${S.ARENA.PACK_COST} 分换专属包（3 张 · 保底史诗+）</button><button class="btn ghost" id="arenaInboxBtn">拉取战报/奖励</button></div>` +
+    poolBlock("B") + poolBlock("C") + inboxHtml +
+    `<p class="hint">防守战报会发到邮箱（右上角「⋯」→ 通知邮箱）；C 池被夺的卡也会在战报里写明，登录时自动处理。</p>`;
+  bodyEl.querySelectorAll("[data-arena-enter]").forEach(b => b.onclick = () => arenaEnter(b.dataset.arenaEnter));
+  bodyEl.querySelectorAll("[data-arena-find]").forEach(b => b.onclick = () => arenaFindTarget(b.dataset.arenaFind));
+  bodyEl.querySelectorAll("[data-arena-fight]").forEach(b => b.onclick = () => arenaFight(b.dataset.arenaFight));
+  bodyEl.querySelectorAll("[data-arena-claim]").forEach(b => b.onclick = () => { const l = ((inboxCache && inboxCache.logs) || []).find(x => String(x.id !== undefined ? x.id : x.logId) === b.dataset.arenaClaim); if (l) arenaClaimLog(l); });
+  const sp = $("#arenaSpendBtn"); if (sp) sp.onclick = () => arenaSpend();
+  const ib = $("#arenaInboxBtn"); if (ib) ib.onclick = () => { inboxCache = null; arenaPullInbox(true); toast("已刷新战报与奖励"); };
+  const lp = $("#lootPickBtn"); if (lp) lp.onclick = () => { lootEnterAfter = false; openLootModal(); };
+  // 赛果（复用联赛式对位行）
+  const resEl = $("#arenaResult");
+  if (lastArenaMatch) {
+    const m = lastArenaMatch;
+    resEl.innerHTML = `<h2>${m.pool} 池战报</h2><p><b>${m.won ? "🏆 胜利" : "惜败"} ${m.myWins}:${m.opWins}</b>（半场 ${m.htMy}:${m.htOp}）vs ${m.oppName}（对手战力 ${m.oppPower} · ${m.oppFormation} · 战术 ${m.oppTactic}${m.adj > 0 ? " · 我方克制 +" + m.adj : m.adj < 0 ? " · 被克制 " + m.adj : ""}）· 我的战力 ${m.myPower}</p>` +
+      m.lines.map(l => `<p class="hint">${l.minute}' ${l.pos}：${l.myName} ${l.myRating}${l.captain ? "⭐" : ""} ${l.win ? "＞" : "＜"} ${l.opName} ${l.opRating} ${l.goalMark ? "⚽ 进球！" : l.goalMarkOpp ? "⚽ 被进球" : l.win ? "✅" : "❌"}</p>`).join("");
+  } else resEl.innerHTML = "";
+}
+// 可夺池选择弹窗
+const lootSel = new Set();
+function openLootModal() {
+  lootSel.clear();
+  arenaSt().lootUids.forEach(u => { const c = state.cards.find(x => x.uid === u); if (c && S.lootEligible(state, c).ok) lootSel.add(u); });
+  renderLootList();
+  $("#lootModal").classList.add("on");
+}
+function renderLootList() {
+  $("#lootCount").textContent = lootSel.size;
+  const pool = state.cards.filter(c => ["普通", "稀有", "史诗"].includes(c.tier))
+    .sort((x, y) => (S.lootEligible(state, x).ok ? 0 : 1) - (S.lootEligible(state, y).ok ? 0 : 1) || E.TIERS.indexOf(y.tier) - E.TIERS.indexOf(x.tier) || S.instanceValue(state, y, D) - S.instanceValue(state, x, D)).slice(0, 120);
+  $("#lootList").innerHTML = pool.length ? pool.map(c => {
+    const chk = S.lootEligible(state, c), sel = lootSel.has(c.uid);
+    return `<label class="lootrow ${chk.ok ? "" : "off"}"><input type="checkbox" data-loot="${c.uid}" ${sel ? "checked" : ""} ${chk.ok || sel ? "" : "disabled"}><span>${c.name} · ${c.tier} ${c.rating}${c.stamp !== "无编" ? " · " + c.stamp : ""}${c.variant && c.variant !== "base" ? " · " + c.variant : ""} · 身价 ${S.instanceValue(state, c, D)}</span><span class="lwhy">${chk.ok ? (sel ? "已选" : "可放") : chk.reasons[0] || ""}</span></label>`;
+  }).join("") : '<p class="hint">暂无史诗及以下的卡。</p>';
+  document.querySelectorAll("[data-loot]").forEach(cb => cb.onchange = () => {
+    const uid = +cb.dataset.loot;
+    if (cb.checked) { if (lootSel.size >= 6) { toast("可夺池最多 6 张"); cb.checked = false; return; } lootSel.add(uid); }
+    else lootSel.delete(uid);
+    renderLootList();
+  });
+}
+$("#lootCancel").onclick = () => { $("#lootModal").classList.remove("on"); lootEnterAfter = false; };
+$("#lootModal").addEventListener("click", e => { if (e.target.id === "lootModal") { $("#lootModal").classList.remove("on"); lootEnterAfter = false; } });
+$("#lootConfirm").onclick = () => {
+  if (lootSel.size < 3 || lootSel.size > 6) { toast("可夺池要选 3–6 张"); return; }
+  arenaSt().lootUids = [...lootSel];
+  $("#lootModal").classList.remove("on");
+  persist(); render();
+  toast(`可夺池已保存（${lootSel.size} 张）`);
+  if (lootEnterAfter) { lootEnterAfter = false; arenaEnter("C"); }
+};
 
 // ----- 广告点位 -----
 let gradeTargetUid = null; // 评级广告的目标卡（发起时记下，grant 结算时用；补发路径用 PENDING 里的 uid）
@@ -3053,7 +3657,7 @@ function applyAdReward(kind, uid) {
   else if (kind === "dia") { state.dia += 10; }
   else if (kind === "dia30") { state.dia += 30; } // 第二批：钻石广告独立 bucket，每次 +30 钻
   else if (kind === "league") { state.matchesLeft += 10; }
-  else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.dia60, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; state.cards.push(c); lastDraw = [c]; checkPoster([c]); } // 第二批：体验抽改钻石包（60 档）口径单张
+  else if (kind === "urdraw") { const c = E._drawOne(state, E.PACKS.dia60, Math.random, null); E.settleCards(state, [c]); c.bornDay = D; c.adAssist = true; c.src = "urdraw"; state.cards.push(c); lastDraw = [c]; checkPoster([c]); } // 第二批：体验抽改钻石包（60 档）口径单张；第三批：来源标记（体验抽产出可挂牌）
   else if (kind === "heat") { state.furnaceHeat = Math.min(3, (state.furnaceHeat || 0) + 1); }
   else if (kind === "grade") { return settleGrade(uid !== null && uid !== undefined ? uid : gradeTargetUid); }
   return null;
@@ -3220,7 +3824,7 @@ $("#importBtn").onclick = () => {
 };
 // ================= 竞品抄作业批（2026-11-03）：邮箱 / 更多功能面板 / 碎片兑换弹窗 / 新手引导 =================
 // ----- 邮箱（第 7 项，本地版 v1，无奖励附件）：state.mail 上限 40、新在前；生产者=欢迎信 + 版本更新信 -----
-const MAIL_VER = "2026-11-03b";
+const MAIL_VER = "2026-11-03c";
 function mailPush(title, body) {
   state.mail = state.mail || [];
   state.mail.unshift({ id: Date.now() + "-" + Math.floor(Math.random() * 1e6), title, body, day: todayStr(), read: false });
@@ -3383,6 +3987,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
+  { v: "交易所开市 · 异步挑战 · 全服唯一", items: ["🏛 交易所正式开市：传世卡和时期/双人卡能挂牌卖钻——钻石包、名宿包、体验抽出的才能挂，合成和冲档产出的不收；买卖用钻石结算，卖家到手 95%", "⚔️ 新增「挑战」页签：把 11 人阵容托管 24 小时打异步对战——B 池入场 200 金、赢了领 350 金；C 池更刺激：赢了能夺走对方亮出的重复卡，先选好你自己愿意亮出的 3–6 张；积分攒 300 换专属包（3 张保底史诗+）", "👑 全服唯一 1/1：豪华钻石包的时期卡抽到限编 /1，要先全服注册——注册成功附唯一证书；被人抢先了自动降为 /10 并补偿 30 钻", "📈 排行榜新增「涨幅榜」：比 7 天身价涨幅；平行版上场加成实装：银折 +1、红折 +2、签字/球衣 +3，只算上场卡", "♻️ 系统回收调整：史诗/传说/传世不再卖给系统了（好卡走交易所或分解换碎片），普通/稀有回收不变，传世分解换万能材料保留"] },
   { v: "签到日历 · 成就轨迹 · 邮箱与碎片", items: ["🗓 签到改版：7 天日历全摆明面——金币 200→800 递增、第 3/6 天送高级包、第 7 天大奖 50 钻（旧版每天 300 金作废）", "🏆 成就改轨迹呈现：收藏/财富/征程/养成四条线分组，顶部能看到已完成数和可领钻石合计", "✉️ 通知邮箱上线：版本更新和公告都进邮箱，右上角「⋯」更多里打开，未读有红点；新店主首次进店还有 5 步聚光灯引导（老店主可在「更多」里重播）", "🧩 碎片兑换：重复的普通/稀有/史诗卡在卡片详情里分解换碎片（1/3/10），去图鉴页指定兑换还没点亮的球员（稀有 15 · 史诗 60）", "📈 图鉴页全仓身价旁新增今日涨跌，今天赚了还是亏了一眼看清"] },
   { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出", "💰 名宿系列包调价 30→60 钻：与钻石包、豪华包的性价比对齐，概率不变", "🏆 成就扩容到 35 个：低阶成就钻石变少、高阶更丰厚（图鉴全集 40 钻、传世收藏 10 张 80 钻），难度整体上调，钻石更金贵——重度玩家主要靠钻石广告攒钻", "🔥 合成炉出卡改揭晓演出：合成/冲档成功先慢揭看卡（史诗以上）、再弹结果卡，不再只闪一行字"] },
   { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
