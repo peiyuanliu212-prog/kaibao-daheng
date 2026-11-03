@@ -1747,24 +1747,41 @@ const KBMeta = (() => {
   }
   // ---------- 成就（§10 + 纪录系） ----------
   const ACHS = [
-    { id: "firstUR", name: "首抽传世", dia: 10, coins: 1000, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
-    { id: "firstOne", name: "首张 /1", dia: 10, coins: 1000, test: st => st.cards.some(c => c.stamp === "/1") },
-    { id: "firstPara", name: "首张平行版", dia: 8, coins: 300, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
-    { id: "para10", name: "平行收藏 10", dia: 10, coins: 600, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
-    { id: "jersey1", name: "球衣卡到手", dia: 15, coins: 800, test: st => st.cards.some(c => c.variant === "球衣") },
-    { id: "dex30", name: "图鉴 30", dia: 10, coins: 500, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
-    { id: "dex60", name: "图鉴 60", dia: 10, coins: 800, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
-    { id: "dex90", name: "图鉴 90", dia: 15, coins: 1200, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
-    { id: "dex120", name: "图鉴全集 120", dia: 30, coins: 2000, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
-    { id: "shop5", name: "卡店 Lv.5", dia: 10, coins: 800, test: st => st.shopLv >= 5 },
-    { id: "shop10", name: "卡店 Lv.10", dia: 20, coins: 1500, test: st => st.shopLv >= 10 },
-    { id: "rich100k", name: "全仓身价破 10 万", dia: 10, coins: 1000, test: st => st.records.total >= 100000 },
-    { id: "rich500k", name: "全仓身价破 50 万", dia: 25, coins: 2500, test: st => st.records.total >= 500000 },
+    { id: "firstUR", name: "首抽传世", dia: 3, coins: 1000, test: st => st.cards.some(c => c.tier === "传世" && !c.adAssist) },
+    { id: "firstOne", name: "首张 /1", dia: 5, coins: 1000, test: st => st.cards.some(c => c.stamp === "/1") },
+    { id: "firstPara", name: "首张平行版", dia: 2, coins: 300, test: st => st.cards.some(c => c.variant && c.variant !== "base") },
+    { id: "para10", name: "平行收藏 10", dia: 5, coins: 600, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 10 },
+    { id: "jersey1", name: "球衣卡到手", dia: 8, coins: 800, test: st => st.cards.some(c => c.variant === "球衣") },
+    { id: "dex30", name: "图鉴 30", dia: 3, coins: 500, test: st => new Set(st.cards.map(c => c.pid)).size >= 30 },
+    { id: "dex60", name: "图鉴 60", dia: 5, coins: 800, test: st => new Set(st.cards.map(c => c.pid)).size >= 60 },
+    { id: "dex90", name: "图鉴 90", dia: 8, coins: 1200, test: st => new Set(st.cards.map(c => c.pid)).size >= 90 },
+    { id: "dex120", name: "图鉴全集 120", dia: 40, coins: 2000, test: st => new Set(st.cards.map(c => c.pid)).size >= 120 },
+    { id: "shop5", name: "卡店 Lv.5", dia: 3, coins: 800, test: st => st.shopLv >= 5 },
+    { id: "shop10", name: "卡店 Lv.10", dia: 15, coins: 1500, test: st => st.shopLv >= 10 },
+    { id: "rich100k", name: "全仓身价破 20 万", dia: 5, coins: 1000, test: st => st.records.total >= 200000 },
+    { id: "rich500k", name: "全仓身价破 100 万", dia: 15, coins: 2500, test: st => st.records.total >= 1000000 },
     { id: "master", name: "联赛大师段位", dia: 15, coins: 1000, test: st => st.division >= 5 },
-    { id: "synthLegend", name: "合成出传说", dia: 10, coins: 800, test: st => !!st.flags.synthLegend },
-    { id: "ur3", name: "传世收藏 3", dia: 10, coins: 1000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 3 },
-    { id: "ur6", name: "传世收藏 6", dia: 20, coins: 1500, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 6 },
-    { id: "ur10", name: "传世收藏 10 · 卡王", dia: 50, coins: 3000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 10 }
+    { id: "synthLegend", name: "合成出传说", dia: 5, coins: 800, test: st => !!st.flags.synthLegend },
+    { id: "ur3", name: "传世收藏 3", dia: 5, coins: 1000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 3 },
+    { id: "ur6", name: "传世收藏 6", dia: 15, coins: 1500, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 6 },
+    { id: "ur10", name: "传世收藏 10 · 卡王", dia: 80, coins: 3000, test: st => new Set(st.cards.filter(c => c.tier === "传世" && !c.adAssist).map(c => c.pid)).size >= 10 },
+    { id: "draws500", name: "开包达人 · 500 张", dia: 5, coins: 800, test: st => (st.draws || 0) >= 500 },
+    { id: "draws1500", name: "开包达人 · 1500 张", dia: 12, coins: 1500, test: st => (st.draws || 0) >= 1500 },
+    { id: "draws4000", name: "开包达人 · 4000 张", dia: 30, coins: 3000, test: st => (st.draws || 0) >= 4000 },
+    { id: "para30", name: "平行收藏 30", dia: 12, coins: 1000, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 30 },
+    { id: "para80", name: "平行收藏 80", dia: 30, coins: 2500, test: st => new Set(st.cards.filter(c => c.variant && c.variant !== "base").map(c => c.pid + "|" + c.variant)).size >= 80 },
+    { id: "one3", name: "/1 收藏 3 张", dia: 20, coins: 1500, test: st => st.cards.filter(c => c.stamp === "/1").length >= 3 },
+    { id: "jersey3", name: "球衣收藏 3 张", dia: 20, coins: 1500, test: st => st.cards.filter(c => c.variant === "球衣").length >= 3 },
+    { id: "star5one", name: "首张满星卡", dia: 5, coins: 800, test: st => st.cards.some(c => (c.star || 0) >= 5) },
+    { id: "star5three", name: "满星卡 3 张", dia: 15, coins: 1500, test: st => st.cards.filter(c => (c.star || 0) >= 5).length >= 3 },
+    { id: "star5eight", name: "满星卡 8 张", dia: 35, coins: 3000, test: st => st.cards.filter(c => (c.star || 0) >= 5).length >= 8 },
+    { id: "gradeFirst", name: "首次评级", dia: 3, coins: 500, test: st => st.cards.some(c => !!c.grade) },
+    { id: "gradeBlack", name: "首张黑标", dia: 25, coins: 2000, test: st => st.cards.some(c => c.grade && c.grade.label === "黑标") },
+    { id: "gradeTen", name: "评级卡 10 张", dia: 20, coins: 1500, test: st => st.cards.filter(c => !!c.grade).length >= 10 },
+    { id: "rich500w", name: "全仓身价破 500 万", dia: 40, coins: 4000, test: st => st.records.total >= 5000000 },
+    { id: "single100k", name: "单卡身价破 10 万", dia: 15, coins: 1200, test: st => (st.records.single || 0) >= 100000 },
+    { id: "era3", name: "时期收藏 3", dia: 15, coins: 1200, test: st => new Set(st.cards.filter(c => c.pid >= 200).map(c => c.pid)).size >= 3 },
+    { id: "era7", name: "时期/双人全集 7", dia: 40, coins: 3000, test: st => new Set(st.cards.filter(c => c.pid >= 200).map(c => c.pid)).size >= 7 }
   ];
   function claimAchievement(state, id) {
     const a = ACHS.find(x => x.id === id);
@@ -3078,7 +3095,7 @@ if (muteBtnEl) { muteBtnEl.textContent = KBAudio.isMuted() ? "🔇" : "🔊"; mu
 
 // ---------- v6：开始页 / 三档位 / 新手礼包 ----------
 const CHANGELOG = [
-  { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出", "💰 名宿系列包调价 30→60 钻：与钻石包、豪华包的性价比对齐，概率不变"] },
+  { v: "钻石包双档 · 评级与时期卡登场", items: ["💎 钻石包双档上线：60 钻包（史诗 55% · 传说 35% · 传世 10%）与 120 钻豪华包（史诗 30% · 传说 55% · 传世 15%），原 40 钻传世箱下线；240 传世保底两档都能兑现", "📺 钻石广告上线：看广告每次 +30 钻，每天最多 30 次，独立计次不占其他广告额度", "🏅 评级系统：5 星卡可看广告评级（PSA 9 / BGS 9.5 / PSA 10 / BGS 10 / 黑标），身价最高 ×9.5、战力最高 +12，每卡 3 次机会、重评覆盖旧分", "🕰 时期卡首发：梅西·2022世界杯冠军、C罗·欧冠三连冠、贝利·1970世界杯、克鲁伊夫·1974飞翔荷兰、布冯·2006世界杯冠军——只在豪华钻石包的惊喜槽出现，身价 3 倍起；梅罗同框、罗齐组合两张双人卡仅供收藏", "⭐ 传世升星变专一：只吃同球员重复卡；多余的传世卡可在详情里分解成万能材料，顶替任意传世的升星材料", "🏛 交易所即将开启：先在页签里看预告，传世卡与时期卡未来可挂牌交易（钻石结算）", "🎴 金币包更纯粹：限编只出到 /99、版本只出到银折；/25 以上与红折以上只在钻石包和名宿包出", "💰 名宿系列包调价 30→60 钻：与钻石包、豪华包的性价比对齐，概率不变", "🏆 成就扩容到 35 个：低阶成就钻石变少、高阶更丰厚（图鉴全集 40 钻、传世收藏 10 张 80 钻），难度整体上调，钻石更金贵——重度玩家主要靠钻石广告攒钻"] },
   { v: "卡库大扫除 · 1/1 真唯一", items: ["🎁 开包结果改弹窗全展示：整包一次看全、逐张翻入，不用再下滑找卡", "💎 传说/传世改钻石包专属：金币包最高出史诗；传说/传世去传世箱和名宿包（改 30 钻）开，升星从此有门槛", "📖 图鉴与卡库合并：一个网格看全，重复卡归成 ×几，点开卡片逐张卖；工具栏有身价倍率表", "🔎 图鉴未收集的球员直接显示名字和灰色头像，还缺谁一目了然；图鉴可按档位/版本/限编/名字筛选搜索", "⚡ 快捷出售上线：先预览再卖，自动保留每个球员身价最高的一张，阵容/展示/升星卡永不误卖", "⭐ 升星三调整：一键升到 3 星；材料只吃同球员或同系列同档卡；4/5 星成功率 70%/50%；升星选卡可搜索", "🔥 熔炉新增广告点：看广告炉温 +1，攒满 3 点下次合成免费（每日 3 次）", "1️⃣ 1/1 改真唯一：同一球员全版本只出一张，重复抽到自动变 /10；名宿包和合成炉也能出折射版了"] },
   { v: "存档码一键粘贴 · 卖卡不跳屏", items: ["📋 存档码新增「一键粘贴」按钮：点一下就帮你点好输入框、弹好键盘，配合键盘剪贴板一下贴好，不用再长按；分段发的码连着粘会自动接上", "🃏 卖卡时图鉴和卡库不再跳来跳去，卖完还停在原地"] },
   { v: "升星与冲档大更新", items: ["⭐ 升星上线：重复卡和同档卡能喂主卡升星（满 5 星，每星评分 +2、身价 ×1.25），冲 4/5 星小心炸炉——只损材料、主卡无损", "🎲 合成炉新开冲档赌口：3 张低档赌高一档，免手续费；连败 2 次第 3 次必成，炸炉还攒炉温（满 3 次合成免费）", "🏆 联赛升段变长线：黄金起要 4 星升段，连胜 ≥3 每胜 +2 星加速；高段对手也变强了", "🎴 开包演出升级：好卡压轴揭晓，史诗以上身价数字滚动跳出"] },
